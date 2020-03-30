@@ -4,30 +4,30 @@
             <div class="boxText">
                 <img class="logo" :src="image" alt="" />
             </div>
-            <form action="">
+            <form id="form-register">
                 <div class="form1" v-if="section == 1">
+                    <div class="form-group">
+                        <input type="email" id="email" class="form-control" required>
+                        <label class="form-control-placeholder" for="email">Email</label>
+                        <p data-error="email" class="msgError d-none">*msgError</p>
+                    </div>
                     <div class="form-group">
                         <input type="text" id="name" class="form-control" required>
                         <label class="form-control-placeholder" for="name">Nombre</label>
-                        <p class="msgError d-none">*msgError</p>
+                        <p data-error="name" class="msgError d-none">*msgError</p>
                     </div>
                     <div class="form-group">
                         <input type="text" id="lastname" class="form-control" required >
                         <label class="form-control-placeholder" for="lastname">Apellido</label>
-                        <p class="msgError d-none">*msgError</p>
+                        <p data-error="lastname" class="msgError d-none">*msgError</p>
                     </div>
                     <div class="form-group">
-                        <input type="text" id="dni" class="form-control" required >
+                        <input type="text" maxlength="12" id="dni" onkeypress="if(this.value.length==this.getAttribute('maxlength')) return false;" class="form-control" v-on:keydown="campoNumber" required >
                         <label class="form-control-placeholder" for="dni">Dni</label>
-                        <p class="msgError d-none">*msgError</p>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" id="lastname" class="form-control" required >
-                        <label class="form-control-placeholder" for="lastname">Apellido</label>
-                        <p class="msgError d-none">*msgError</p>
+                        <p data-error="dni" class="msgError d-none">*msgError</p>
                     </div>
                      <div class="form-group botonera">
-                        <a class="btn btnRegister" @click=" section = 2">Siguiente</a>
+                        <a class="btn btnRegister" @click="nextForm">Siguiente</a>
                     </div>
                 </div>
                 <div class="form1" v-if="section == 2">
@@ -63,11 +63,6 @@
                         <p class="msgError d-none">*msgError</p>
                     </div>
                     <div class="form-group">
-                        <input type="email" id="email" class="form-control" required>
-                        <label class="form-control-placeholder" for="email">Email</label>
-                        <p class="msgError d-none">*msgError</p>
-                    </div>
-                    <div class="form-group">
                         <input type="number" id="telephone" class="form-control" required>
                         <label class="form-control-placeholder" for="telephone">Teléfono</label>
                         <p class="msgError d-none">*msgError</p>
@@ -89,7 +84,8 @@
                         <p class="msgError d-none">*msgError</p>
                     </div>
                      <div class="form-group botonera">
-                        <a class="btn btnRegister" v-b-modal.my-modal>Entrar a raus</a>
+                        <a class="btn btnRegister" @click="register">Entrar a raus</a>
+                        <button type="button" style="display: none;" id="btn-modal" v-b-modal.my-modal></button>
                     </div>
                 </div>
             </form>
@@ -108,13 +104,14 @@
 <script>
 import checkimg from "../assets/img/icons/check.svg";
 import image from "../assets/img/logo.png";
-
+let $ = require("jquery");
 
 export default {
-    
   name: 'register',
   data: function () {
         return {
+            form: "",
+            btnModal: "",
             image: image,
             checkimg: checkimg,
             showHide: true,
@@ -123,7 +120,12 @@ export default {
             type2: "password",
             icon2: "fas fa-eye",
             section: 1,
-            myclass: ['alert']
+            myclass: ['alert'],
+            formEmail: "",
+            formName: "",
+            formLastname: "",
+            formDni: "",
+            allCampoNumber: ""
         }
     },
     methods: {
@@ -145,8 +147,80 @@ export default {
                 this.icon2 = "fas fa-eye-slash"
             }
         },
-        register(){
-            this.$router.push('/HelloWorld');
+        campoNumber(e) {
+            var charCode = (e.which) ? e.which : e.keyCode;
+            console.log(charCode);
+            if (charCode > 31 && (charCode < 48 || charCode > 57)){
+                return false;
+            }
+            return true;
+        },
+        nextForm() {
+            this.formEmail = document.querySelector("#email");
+            this.formName = document.querySelector("#name");
+            this.formLastname = document.querySelector("#lastname");
+            this.formDni = document.querySelector("#dni");
+
+            if (this.formEmail.value === "") {
+                document.querySelector("[data-error='email']").innerText = "El email esta vacio, por favor completelo.";
+                document.querySelector("[data-error='email']").classList.remove("d-none");
+
+                setTimeout(() => {
+                    document.querySelector("[data-error='email']").classList.add("d-none");
+                }, 2500);
+            }
+
+            if (this.formName.value === "") {
+                document.querySelector("[data-error='name']").innerText = "El nombre esta vacio, por favor completelo.";
+                document.querySelector("[data-error='name']").classList.remove("d-none");
+
+                setTimeout(() => {
+                    document.querySelector("[data-error='name']").classList.add("d-none");
+                }, 2500);
+            }
+
+            if (this.formLastname.value === "") {
+                document.querySelector("[data-error='lastname']").innerText = "El apellido esta vacio, por favor completelo.";
+                document.querySelector("[data-error='lastname']").classList.remove("d-none");
+
+                setTimeout(() => {
+                    document.querySelector("[data-error='lastname']").classList.add("d-none");
+                }, 2500);
+            }
+
+            if (this.formDni.value === "") {
+                document.querySelector("[data-error='dni']").innerText = "El dni esta vacio, por favor completelo.";
+                document.querySelector("[data-error='dni']").classList.remove("d-none");
+
+                setTimeout(() => {
+                    document.querySelector("[data-error='dni']").classList.add("d-none");
+                }, 2500);
+            } else {
+                if (this.formDni.value.length <= 7) {
+                    document.querySelector("[data-error='dni']").innerText = "El dni debe de ser menor a 8. Introduzca un dni valido.";
+                    document.querySelector("[data-error='dni']").classList.remove("d-none");
+
+                    setTimeout(() => {
+                        document.querySelector("[data-error='dni']").classList.add("d-none");
+                    }, 2500);
+
+                    return false;
+                } else {
+                    if (this.formEmail.value != "" && this.formName.value != "" && this.formLastname.value != "" && this.formDni.value != "" && this.formDni.value.length >= 8) {
+                        this.section = 2;
+                    }
+                }
+            }
+        },
+        register() {
+            this.form = document.querySelector(`#form-register`);
+            this.btnModal = document.querySelector(`#btn-modal`);
+            this.btnModal.click();
+            console.log(this.form);
+            console.log(this.btnModal);
+            $("#app").html();
+
+            // this.$router.push('/home');
         },
     }
 }
@@ -308,8 +382,14 @@ export default {
 
         .msgError{
             color: red;
+            background: #fff;
             font-size: 12px;
             text-align: center;
+            padding: .75rem;
+            border-radius: 5px;
+            font-weight: bold !important;
+            letter-spacing: 0.065rem;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, .45);
         }
     }   
 </style>
