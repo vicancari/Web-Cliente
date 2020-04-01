@@ -1,22 +1,6 @@
+var $ = require("jquery");
+
 export default {
-    geo() {
-        return new Promise((resolve, reject) => {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    function(pos) {
-                        resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude });
-                    },
-                    function() {
-                        console.log("Ocurrió un error intentando encontrar su ubicación");
-                        reject();
-                    }
-                );
-            } else {
-                console.log("Debe activar el GPS para utilizar esta función.");
-                reject();
-            }
-        });
-    },
     calcularDistancia(lat1, lon1, lat2, lon2) {
         var p = 0.017453292519943295; // Math.PI / 180
         var c = Math.cos;
@@ -59,5 +43,47 @@ export default {
     fechaYHora(date) {
         console.log(date);
         return this.formatoFecha(date) + " " + this.formatoHora(date);
+    },
+    campoNumber(e) {
+        var charCode = (e.which) ? e.which : e.keyCode;
+        // console.log(charCode);
+        if (charCode > 31 && (charCode < 48 || charCode > 57)){
+            return false;
+        }
+    },
+    searchDirection(e, google) {
+        var autocomplete = google;
+        
+        autocomplete.addListener('place_changed', function() {
+            var place = autocomplete.getPlace();
+            e.addEventListener("onchange", () => {
+                if (!place.geometry) {
+                    document.querySelector("#origen").value = "Error";
+                    // console.log("error");
+                } else {
+                    document.querySelector("#origen").value = place.geometry.location.lat() +" "+ place.geometry.location.lng();
+                    $.post("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + place.geometry.location.lat() + "," + place.geometry.location.lng() + "&key=AIzaSyBUhsxeoY9tYVFFD31lLygBdRROqHU7s6k", function(data) {
+                        var formCountry = document.querySelector("#country");
+                        var formCity = document.querySelector("#city");
+                        formCountry.value = `${data.results[0].address_components[5].long_name}`;
+                        formCity.value = `${data.results[0].address_components[3].long_name}`;
+                    });
+                    // console.log(place.geometry.location.lat() +" "+ place.geometry.location.lng());
+                }
+            });
+            if (!place.geometry) {
+                document.querySelector("#origen").value = "Error";
+                // console.log("error");
+            } else {
+                document.querySelector("#origen").value = place.geometry.location.lat() +" "+ place.geometry.location.lng();
+                $.post("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + place.geometry.location.lat() + "," + place.geometry.location.lng() + "&key=AIzaSyBUhsxeoY9tYVFFD31lLygBdRROqHU7s6k", function(data) {
+                    var formCountry = document.querySelector("#country");
+                    var formCity = document.querySelector("#city");
+                    formCountry.value = `${data.results[0].address_components[5].long_name}`;
+                    formCity.value = `${data.results[0].address_components[3].long_name}`;
+                });
+                // console.log(place.geometry.location.lat() +" "+ place.geometry.location.lng());
+            }
+        });
     }
 };

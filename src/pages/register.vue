@@ -22,7 +22,7 @@
                         <p data-error="lastname" class="msgError d-none">*msgError</p>
                     </div>
                     <div class="form-group">
-                        <input type="text" maxlength="12" id="dni" onkeypress="if(this.value.length==this.getAttribute('maxlength')) return false;" class="form-control" v-on:keydown="campoNumber" required >
+                        <input type="text" maxlength="12" id="dni" onkeypress="if(this.value.length==this.getAttribute('maxlength')) return false; return funciones.campoNumber(event);" class="form-control" required >
                         <label class="form-control-placeholder" for="dni">Dni</label>
                         <p data-error="dni" class="msgError d-none">*msgError</p>
                     </div>
@@ -32,25 +32,26 @@
                 </div>
                 <div class="form1" v-if="section == 2">
                     <div class="form-group">
-                        <input type="date" id="date" class="form-control date" required value="2020-02-03">
+                        <input type="date" id="birthdate" class="form-control date" required value="2020-02-03">
                         <label class="form-control-placeholder" for="date">Fecha denacimiento</label>
-                        <p class="msgError d-none">*msgError</p>
+                        <p data-error="birthdate" class="msgError d-none">*msgError</p>
                     </div>
                     <div class="form-group">
                         <input type="text" id="country" class="form-control" required>
                         <label class="form-control-placeholder" for="country">País</label>
-                        <p class="msgError d-none">*msgError</p>
+                        <p data-error="country" class="msgError d-none">*msgError</p>
                     </div>
                     <div class="form-group">
                         <input type="text" id="city" class="form-control" required>
                         <label class="form-control-placeholder" for="city">Ciudad</label>
-                        <p class="msgError d-none">*msgError</p>
+                        <p data-error="city" class="msgError d-none">*msgError</p>
                     </div>
                     <div class="form-group">
-                        <input type="text" id="address" class="form-control" required>
+                        <input type="text" id="address" onkeypress="funciones.searchDirection(this, new google.maps.places.Autocomplete(this));" class="form-control" required>
+                        <input style="display: none;" type="text" id="origen" v-model="this.origen" class="form-control" required>
                         <label class="form-control-placeholder" for="address">Direccion</label>
                         <a class="mapMarket" href="#"><i class="fas fa-map-marker-alt"></i></a>
-                        <p class="msgError d-none">*msgError</p>
+                        <p data-error="address" class="msgError d-none">*msgError</p>
                     </div>
                      <div class="form-group botonera">
                         <a class="btn btnRegister" @click="section = 3">Siguiente</a>
@@ -102,128 +103,169 @@
 </template>
 
 <script>
-import checkimg from "../assets/img/icons/check.svg";
-import image from "../assets/img/logo.png";
-let $ = require("jquery");
+    import Vue from "vue";
+    import checkimg from "../assets/img/icons/check.svg";
+    import image from "../assets/img/logo.png";
+    import LoadScript from "vue-plugin-load-script";
+    var $ = require("jquery");
 
-export default {
-  name: 'register',
-  data: function () {
-        return {
-            form: "",
-            btnModal: "",
-            image: image,
-            checkimg: checkimg,
-            showHide: true,
-            type: "password",
-            icon: "fas fa-eye",
-            type2: "password",
-            icon2: "fas fa-eye",
-            section: 1,
-            myclass: ['alert'],
-            formEmail: "",
-            formName: "",
-            formLastname: "",
-            formDni: "",
-            allCampoNumber: ""
-        }
-    },
-    methods: {
-        showPassword() {
-            if(this.type === "password") {
-                this.type = "text"
-                this.icon = "fas fa-eye"
-            } else {
-                this.type = "password"
-                this.icon = "fas fa-eye-slash"
+    Vue.use(LoadScript);
+    Vue.loadScript("https://maps.google.com/maps/api/js?key=AIzaSyBUhsxeoY9tYVFFD31lLygBdRROqHU7s6k&libraries=places&region=es&sensor=false&amp;language=es");
+
+    export default {
+        name: 'register',
+        data: function () {
+            return {
+                form: "",
+                btnModal: "",
+                image: image,
+                checkimg: checkimg,
+                showHide: true,
+                type: "password",
+                icon: "fas fa-eye",
+                type2: "password",
+                icon2: "fas fa-eye",
+                section: 1,
+                myclass: ['alert'],
+                formEmail: "",
+                formName: "",
+                formLastname: "",
+                formDni: "",
+                formBirthdate: "",
+                formCountry: "",
+                formCity: "",
+                formAddress: "",
+                allCampoNumber: "",
+                origen: "",
+                autocomplete: "",
+                geocoder: "",
+                ubiLat: "",
+                ubiLong: "",
             }
         },
-        showPassword2() {
-            if(this.type === "password") {
-                this.type2 = "text"
-                this.icon2 = "fas fa-eye"
-            } else {
-                this.type2 = "password"
-                this.icon2 = "fas fa-eye-slash"
-            }
+        async created() {
+            var ubicacion = await this.geo();
+            this.origen = `${ubicacion.lat}, ${ubicacion.lon}`;
+            this.ubiLat = ubicacion.lat;
+            this.ubiLong = ubicacion.lon;
+            console.log(ubicacion);
         },
-        campoNumber(e) {
-            var charCode = (e.which) ? e.which : e.keyCode;
-            console.log(charCode);
-            if (charCode > 31 && (charCode < 48 || charCode > 57)){
-                return false;
-            }
-            return true;
-        },
-        nextForm() {
-            this.formEmail = document.querySelector("#email");
-            this.formName = document.querySelector("#name");
-            this.formLastname = document.querySelector("#lastname");
-            this.formDni = document.querySelector("#dni");
+        methods: {
+            showPassword() {
+                if(this.type === "password") {
+                    this.type = "text"
+                    this.icon = "fas fa-eye"
+                } else {
+                    this.type = "password"
+                    this.icon = "fas fa-eye-slash"
+                }
+            },
+            showPassword2() {
+                if(this.type === "password") {
+                    this.type2 = "text"
+                    this.icon2 = "fas fa-eye"
+                } else {
+                    this.type2 = "password"
+                    this.icon2 = "fas fa-eye-slash"
+                }
+            },
+            nextForm() {
+                this.formEmail = document.querySelector("#email");
+                this.formName = document.querySelector("#name");
+                this.formLastname = document.querySelector("#lastname");
+                this.formDni = document.querySelector("#dni");
 
-            if (this.formEmail.value === "") {
-                document.querySelector("[data-error='email']").innerText = "El email esta vacio, por favor completelo.";
-                document.querySelector("[data-error='email']").classList.remove("d-none");
+                if (this.formEmail.value === "") {
+                    document.querySelector("[data-error='email']").innerText = "El email esta vacio, por favor completelo.";
+                    document.querySelector("[data-error='email']").classList.remove("d-none");
 
-                setTimeout(() => {
-                    document.querySelector("[data-error='email']").classList.add("d-none");
-                }, 2500);
-            }
+                    setTimeout(() => {
+                        document.querySelector("[data-error='email']").classList.add("d-none");
+                    }, 2500);
+                }
 
-            if (this.formName.value === "") {
-                document.querySelector("[data-error='name']").innerText = "El nombre esta vacio, por favor completelo.";
-                document.querySelector("[data-error='name']").classList.remove("d-none");
+                if (this.formName.value === "") {
+                    document.querySelector("[data-error='name']").innerText = "El nombre esta vacio, por favor completelo.";
+                    document.querySelector("[data-error='name']").classList.remove("d-none");
 
-                setTimeout(() => {
-                    document.querySelector("[data-error='name']").classList.add("d-none");
-                }, 2500);
-            }
+                    setTimeout(() => {
+                        document.querySelector("[data-error='name']").classList.add("d-none");
+                    }, 2500);
+                }
 
-            if (this.formLastname.value === "") {
-                document.querySelector("[data-error='lastname']").innerText = "El apellido esta vacio, por favor completelo.";
-                document.querySelector("[data-error='lastname']").classList.remove("d-none");
+                if (this.formLastname.value === "") {
+                    document.querySelector("[data-error='lastname']").innerText = "El apellido esta vacio, por favor completelo.";
+                    document.querySelector("[data-error='lastname']").classList.remove("d-none");
 
-                setTimeout(() => {
-                    document.querySelector("[data-error='lastname']").classList.add("d-none");
-                }, 2500);
-            }
+                    setTimeout(() => {
+                        document.querySelector("[data-error='lastname']").classList.add("d-none");
+                    }, 2500);
+                }
 
-            if (this.formDni.value === "") {
-                document.querySelector("[data-error='dni']").innerText = "El dni esta vacio, por favor completelo.";
-                document.querySelector("[data-error='dni']").classList.remove("d-none");
-
-                setTimeout(() => {
-                    document.querySelector("[data-error='dni']").classList.add("d-none");
-                }, 2500);
-            } else {
-                if (this.formDni.value.length <= 7) {
-                    document.querySelector("[data-error='dni']").innerText = "El dni debe de ser menor a 8. Introduzca un dni valido.";
+                if (this.formDni.value === "") {
+                    document.querySelector("[data-error='dni']").innerText = "El dni esta vacio, por favor completelo.";
                     document.querySelector("[data-error='dni']").classList.remove("d-none");
 
                     setTimeout(() => {
                         document.querySelector("[data-error='dni']").classList.add("d-none");
                     }, 2500);
-
-                    return false;
                 } else {
-                    if (this.formEmail.value != "" && this.formName.value != "" && this.formLastname.value != "" && this.formDni.value != "" && this.formDni.value.length >= 8) {
-                        this.section = 2;
+                    if (this.formDni.value.length <= 7) {
+                        document.querySelector("[data-error='dni']").innerText = "El dni debe de ser menor a 8. Introduzca un dni valido.";
+                        document.querySelector("[data-error='dni']").classList.remove("d-none");
+
+                        setTimeout(() => {
+                            document.querySelector("[data-error='dni']").classList.add("d-none");
+                        }, 2500);
+
+                        return false;
+                    } else {
+                        if (this.formEmail.value != "" && this.formName.value != "" && this.formLastname.value != "" && this.formDni.value != "" && this.formDni.value.length >= 8) {
+                            this.section = 2;
+                            this.getStreetAddressFrom(this.ubiLat, this.ubiLong);
+                        }
                     }
                 }
+            },
+            nextFormTwo() {
+                // 
+            },
+            register() {
+                this.form = document.querySelector(`#form-register`);
+                this.btnModal = document.querySelector(`#btn-modal`);
+                this.btnModal.click();
+                console.log(this.form);
+                console.log(this.btnModal);
+                $("#app").html();
+            },
+            async geo() {
+                return new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(
+                        async function(pos) {
+                            resolve({
+                                lat: pos.coords.latitude,
+                                lon: pos.coords.longitude
+                            });
+                        },
+                        function(error) {
+                            console.log(error);
+                            reject();
+                        }
+                    );
+                });
+            },
+            async getStreetAddressFrom(lat, long) {
+                $.post("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + lat + "," + long + "&key=AIzaSyBUhsxeoY9tYVFFD31lLygBdRROqHU7s6k", function(data) {
+                    this.formAddress = document.querySelector("#address");
+                    this.formCountry = document.querySelector("#country");
+                    this.formCity = document.querySelector("#city");
+                    this.formCountry.value = `${data.results[0].address_components[5].long_name}`;
+                    this.formCity.value = `${data.results[0].address_components[3].long_name}`;
+                    this.formAddress.value = `${data.results[0].formatted_address}`;
+                });
             }
-        },
-        register() {
-            this.form = document.querySelector(`#form-register`);
-            this.btnModal = document.querySelector(`#btn-modal`);
-            this.btnModal.click();
-            console.log(this.form);
-            console.log(this.btnModal);
-            $("#app").html();
-
-            // this.$router.push('/home');
-        },
+        }
     }
-}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

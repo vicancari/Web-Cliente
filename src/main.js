@@ -14,6 +14,7 @@ window.funciones = funciones;
 window.config = config;
 
 Vue.use(BootstrapVue);
+
 Vue.config.productionTip = false;
 
 new Vue({
