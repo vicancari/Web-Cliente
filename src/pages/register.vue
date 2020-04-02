@@ -378,6 +378,7 @@
                     'http://localhost:9990/api/cliente/registro/',
                     {
                         email: this.formEmail.value,
+                        phone: `+${funciones.codigoArea(this.formCountry.value)}${this.formTel.value}`,
                         password: this.formConf.value,
                         address: this.formAddress.value,
                         birthday: this.formBirthdate.value,
@@ -387,11 +388,11 @@
                         dni: this.formDni.value,
                         lastname: this.formLastname.value,
                         name: this.formName.value,
-                        phone: `+${funciones.codigoArea(this.formCountry.value)}${this.formTel.value}`,
                         zipcode: this.formCodiPostal.value
                     },
                     function(response) {
                         var json = response;
+                        console.log(json);
                         if (json.uid != "" || json.uid != "Null" || json.uid != "None") {
                             this.btnModal = document.querySelector(`#btn-modal`);
                             this.btnModal.click();
