@@ -32,7 +32,7 @@
                 </div>
                 <div class="form1" v-if="section == 2">
                     <div class="form-group">
-                        <input type="date" id="birthdate" class="form-control date" required value="2020-02-03">
+                        <input type="date" id="birthdate" class="form-control date" required>
                         <label class="form-control-placeholder" for="date">Fecha denacimiento</label>
                         <p data-error="birthdate" class="msgError d-none">*msgError</p>
                     </div>
@@ -47,52 +47,51 @@
                         <p data-error="city" class="msgError d-none">*msgError</p>
                     </div>
                     <div class="form-group">
-                        <input type="text" id="address" onkeypress="funciones.searchDirection(this, new google.maps.places.Autocomplete(this));" class="form-control" required>
-                        <input style="display: none;" type="text" id="origen" v-model="this.origen" class="form-control" required>
+                        <input type="text" id="address" onkeyup="funciones.searchDirection(this, new google.maps.places.Autocomplete(this));" class="form-control" required>
                         <label class="form-control-placeholder" for="address">Direccion</label>
-                        <a class="mapMarket" href="#"><i class="fas fa-map-marker-alt"></i></a>
+                        <span style="outline: none; cursor: pointer;" class="mapMarket"><i class="fas fa-map-marker-alt"></i></span>
                         <p data-error="address" class="msgError d-none">*msgError</p>
                     </div>
                      <div class="form-group botonera">
-                        <a class="btn btnRegister" @click="section = 3">Siguiente</a>
+                        <a class="btn btnRegister" @click="nextFormTwo">Siguiente</a>
                     </div>
                 </div>
                 <div class="form1" v-if="section == 3">
                     <div class="form-group">
-                        <input type="text" id="code-postal" class="form-control" required>
+                        <input type="text" id="code-postal" onkeypress="return funciones.campoNumber(event);" class="form-control" required>
                         <label class="form-control-placeholder" for="code-postal">Código postal</label>
-                        <p class="msgError d-none">*msgError</p>
+                        <p data-error="code-postal" class="msgError d-none">*msgError</p>
                     </div>
                     <div class="form-group">
-                        <input type="number" id="telephone" class="form-control" required>
+                        <input type="number" id="telephone" onkeypress="return funciones.campoNumber(event);" class="form-control" required>
                         <label class="form-control-placeholder" for="telephone">Teléfono</label>
-                        <p class="msgError d-none">*msgError</p>
+                        <p data-error="telephone" class="msgError d-none">*msgError</p>
                     </div>
                     <div class="form-group">
-                        <input :type="type" id="password" class="form-control" required >
+                        <input :type="type" id="password" maxlength="15" onkeypress="if(this.value.length==this.getAttribute('maxlength')) return false;" onkeyup="return funciones.validar_clave(this);" class="form-control" required >
                         <label class="form-control-placeholder" for="password">Contraseña</label>
                         <a class="btn btnShow" @click="showPassword">
                             <i :class="icon" ></i>
                         </a>
-                        <p class="msgError d-none">*msgError</p>
+                        <p data-error="password" class="msgError d-none">*msgError</p>
                     </div>
                     <div class="form-group">
-                        <input :type="type2" id="conf-password" class="form-control" required >
-                        <label class="form-control-placeholder" for="conf-password">Confirmar contraseña</label>
+                        <input :type="type2" id="confPassword" maxlength="15" onkeypress="if(this.value.length==this.getAttribute('maxlength')) return false;" class="form-control" required >
+                        <label class="form-control-placeholder" for="confPassword">Confirmar contraseña</label>
                         <a class="btn btnShow" @click="showPassword2">
                             <i :class="icon2" ></i>
                         </a>
-                        <p class="msgError d-none">*msgError</p>
+                        <p data-error="confPassword" class="msgError d-none">*msgError</p>
                     </div>
                      <div class="form-group botonera">
-                        <a class="btn btnRegister" @click="register">Entrar a raus</a>
+                        <button type="button" id="btnRegistar" disabled class="btn btnRegister" @click="register">Entrar a raus</button>
                         <button type="button" style="display: none;" id="btn-modal" v-b-modal.my-modal></button>
                     </div>
                 </div>
             </form>
         </div>
 
-         <b-modal :modal-class="myclass" centered  id="my-modal" ref="my-modal"  hide-footer hide-header>  
+        <b-modal :modal-class="myclass" centered  id="my-modal" ref="my-modal"  hide-footer hide-header>  
             <div class="d-block text-center">
                 <img :src="checkimg" alt="">
                 <h3>Gracias!</h3>
@@ -104,13 +103,14 @@
 
 <script>
     import Vue from "vue";
+    import funciones from "../funciones.js";
     import checkimg from "../assets/img/icons/check.svg";
     import image from "../assets/img/logo.png";
     import LoadScript from "vue-plugin-load-script";
     var $ = require("jquery");
 
     Vue.use(LoadScript);
-    Vue.loadScript("https://maps.google.com/maps/api/js?key=AIzaSyBUhsxeoY9tYVFFD31lLygBdRROqHU7s6k&libraries=places&region=es&sensor=false&amp;language=es");
+    Vue.loadScript("https://maps.google.com/maps/api/js?key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho&libraries=places&region=es&sensor=false&amp;language=es");
 
     export default {
         name: 'register',
@@ -135,20 +135,27 @@
                 formCountry: "",
                 formCity: "",
                 formAddress: "",
+                formCodiPostal: "",
+                formTel: "",
+                formPass: "",
+                formConf: "",
                 allCampoNumber: "",
-                origen: "",
                 autocomplete: "",
                 geocoder: "",
                 ubiLat: "",
                 ubiLong: "",
+                fechaPermitida: "",
+                dateActualValue: "",
+                password: "",
+                cArea: "",
+                confPass: "",
             }
         },
         async created() {
             var ubicacion = await this.geo();
-            this.origen = `${ubicacion.lat}, ${ubicacion.lon}`;
             this.ubiLat = ubicacion.lat;
             this.ubiLong = ubicacion.lon;
-            console.log(ubicacion);
+            this.getStreetAddressFrom(ubicacion.lat, ubicacion.lon);
         },
         methods: {
             showPassword() {
@@ -182,6 +189,8 @@
                     setTimeout(() => {
                         document.querySelector("[data-error='email']").classList.add("d-none");
                     }, 2500);
+
+                    return false;
                 }
 
                 if (this.formName.value === "") {
@@ -191,6 +200,8 @@
                     setTimeout(() => {
                         document.querySelector("[data-error='name']").classList.add("d-none");
                     }, 2500);
+
+                    return false;
                 }
 
                 if (this.formLastname.value === "") {
@@ -200,6 +211,8 @@
                     setTimeout(() => {
                         document.querySelector("[data-error='lastname']").classList.add("d-none");
                     }, 2500);
+
+                    return false;
                 }
 
                 if (this.formDni.value === "") {
@@ -209,6 +222,8 @@
                     setTimeout(() => {
                         document.querySelector("[data-error='dni']").classList.add("d-none");
                     }, 2500);
+
+                    return false;
                 } else {
                     if (this.formDni.value.length <= 7) {
                         document.querySelector("[data-error='dni']").innerText = "El dni debe de ser menor a 8. Introduzca un dni valido.";
@@ -228,15 +243,161 @@
                 }
             },
             nextFormTwo() {
-                // 
+                this.formBirthdate = document.querySelector("#birthdate");
+                this.formCountry = document.querySelector("#country");
+                this.formCity = document.querySelector("#city");
+                this.formAddress = document.querySelector("#address");
+
+                if (this.formBirthdate.value === "") {
+                    document.querySelector("[data-error='birthdate']").innerText = "La fecha de nacimiento esta vacio, por favor seleccione su fecha.";
+                    document.querySelector("[data-error='birthdate']").classList.remove("d-none");
+
+                    setTimeout(() => {
+                        document.querySelector("[data-error='birthdate']").classList.add("d-none");
+                    }, 2500);
+
+                    return false;
+                }
+
+                if (parseInt(this.formBirthdate.value.split("-")[0]) > parseInt(this.fechaPermitida.split("-")[0])) {
+                    document.querySelector("[data-error='birthdate']").innerText = "La fecha de nacimiento no es valida. debe ser mayor de 15 años en adelante.";
+                    document.querySelector("[data-error='birthdate']").classList.remove("d-none");
+
+                    setTimeout(() => {
+                        document.querySelector("[data-error='birthdate']").classList.add("d-none");
+                    }, 2500);
+
+                    return false;
+                }
+
+                if (this.formCountry.value === "") {
+                    document.querySelector("[data-error='country']").innerText = "El pais esta incompleto por favor escriba su dirección.";
+                    document.querySelector("[data-error='country']").classList.remove("d-none");
+
+                    setTimeout(() => {
+                        document.querySelector("[data-error='country']").classList.add("d-none");
+                    }, 2500);
+
+                    return false;
+                }
+
+                if (this.formCity.value === "") {
+                    document.querySelector("[data-error='city']").innerText = "La ciudad esta incompleta por favor escriba su dirección.";
+                    document.querySelector("[data-error='city']").classList.remove("d-none");
+
+                    setTimeout(() => {
+                        document.querySelector("[data-error='city']").classList.add("d-none");
+                    }, 2500);
+
+                    return false;
+                }
+
+                if (this.formAddress.value === "") {
+                    document.querySelector("[data-error='address']").innerText = "La dirección esta incompleta por favor escriba su dirección.";
+                    document.querySelector("[data-error='address']").classList.remove("d-none");
+
+                    setTimeout(() => {
+                        document.querySelector("[data-error='address']").classList.add("d-none");
+                    }, 2500);
+
+                    return false;
+                }
+
+                if (this.formBirthdate.value != "" || parseInt(this.formBirthdate.value.split("-")[0]) <= parseInt(this.fechaPermitida.split("-")[0]) || this.formCountry.value != "" || this.formCity.value != "" || this.formAddress.value != "") {
+                    this.section = 3;
+                }
             },
             register() {
-                this.form = document.querySelector(`#form-register`);
-                this.btnModal = document.querySelector(`#btn-modal`);
-                this.btnModal.click();
-                console.log(this.form);
-                console.log(this.btnModal);
-                $("#app").html();
+                this.formCodiPostal = document.querySelector("#code-postal");
+                this.formTel = document.querySelector("#telephone");
+                this.formPass = document.querySelector("#password");
+                this.formConf = document.querySelector("#confPassword");
+
+                if (this.formCodiPostal.value === "") {
+                    document.querySelector("[data-error='code-postal']").innerText = "El codigo postal o codigo zip esta vacio, por favor completelo.";
+                    document.querySelector("[data-error='code-postal']").classList.remove("d-none");
+
+                    setTimeout(() => {
+                        document.querySelector("[data-error='code-postal']").classList.add("d-none");
+                    }, 2500);
+
+                    return false;
+                }
+                
+                if (this.formTel.value === "") {
+                    document.querySelector("[data-error='telephone']").innerText = "El teléfono esta vacio, por favor completelo.";
+                    document.querySelector("[data-error='telephone']").classList.remove("d-none");
+
+                    setTimeout(() => {
+                        document.querySelector("[data-error='telephone']").classList.add("d-none");
+                    }, 2500);
+
+                    return false;
+                }
+
+                if (this.formPass.value === "") {
+                    document.querySelector("[data-error='password']").innerText = "La contraseña debe contener mínimo 8 y máximo 15 caracteres, al menos un dígito, una letra mayúscula, una minuscula y un caracter especial.";
+                    document.querySelector("[data-error='password']").classList.remove("d-none");
+
+                    setTimeout(() => {
+                        document.querySelector("[data-error='password']").classList.add("d-none");
+                    }, 2500);
+
+                    return false;
+                }
+
+                if (this.formConf.value === "") {
+                    document.querySelector("[data-error='confPassword']").innerText = "Confirme la contraseña por favor.";
+                    document.querySelector("[data-error='confPassword']").classList.remove("d-none");
+
+                    setTimeout(() => {
+                        document.querySelector("[data-error='confPassword']").classList.add("d-none");
+                    }, 2500);
+
+                    return false;
+                }
+
+                if (this.formPass.value != this.formConf.value) {
+                    document.querySelector("[data-error='confPassword']").innerText = "Las contraseñas no coinciden, por favor verifique.";
+                    document.querySelector("[data-error='confPassword']").classList.remove("d-none");
+
+                    setTimeout(() => {
+                        document.querySelector("[data-error='confPassword']").classList.add("d-none");
+                    }, 2500);
+
+                    return false;
+                }
+
+                var date = new Date();
+                var Dia = date.getDate() <= 9 ? "0" + date.getDate() : date.getDate();
+                var mes = date.getMonth() + 1;
+                var Mes = mes <= 9 ? "0" + mes : mes;
+                var AnnoActual = date.getFullYear();
+
+                $.post(
+                    'http://localhost:9990/api/cliente/registro/',
+                    {
+                        email: this.formEmail.value,
+                        password: this.formConf.value,
+                        address: this.formAddress.value,
+                        birthday: this.formBirthdate.value,
+                        city: this.formCity.value,
+                        country: this.formCountry.value,
+                        createt_ad: `${AnnoActual}-${Mes}-${Dia}`,
+                        dni: this.formDni.value,
+                        lastname: this.formLastname.value,
+                        name: this.formName.value,
+                        phone: `+${funciones.codigoArea(this.formCountry.value)}${this.formTel.value}`,
+                        zipcode: this.formCodiPostal.value
+                    },
+                    function(response) {
+                        var json = response;
+                        if (json.uid != "" || json.uid != "Null" || json.uid != "None") {
+                            this.btnModal = document.querySelector(`#btn-modal`);
+                            this.btnModal.click();
+                        }
+                    }
+                );
             },
             async geo() {
                 return new Promise((resolve, reject) => {
@@ -255,13 +416,23 @@
                 });
             },
             async getStreetAddressFrom(lat, long) {
-                $.post("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + lat + "," + long + "&key=AIzaSyBUhsxeoY9tYVFFD31lLygBdRROqHU7s6k", function(data) {
+                $.post("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + lat + "," + long + "&key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho", function(data) {
                     this.formAddress = document.querySelector("#address");
                     this.formCountry = document.querySelector("#country");
                     this.formCity = document.querySelector("#city");
                     this.formCountry.value = `${data.results[0].address_components[5].long_name}`;
                     this.formCity.value = `${data.results[0].address_components[3].long_name}`;
                     this.formAddress.value = `${data.results[0].formatted_address}`;
+
+                    this.cArea = "+"+funciones.codigoArea(data.results[0].address_components[5].long_name);
+                    
+                    var date = new Date();
+                    var Dia = date.getDate() <= 9 ? "0" + date.getDate() : date.getDate();
+                    var mes = date.getMonth() + 1;
+                    var Mes = mes <= 9 ? "0" + mes : mes;
+                    var AnnoActual = date.getFullYear();
+                    this.fechaPermitida = `${AnnoActual - 15}-${Mes}-${Dia}`;
+                    document.querySelector("#birthdate").value = this.fechaPermitida;
                 });
             }
         }
@@ -402,7 +573,7 @@
             .botonera{
                 display: flex;
                 flex-direction: column;
-                a{
+                a, button {
                     border-radius: 0;
                     color: #fff;
                     font-size: 14px;
@@ -410,11 +581,11 @@
                     margin: auto;
                     padding: 4px;
                 }
-                a.btnEntrar{
+                .btnEntrar{
                     background-color: var(--blue);
 
                 }
-                a.btnRegister{
+                .btnRegister{
                     background-color: var(--yellow);
                     margin-top: 40px;
 
@@ -433,5 +604,14 @@
             letter-spacing: 0.065rem;
             text-shadow: 1px 1px 1px rgba(0, 0, 0, .45);
         }
-    }   
+    }
+</style>
+
+<style lang="css">
+    #GmapMark .modal.show .modal-dialog {
+        max-width: 100vw !important;
+    }
+    #GmapMark .modal.show .modal-dialog .modal-content {
+        height: 70vh !important;
+    }
 </style>
