@@ -111,6 +111,7 @@
 
     Vue.use(LoadScript);
     Vue.loadScript("https://maps.google.com/maps/api/js?key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho&libraries=places&region=es&sensor=false&amp;language=es");
+    Vue.loadScript("https://code.jquery.com/jquery-3.4.1.js");
 
     export default {
         name: 'register',
@@ -390,12 +391,18 @@
                         name: this.formName.value,
                         zipcode: this.formCodiPostal.value
                     },
-                    function(response) {
-                        var json = response;
+                    function(resp) {
+                        var json = resp;
                         console.log(json);
                         if (json.uid != "" || json.uid != "Null" || json.uid != "None") {
                             this.btnModal = document.querySelector(`#btn-modal`);
-                            this.btnModal.click();
+                            
+                            $.post('http://localhost:9990/api/auth/Bynumber/', {phone: `+${funciones.codigoArea(this.formCountry.value)}${this.formTel.value}`}, function(resp) {
+                                if (resp.uid != "") {
+                                    this.btnModal.click();
+                                    this.$router.push("/validar-numero/");
+                                }
+                            });
                         }
                     }
                 );
