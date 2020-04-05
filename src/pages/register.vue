@@ -47,7 +47,7 @@
                         <p data-error="city" class="msgError d-none">*msgError</p>
                     </div>
                     <div class="form-group">
-                        <input type="text" id="address" onkeyup="funciones.searchDirection(this, new google.maps.places.Autocomplete(this));" class="form-control" required>
+                        <input type="text" id="address" onkeyup="funciones.searchDirection(this, new google.maps.places.Autocomplete(this), new google.maps.Geocoder());" class="form-control" required>
                         <label class="form-control-placeholder" for="address">Direccion</label>
                         <span style="outline: none; cursor: pointer;" class="mapMarket"><i class="fas fa-map-marker-alt"></i></span>
                         <p data-error="address" class="msgError d-none">*msgError</p>
@@ -86,6 +86,7 @@
                      <div class="form-group botonera">
                         <button type="button" id="btnRegistar" disabled class="btn btnRegister" @click="register">Entrar a raus</button>
                         <button type="button" style="display: none;" id="btn-modal" v-b-modal.my-modal></button>
+                        <router-link style="display: none;" id="nextLink" to="/validar-numero">next</router-link>
                     </div>
                 </div>
             </form>
@@ -393,16 +394,22 @@
                     },
                     function(resp) {
                         var json = resp;
-                        console.log(json);
-                        if (json.uid != "" || json.uid != "Null" || json.uid != "None") {
-                            this.btnModal = document.querySelector(`#btn-modal`);
-                            
-                            $.post('http://localhost:9990/api/auth/Bynumber/', {phone: `+${funciones.codigoArea(this.formCountry.value)}${this.formTel.value}`}, function(resp) {
-                                if (resp.uid != "") {
-                                    this.btnModal.click();
-                                    this.$router.push("/validar-numero/");
-                                }
-                            });
+                        // console.log(json);
+                        if (json.next === "OK") {
+                            setTimeout(() => {
+                                $.post('http://localhost:9990/api/auth/Bynumber/', {name: `${json.name.toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();})}`, phone: `${json.phone}`}, function(resp) {
+                                    // console.log(resp);
+                                    if (resp.disabled === false) {
+                                        this.btnModal = document.querySelector(`#btn-modal`);
+                                        this.btnModal.click();
+                                        setTimeout(() => {
+                                            if (document.querySelector("#nextLink")) {
+                                                document.querySelector("#nextLink").click();
+                                            }
+                                        }, 1000);
+                                    }
+                                });
+                            }, 500);
                         }
                     }
                 );
@@ -428,9 +435,12 @@
                     this.formAddress = document.querySelector("#address");
                     this.formCountry = document.querySelector("#country");
                     this.formCity = document.querySelector("#city");
-                    this.formCountry.value = `${data.results[0].address_components[5].long_name}`;
-                    this.formCity.value = `${data.results[0].address_components[3].long_name}`;
-                    this.formAddress.value = `${data.results[0].formatted_address}`;
+
+                    if (this.formCountry && this.formAddress && this.formCity) {
+                        this.formCountry.value = `${data.results[0].address_components[5].long_name}`;
+                        this.formCity.value = `${data.results[0].address_components[3].long_name}`;
+                        this.formAddress.value = `${data.results[0].formatted_address}`;
+                    }
 
                     this.cArea = "+"+funciones.codigoArea(data.results[0].address_components[5].long_name);
                     
@@ -440,9 +450,14 @@
                     var Mes = mes <= 9 ? "0" + mes : mes;
                     var AnnoActual = date.getFullYear();
                     this.fechaPermitida = `${AnnoActual - 15}-${Mes}-${Dia}`;
-                    document.querySelector("#birthdate").value = this.fechaPermitida;
+                    if (document.querySelector("#birthdate")) {
+                        document.querySelector("#birthdate").value = this.fechaPermitida;
+                    }
                 });
             }
+        },
+        mounted() {
+            console.log("");
         }
     }
 </script>

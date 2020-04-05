@@ -1,14 +1,14 @@
 import Vue from 'vue'
-import Router from 'vue-router'
+import router from 'vue-router'
 import Login from '@/pages/login'
 import Register from '@/pages/register'
 import validarNumero from '@/pages/ValidarNumero'
 import Home from '@/pages/home';
 import Tutorial from '@/pages/tutorial'
 
-Vue.use(Router)
+Vue.use(router)
 
-export default new Router({
+export default new router({
   routes: [
     {
       path: '/',

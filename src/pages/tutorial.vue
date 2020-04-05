@@ -1,31 +1,31 @@
 <template>
     <div>
-       <section class="section">
-           <div class="row m-0">
-               <div class="col-12 col-sm-6 col-md-6 p-0">
-                   <transition name="fade" v-if="count == 1" >
+        <section class="section">
+            <div class="row m-0">
+                <div class="col-12 col-sm-6 col-md-6 p-0">
+                    <transition name="fade" v-if="count == 1" >
                         <div class="boxText" v-bind:class="{ 'text-red': count = 1 }">
                             <p>1 Lorem ipsum dolor sit amet consectetur adipisicing elit. Veritatis ex possimus dicta maiores iste dolorum laborum reiciendis doloribus, esse molestiae nisi odit dolores commodi accusantium provident voluptates sunt! Officiis, nulla.</p>
                         </div>
-                   </transition>
+                    </transition>
                     <transition name="fade" v-if="count == 2" >
                         <div class="boxText" v-bind:class="{ 'text-red': count = 2 }">
                             <p>2 Lorem ipsum dolor sit amet consectetur adipisicing elit. Veritatis ex possimus dicta maiores iste dolorum laborum reiciendis doloribus, esse molestiae nisi odit dolores commodi accusantium provident voluptates sunt! Officiis, nulla.</p>
                         </div>
-                   </transition>
+                    </transition>
                     <transition name="fade" v-if="count == 3" >
                         <div class="boxText" v-bind:class="{ 'text-red': count = 3 }">
                             <p>3 Lorem ipsum dolor sit amet consectetur adipisicing elit. Veritatis ex possimus dicta maiores iste dolorum laborum reiciendis doloribus, esse molestiae nisi odit dolores commodi accusantium provident voluptates sunt! Officiis, nulla.</p>
                         </div>
-                   </transition>
-                   <transition name="fade" v-if="count == 4" >
+                    </transition>
+                    <transition name="fade" v-if="count == 4" >
                         <div class="boxText" v-bind:class="{ 'text-red': count = 4 }">
                             <i class="fas fa-map-marker-alt iconMarket" v-b-modal.modal-map></i>
                             <p>Introduce tu ubicación para que descubras, restaurantes y establecimientos de la familia Raus cerca de ti</p>
                         </div>
-                   </transition>
-               </div>
-               <div class="col-12 col-sm-6 col-md-6 p-0">
+                    </transition>
+                </div>
+                <div class="col-12 col-sm-6 col-md-6 p-0">
                     <div class="background">
                         <button class="btn btn-next" @click="next" v-if="count < 4">
                             <img :src="arrow" alt="" class="img-fluid">
@@ -33,13 +33,14 @@
                         <div class="thank" v-if="direction">
                             <img class="img-fluid" :src="checkimg" alt="">
                             <h3>Vamos!</h3>
-                            <p>Bienvenida y bienvenido a Raus!</p>
+                            <p>Bienvenid@ a Raus!</p>
                         </div>
                     </div>
-               </div>
-           </div>
-       </section>
-         <b-modal id="modal-map" centered hide-footer hide-header>
+                </div>
+            </div>
+        </section>
+        <router-link style="display: none;" id="nextLink2" to="/home"></router-link>
+        <b-modal id="modal-map" centered hide-footer hide-header>
             <div style="width: 100%"><iframe width="100%" height="400" src="https://maps.google.com/maps?width=100%&height=300&hl=es&coord=9.0224304, -69.73829669999999&q=Les%20Rambles%2C%201%20Barcelona%2C%20Spain+(Web%20cliente)&ie=UTF8&t=&z=14&iwloc=B&output=embed" frameborder="0" scrolling="no" marginheight="0" marginwidth="0"><a href="https://www.mapsdirections.info/calcular-ruta.html">Calcular Ruta</a></iframe></div>
            <router-link to="/home"><button class="btn btnAceptar">Aceptar</button></router-link>
         </b-modal>
@@ -51,9 +52,8 @@ import Arrow from '../assets/img/arrow-next.png';
 import checkimg from "../assets/img/icons/check.svg";
 
 export default {
-    
-  name: 'tutorial',
-  data: function () {
+    name: 'tutorial',
+    data: function () {
         return {
             arrow: Arrow,
             count: 1,
@@ -64,13 +64,24 @@ export default {
     methods: {
         next(){
             this.count++;  
-            if(this.count >= 4){
+            if (this.count >= 4) {
                 this.count = 4;
                 this.direction = true;
             }
         }
-    }
-   
+    },
+    mounted() {
+        if (window.localStorage.getItem("getTutorial") != "false") {
+            window.localStorage.setItem("getTutorial", "false");
+            return false;
+        }
+
+        if (window.localStorage.getItem("getTutorial") === "false") {
+            if (document.querySelector("#nextLink2")) {
+                document.querySelector("#nextLink2").click();
+            }
+        }
+    },
 }
 </script>
 

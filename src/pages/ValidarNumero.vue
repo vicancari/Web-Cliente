@@ -10,12 +10,13 @@
                         <p class="msg">Introduce el codigo pin que<br>te hemos enviado por sms.</p>
                     </div>
                     <div class="form-group">
-                        <input type="text" id="codigo-pin" maxlength="4" onkeypress="if(this.value.length==this.getAttribute('maxlength')) return false; return funciones.campoNumber(event);" class="form-control" required>
+                        <input type="text" id="codigo-pin" maxlength="4" onkeyup="if(this.value.length==this.getAttribute('maxlength')) {document.querySelector('#btnRegistar').disabled = false; return false} else {document.querySelector('#btnRegistar').disabled = true;} return funciones.campoNumber(event);" class="form-control" required>
                         <p data-error="codigo-pin" class="msgError d-none">*msgError</p>
                     </div>
                     <div class="form-group botonera">
-                        <button type="button" id="btnRegistar" disabled class="btn btnRegister">Siguiente</button>
+                        <button type="button" id="btnRegistar" disabled class="btn btnRegister" @click="verificarCodigo">Siguiente</button>
                         <button type="button" style="display: none;" id="btn-modal" v-b-modal.my-modal></button>
+                        <router-link style="display: none;" id="nextLink" to="/">next</router-link>
                     </div>
                 </div>
             </form>
@@ -35,7 +36,7 @@
     // import funciones from "../funciones.js";
     import checkimg from "../assets/img/icons/check.svg";
     import image from "../assets/img/logo.png";
-    // var $ = require("jquery");
+    var $ = require("jquery");
 
     export default {
         name: 'validarNumero',
@@ -52,25 +53,49 @@
                 icon2: "fas fa-eye",
                 section: 1,
                 myclass: ['alert'],
+                formCodigoPin: ""
             }
         },
         methods: {
-            showPassword() {
-                if(this.type === "password") {
-                    this.type = "text"
-                    this.icon = "fas fa-eye"
-                } else {
-                    this.type = "password"
-                    this.icon = "fas fa-eye-slash"
+            verificarCodigo() {
+                this.formCodigoPin = document.querySelector("#codigo-pin");
+
+                if (this.formCodigoPin.value === "") {
+                    document.querySelector("[data-error='codigo-pin']").innerText = "Por favor rellene el campo de código.";
+                    document.querySelector("[data-error='codigo-pin']").classList.remove("d-none");
+
+                    setTimeout(() => {
+                        document.querySelector("[data-error='codigo-pin']").classList.add("d-none");
+                    }, 2500);
+
+                    return false;
                 }
-            },
-            showPassword2() {
-                if(this.type === "password") {
-                    this.type2 = "text"
-                    this.icon2 = "fas fa-eye"
-                } else {
-                    this.type2 = "password"
-                    this.icon2 = "fas fa-eye-slash"
+
+                if (this.formCodigoPin.value.length < 4) {
+                    document.querySelector("[data-error='codigo-pin']").innerText = "El codigo debe tener 4 números.";
+                    document.querySelector("[data-error='codigo-pin']").classList.remove("d-none");
+
+                    setTimeout(() => {
+                        document.querySelector("[data-error='codigo-pin']").classList.add("d-none");
+                    }, 2500);
+
+                    return false;
+                }
+
+                if (this.formCodigoPin.value != "" && this.formCodigoPin.value.length === 4) {
+                    console.log(this.formCodigoPin.value);
+                    $.post('https://myraus.com:9283/api/sms/VerificarCodigo', {codigo: `${this.formCodigoPin.value}`}, function(resp) {
+                        console.log(resp);
+                        if (resp.result === true) {
+                            this.btnModal = document.querySelector(`#btn-modal`);
+                            this.btnModal.click();
+                            setTimeout(() => {
+                                if (document.querySelector("#nextLink")) {
+                                    document.querySelector("#nextLink").click();
+                                }
+                            }, 1000);
+                        }
+                    });
                 }
             }
         }

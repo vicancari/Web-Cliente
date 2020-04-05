@@ -61,7 +61,7 @@
                     <img class="imgMenu" :src="config" alt="">
                     <p>Config</p>
                 </button>
-                 <button class="btn btnMenu">
+                <button class="btn btnMenu" @click="logout">
                     <img class="imgMenu" :src="salirazul" alt="">
                     <p>Salir</p>
                 </button>
@@ -104,11 +104,12 @@ export default {
 
         }
     },
-   
     methods: {
-        
+        logout() {
+            window.localStorage.setItem("token", "");
+            this.$router.push("/");
+        }
     }
-   
 }
 </script>
 

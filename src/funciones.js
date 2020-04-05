@@ -51,9 +51,29 @@ export default {
             return false;
         }
     },
-    searchDirection(e, google) {
+    searchDirection(e, google, geoCode) {
         var autocomplete = google;
-        
+        var geocoder = geoCode;
+
+        geocoder.geocode({"address": e.value}, function(results, status) {
+            if (status === "OK") {
+                results[0].address_components.forEach(_country => {
+                    // console.log(_country);
+                    var formCountry = document.querySelector("#country");
+                    if (formCountry) {
+                        formCountry.value = `${_country.long_name}`;
+                    }
+                    $.post("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + results[0].geometry.location.lat() +","+ results[0].geometry.location.lng() + "&key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho", function(data) {
+                        // console.log(data);
+                        var formCity = document.querySelector("#city");
+                        if (formCity) {
+                            formCity.value = `${data.results[0].address_components[3].long_name}`;
+                        }
+                    });
+                });
+            }
+        });
+
         autocomplete.addListener('place_changed', function() {
             var place = autocomplete.getPlace();
             e.addEventListener("onchange", () => {
@@ -62,13 +82,23 @@ export default {
                     // console.log("error");
                 } else {
                     // document.querySelector("#origen").value = place.geometry.location.lat() +" "+ place.geometry.location.lng();
-                    $.post("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + place.geometry.location.lat() + "," + place.geometry.location.lng() + "&key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho", function(data) {
-                        var formCountry = document.querySelector("#country");
-                        var formCity = document.querySelector("#city");
-                        formCountry.value = `${data.results[0].address_components[5].long_name}`;
-                        formCity.value = `${data.results[0].address_components[3].long_name}`;
+                    geocoder.geocode({"address": e.value}, function(results, status) {
+                        if (status === "OK") {
+                            results[0].address_components.forEach(_country => {
+                                var formCountry = document.querySelector("#country");
+                                if (formCountry) {
+                                    formCountry.value = `${_country.long_name}`;
+                                }
+                            });
+                        }
                     });
-                    // console.log(place.geometry.location.lat() +" "+ place.geometry.location.lng());
+                    $.post("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + place.geometry.location.lat() + "," + place.geometry.location.lng() + "&key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho", function(data) {
+                        // console.log(data);
+                        var formCity = document.querySelector("#city");
+                        if (formCity) {
+                            formCity.value = `${data.results[0].address_components[3].long_name}`;
+                        }
+                    });
                 }
             });
             if (!place.geometry) {
@@ -76,13 +106,23 @@ export default {
                 // console.log("error");
             } else {
                 // document.querySelector("#origen").value = place.geometry.location.lat() +" "+ place.geometry.location.lng();
-                $.post("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + place.geometry.location.lat() + "," + place.geometry.location.lng() + "&key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho", function(data) {
-                    var formCountry = document.querySelector("#country");
-                    var formCity = document.querySelector("#city");
-                    formCountry.value = `${data.results[0].address_components[5].long_name}`;
-                    formCity.value = `${data.results[0].address_components[3].long_name}`;
+                geocoder.geocode({"address": e.value}, function(results, status) {
+                    if (status === "OK") {
+                        results[0].address_components.forEach(_country => {
+                            var formCountry = document.querySelector("#country");
+                            if (formCountry) {
+                                formCountry.value = `${_country.long_name}`;
+                            }
+                        });
+                    }
                 });
-                // console.log(place.geometry.location.lat() +" "+ place.geometry.location.lng());
+                $.post("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + place.geometry.location.lat() + "," + place.geometry.location.lng() + "&key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho", function(data) {
+                    // console.log(data);
+                    var formCity = document.querySelector("#city");
+                    if (formCity) {
+                        formCity.value = `${data.results[0].address_components[3].long_name}`;
+                    }
+                });
             }
         });
     },
@@ -108,11 +148,16 @@ export default {
                 }
             }
             if (mayuscula == true && minuscula == true && caracter_raro == true && numero == true) {
-                document.querySelector("#btnRegistar").disabled = false;
+                if (document.querySelector("#btnRegistar")) {
+                    document.querySelector("#btnRegistar").disabled = false;
+                }
                 return true;
             }
         }
-        document.querySelector("#btnRegistar").disabled = true;
+
+        if (document.querySelector("#btnRegistar")) {
+            document.querySelector("#btnRegistar").disabled = true;
+        }
         return false;
     },
     codigoArea(country) {

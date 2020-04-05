@@ -5,11 +5,10 @@
                 <img class="logo" :src="image" alt="" />
                 <h5>Hola!, bienvenida y bienvenido a Raus, haz login o registrate para unirte a la nueva era de la conexión comercial</h5>
             </div>
-            <form action="">
+            <form>
                 <div class="form-group a">
-                    <input type="text" id="name" class="form-control" required>
-                    <label class="form-control-placeholder" for="name">Email / Telefono</label>
-                    <p class="msgError d-none">*msgError</p>
+                    <input type="text" id="username" class="form-control" required>
+                    <label class="form-control-placeholder" for="username">Email / Telefono</label>
                 </div>
                 <div class="form-group  mb-0">
                     <input :type="type" id="password" class="form-control" required >
@@ -17,7 +16,7 @@
                     <a class="btn btnShow" @click="showPassword">
                         <i :class="icon" ></i>
                     </a>
-                    <p class="msgError d-none">*msgError</p>
+                    <p data-error="error" class="msgError d-none">*msgError</p>
                 </div>
                 <div class="form-group">
                     <div class="row d-flex align-items-center">
@@ -28,12 +27,14 @@
                             </div>
                         </div>
                         <div class="col-6">
-                            <button class="btn color-blue my-2 btnNew">Nueva contraseña</button>
+                            <button type="button" class="btn color-blue my-2 btnNew">Nueva contraseña</button>
                         </div>
                     </div>
                 </div>
                 <div class="form-group botonera">
-                    <a class="btn btnEntrar"><router-link to="/tutorial">Ir a raus</router-link></a>
+                    <button type="button" class="btn btnEntrar" @click="login">Ingresar</button>
+                    <router-link style="display: none;" id="nextLink" to="/tutorial"></router-link>
+                    <router-link style="display: none;" id="nextLink2" to="/home"></router-link>
                     <a class="btn btnRegister"><router-link to="/register">Registrarse</router-link></a>
                 </div>
             </form>
@@ -42,37 +43,134 @@
 </template>
 
 <script>
-import image from "../assets/img/logo.png";
-
-
-
-export default {
+    import image from "../assets/img/logo.png";
+    import Vue from "vue";
+    import * as firebase from "firebase";
     
-  name: 'login',
-  data: function () {
-        return {
-            image: image,
-            showHide: true,
-            type: "password",
-            icon: "fas fa-eye",
+    // import funciones from "../funciones.js";
+    import LoadScript from "vue-plugin-load-script";
+    var $ = require("jquery");
+
+    const configOptions = {
+        apiKey: "AIzaSyDMMmvx93kGW0ZiHpkbqFTopre63FHogzE",
+        authDomain: "raus-4de7b.firebaseapp.com",
+        databaseURL: "https://raus-4de7b.firebaseio.com",
+        projectId: "raus-4de7b",
+        storageBucket: "raus-4de7b.appspot.com",
+        messagingSenderId: "474517791609",
+        appId: "1:474517791609:web:81aff774436ec0c00d45a8",
+        measurementId: "G-8NV2FVKNJY"
+    };
+    firebase.initializeApp(configOptions);
+
+    Vue.use(LoadScript);
+    Vue.loadScript("https://maps.google.com/maps/api/js?key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho&libraries=places&region=es&sensor=false&amp;language=es");
+    Vue.loadScript("https://code.jquery.com/jquery-3.4.1.js");
+
+    export default {
+        name: 'login',
+        data: function () {
+            return {
+                image: image,
+                showHide: true,
+                type: "password",
+                icon: "fas fa-eye",
+                formUsername: "",
+                formPassword: "",
+            }
+        },
+        methods: {
+            showPassword() {
+                if(this.type === "password") {
+                    this.type = "text"
+                    this.icon = "fas fa-eye"
+                } else {
+                    this.type = "password"
+                    this.icon = "fas fa-eye-slash"
+                }
+            },
+            login() {
+                this.formUsername = document.querySelector("#username");
+                this.formPassword = document.querySelector("#password");
+
+                if (this.formUsername.value.substr(0, 1) === "+") {
+                    $.ajax({
+                        type: "GET",
+                        url: "http://localhost:9990/api/cliente/list/",
+                        dataType: "json",
+                        beforeSend: function () {
+                            console.log("buscando clintes");
+                        },
+                        success: function(data) {
+                            var d = JSON.parse(JSON.stringify(data));
+                            console.log(d);
+                        },
+                        error: function(data) {
+                            console.log(data);
+                        }
+                    });
+                } else {
+                    firebase.auth().signInWithEmailAndPassword(this.formUsername.value, this.formPassword.value)
+                        .then((res) => {
+                            console.log("Estamos en success.");
+                            console.log(res);
+                            $.post("http://localhost:9990/api/auth/signIn/", {uid: res.user.uid}, function(resp) {
+                                if (window.localStorage.getItem("getTutorial") != "false") {
+                                    window.localStorage.setItem("getTutorial", "true");
+                                }
+                                window.localStorage.setItem("token", resp.token);
+
+                                if (document.querySelector("#remember")) {
+                                    if (document.querySelector("#remember").checked === true) {
+                                        window.localStorage.setItem("remenberUser", "true");
+                                    } else {
+                                        window.localStorage.setItem("remenberUser", "false");
+                                    }
+                                }
+
+                                if (window.localStorage.getItem("remenberUser") === "true"){
+                                    window.localStorage.setItem("username", document.querySelector("#username").value);
+                                    window.localStorage.setItem("password", document.querySelector("#password").value);
+                                }
+
+                                if (window.localStorage.getItem("remenberUser") === "false"){
+                                    window.localStorage.setItem("username", "");
+                                    window.localStorage.setItem("password", "");
+                                }
+
+                                if (window.localStorage.getItem("token") != "" && window.localStorage.getItem("getTutorial") === "true") {
+                                    if (document.querySelector("#nextLink")) {
+                                        document.querySelector("#nextLink").click();
+                                    }
+                                }
+
+                                if (window.localStorage.getItem("token") != "" && window.localStorage.getItem("getTutorial") === "false") {
+                                    if (document.querySelector("#nextLink2")) {
+                                        document.querySelector("#nextLink2").click();
+                                    }
+                                }
+                            });
+                        }).catch((error) => {
+                            document.querySelector("[data-error='error']").classList.remove("d-none");
+                            document.querySelector("[data-error='error']").innerText = "Contraseña o Usuario incorrectos por favor verifique.";
+                            console.log(error);
+                        });
+                }
+            }
+        },
+        mounted() {
+            if (window.localStorage.getItem("remenberUser") === "true"){
+                document.querySelector("#remember").checked = true;
+                document.querySelector("#username").value = window.localStorage.getItem("username");
+                document.querySelector("#password").value = window.localStorage.getItem("password");
+            }
+            if (window.localStorage.getItem("token") != "") {
+                if (document.querySelector("#nextLink2")) {
+                    document.querySelector("#nextLink2").click();
+                }
+            }
         }
-    },
-    methods: {
-     showPassword() {
-         
-       if(this.type === "password") {
-          this.type = "text"
-          this.icon = "fas fa-eye"
-       } else {
-          this.type = "password"
-          this.icon = "fas fa-eye-slash"
-       }
-     },
-     register(){
-     }
     }
-   
-}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
@@ -197,7 +295,7 @@ export default {
             .botonera{
                 display: flex;
                 flex-direction: column;
-                a{
+                a, button{
                     border-radius: 0;
                     color: #fff;
                     font-size: 14px;
@@ -206,11 +304,11 @@ export default {
                     padding: 4px;
                     text-decoration: none;
                 }
-                a.btnEntrar{
+                .btnEntrar{
                     background-color: var(--blue);
 
                 }
-                a.btnRegister{
+                .btnRegister{
                     background-color: var(--yellow);
                     margin-top: 40px;
 
@@ -220,8 +318,14 @@ export default {
 
         .msgError{
             color: red;
+            background: #fff;
             font-size: 12px;
             text-align: center;
+            padding: .75rem;
+            border-radius: 5px;
+            font-weight: bold !important;
+            letter-spacing: 0.065rem;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, .45);
         }
     }   
 </style>
