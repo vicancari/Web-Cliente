@@ -156,166 +156,22 @@
                     <div class="col-5">
                         <button class="btn btnRestaurantes" @click="showSectionHome(2)" v-bind:class="{ 'active': activeSection == 2, '': activeSection == 1 }">
                             <span></span>
-                            Restaurates
+                            Restaurantes
                         </button>   
                     </div>
                 </div>
                 <div class="row alignHorizontal" v-if="activeSection == 2">
-                    <div class="col-md-6 col-12 mb-4">
+                    <div v-for="rest in this.listRestaurantes" :key="rest.uid" :id="rest.uid" class="col-md-6 col-12 mb-4">
                         <b-card
-                            img-src="https://picsum.photos/600/300/?image=25"
-                            img-alt="Image"
+                            :img-src="rest.photo"
+                            :img-alt="rest.name"
                             img-top
                             tag="article"
                             class="card-horizontal"
                             >
                             <div class="body">
                                 <div class="text">
-                                    <h5 class="title">Pizza napolitana 4 quesos</h5>
-                                    <button class="btn">Ir <img :src="chevRight" alt=""></button>
-                                    <div class="star-content">
-                                        <div class="row">
-                                            <div class="col-3">
-                                                <div class="box">
-                                                    <img :src="star" alt="">
-                                                    <span>4/5</span>
-                                                    <h6>Sabor</h6>
-                                                </div>
-                                            </div>
-                                            <div class="col-3">
-                                                 <div class="box">
-                                                    <img :src="star" alt="">
-                                                    <span>4/5</span>
-                                                    <h6>Atención</h6>
-                                                </div>
-                                            </div>
-                                            <div class="col-3">
-                                                 <div class="box">
-                                                    <img :src="star" alt="">
-                                                    <span>4/5</span>
-                                                    <h6>Lugar</h6>
-                                                </div>
-                                            </div>
-                                            <div class="col-3">
-                                                 <div class="box">
-                                                    <img :src="star" alt="">
-                                                    <span>5/5</span>
-                                                    <h6>Tiempo</h6>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </b-card>
-                    </div>
-                    <div class="col-md-6 col-12 mb-4">
-                        <b-card
-                            img-src="https://picsum.photos/600/300/?image=25"
-                            img-alt="Image"
-                            img-top
-                            tag="article"
-                            class="card-horizontal"
-                            >
-                            <div class="body">
-                                <div class="text">
-                                    <h5 class="title">Pizza napolitana 4 quesos</h5>
-                                    <button class="btn">Ir <img :src="chevRight" alt=""></button>
-                                    <div class="star-content">
-                                        <div class="row">
-                                            <div class="col-3">
-                                                <div class="box">
-                                                    <img :src="star" alt="">
-                                                    <span>4/5</span>
-                                                    <h6>Sabor</h6>
-                                                </div>
-                                            </div>
-                                            <div class="col-3">
-                                                 <div class="box">
-                                                    <img :src="star" alt="">
-                                                    <span>4/5</span>
-                                                    <h6>Atención</h6>
-                                                </div>
-                                            </div>
-                                            <div class="col-3">
-                                                 <div class="box">
-                                                    <img :src="star" alt="">
-                                                    <span>4/5</span>
-                                                    <h6>Lugar</h6>
-                                                </div>
-                                            </div>
-                                            <div class="col-3">
-                                                 <div class="box">
-                                                    <img :src="star" alt="">
-                                                    <span>5/5</span>
-                                                    <h6>Tiempo</h6>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </b-card>
-                    </div>
-                    <div class="col-md-6 col-12 mb-4">
-                        <b-card
-                            img-src="https://picsum.photos/600/300/?image=25"
-                            img-alt="Image"
-                            img-top
-                            tag="article"
-                            class="card-horizontal"
-                            >
-                            <div class="body">
-                                <div class="text">
-                                    <h5 class="title">Pizza napolitana 4 quesos</h5>
-                                    <button class="btn">Ir <img :src="chevRight" alt=""></button>
-                                    <div class="star-content">
-                                        <div class="row">
-                                            <div class="col-3">
-                                                <div class="box">
-                                                    <img :src="star" alt="">
-                                                    <span>4/5</span>
-                                                    <h6>Sabor</h6>
-                                                </div>
-                                            </div>
-                                            <div class="col-3">
-                                                 <div class="box">
-                                                    <img :src="star" alt="">
-                                                    <span>4/5</span>
-                                                    <h6>Atención</h6>
-                                                </div>
-                                            </div>
-                                            <div class="col-3">
-                                                 <div class="box">
-                                                    <img :src="star" alt="">
-                                                    <span>4/5</span>
-                                                    <h6>Lugar</h6>
-                                                </div>
-                                            </div>
-                                            <div class="col-3">
-                                                 <div class="box">
-                                                    <img :src="star" alt="">
-                                                    <span>5/5</span>
-                                                    <h6>Tiempo</h6>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </b-card>
-                    </div>
-                    <div class="col-md-6 col-12 mb-4">
-                        <b-card
-                            img-src="https://picsum.photos/600/300/?image=25"
-                            img-alt="Image"
-                            img-top
-                            tag="article"
-                            class="card-horizontal"
-                            >
-                            <div class="body">
-                                <div class="text">
-                                    <h5 class="title">Pizza napolitana 4 quesos</h5>
+                                    <h5 class="title">{{ rest.name }}</h5>
                                     <button class="btn">Ir <img :src="chevRight" alt=""></button>
                                     <div class="star-content">
                                         <div class="row">
@@ -548,61 +404,71 @@
 </template>
 
 <script>
+    /* Components */
+    import carousel from 'vue-owl-carousel'
+    import Navbar from '../components/navbar';
+    /* Modals */
+    import search from '../modals/search';
+    /* Images */
+    import searchImg from '../assets/img/search.png';
+    import shared from '../assets/img/icons/share.png';
+    import arrowPrev from '../assets/img/icons/arrow-prev.png';
+    import arrowNext from '../assets/img/icons/arrow-next.png';
+    import imgPin from '../assets/img/icons/pin.png';
+    import star from '../assets/img/icons/star.png';
+    import chevRight from '../assets/img/icons/chev-right.png';
+    import api from '../api.js';
 
-/* Components */
-import carousel from 'vue-owl-carousel'
-import Navbar from '../components/navbar';
-/* Modals */
-import search from '../modals/search';
-/* Images */
-import searchImg from '../assets/img/search.png';
-import shared from '../assets/img/icons/share.png';
-import arrowPrev from '../assets/img/icons/arrow-prev.png';
-import arrowNext from '../assets/img/icons/arrow-next.png';
-import imgPin from '../assets/img/icons/pin.png';
-import star from '../assets/img/icons/star.png';
-import chevRight from '../assets/img/icons/chev-right.png';
+    // var Jquery = require("jquery");
 
-export default {
-    name: 'home',
-    components: {
-        carousel,
-        Navbar,
-        search
-    },
-  data: function () {
-        return {
-            searchImg: searchImg,
-            shared: shared,
-            arrowPrev: arrowPrev,
-            arrowNext: arrowNext, 
-            imgPin: imgPin,
-            star: star,
-            chevRight: chevRight,
-            slide: 0,
-            sliding: null,
-            responsive : "{0:{items:1,nav:false},600:{items:3,nav:true}}",
-            activeSection: 1
-        }
-    },
-    methods: {
-        onSlideStart() {
-            this.sliding = true;
+    export default {
+        name: 'home',
+        components: {
+            carousel,
+            Navbar,
+            search
         },
-        onSlideEnd() {
-            this.sliding = false;
-        },
-        showSectionHome(id){
-            console.log(id);
-            if (id == 1){
-                this.activeSection= 1
-            }else if ( id == 2){
-                this.activeSection= 2
+        data: function () {
+            return {
+                searchImg: searchImg,
+                shared: shared,
+                arrowPrev: arrowPrev,
+                arrowNext: arrowNext, 
+                imgPin: imgPin,
+                star: star,
+                chevRight: chevRight,
+                slide: 0,
+                sliding: null,
+                responsive : "{0:{items:1,nav:false},600:{items:3,nav:true}}",
+                activeSection: 1,
+                listRestaurantes: {}
             }
+        },
+        async beforeMount() {
+            this.listRestaurantes = await api.get(`restaurantes/list/`);
+            console.log(this.listRestaurantes);
+        },
+        methods: {
+            onSlideStart() {
+                this.sliding = true;
+            },
+            onSlideEnd() {
+                this.sliding = false;
+            },
+            showSectionHome(id){
+                console.log(id);
+                if (id == 1){
+                    this.activeSection= 1
+                }else if ( id == 2){
+                    this.activeSection= 2
+                }
+            }
+        },
+        mounted() {
+            console.log(this.$store.getters);
+            console.log(this.$store.getters.isLoggedIn);
         }
     }
-   
-}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

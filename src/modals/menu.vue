@@ -106,7 +106,9 @@ export default {
     },
     methods: {
         logout() {
-            window.localStorage.setItem("token", "");
+            this.$store.state.token = "";
+            this.$store.state.isLoggedIn = false;
+            this.$store.state.user = {};
             this.$router.push("/");
         }
     }

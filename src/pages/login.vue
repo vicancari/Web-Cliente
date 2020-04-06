@@ -49,7 +49,7 @@
     
     // import funciones from "../funciones.js";
     import LoadScript from "vue-plugin-load-script";
-    var $ = require("jquery");
+    var Jquery = require("jquery");
 
     const configOptions = {
         apiKey: "AIzaSyDMMmvx93kGW0ZiHpkbqFTopre63FHogzE",
@@ -77,6 +77,8 @@
                 icon: "fas fa-eye",
                 formUsername: "",
                 formPassword: "",
+                dataUser: {},
+                dataToken: "",
             }
         },
         methods: {
@@ -89,12 +91,50 @@
                     this.icon = "fas fa-eye-slash"
                 }
             },
-            login() {
+            signIn(id) {
+                Jquery.ajax({
+                    type: "POST",
+                    url: "http://localhost:9990/api/auth/signIn/",
+                    data: {
+                        uid: id
+                    },
+                    dataType: "json",
+                    beforeSend: function () {
+                        console.log("Iniciando sesion....");
+                    },
+                    success: function(data) {
+                        window.localStorage.setItem("token", data.token);
+                    },
+                    error: function(data) {
+                        console.log(data);
+                    }
+                });
+            },
+            getInfoClient(id) {
+                Jquery.ajax({
+                    type: "POST",
+                    url: "http://localhost:9990/api/cliente/info/",
+                    data: {
+                        uid: id
+                    },
+                    dataType: "json",
+                    beforeSend: function () {
+                        console.log("Buscando cliente....");
+                    },
+                    success: function(data) {
+                        window.localStorage.setItem("user", JSON.stringify(data));
+                    },
+                    error: function(data) {
+                        console.log(data);
+                    }
+                });
+            },
+            async login() {
                 this.formUsername = document.querySelector("#username");
                 this.formPassword = document.querySelector("#password");
 
                 if (this.formUsername.value.substr(0, 1) === "+") {
-                    $.ajax({
+                    Jquery.ajax({
                         type: "GET",
                         url: "http://localhost:9990/api/cliente/list/",
                         dataType: "json",
@@ -112,44 +152,41 @@
                 } else {
                     firebase.auth().signInWithEmailAndPassword(this.formUsername.value, this.formPassword.value)
                         .then((res) => {
-                            console.log("Estamos en success.");
-                            console.log(res);
-                            $.post("http://localhost:9990/api/auth/signIn/", {uid: res.user.uid}, function(resp) {
-                                if (window.localStorage.getItem("getTutorial") != "false") {
-                                    window.localStorage.setItem("getTutorial", "true");
+                            if (document.querySelector("#remember")) {
+                                if (document.querySelector("#remember").checked === true) {
+                                    window.localStorage.setItem("remember", "true");
+                                } else {
+                                    window.localStorage.setItem("remember", "false");
                                 }
-                                window.localStorage.setItem("token", resp.token);
+                            }
 
-                                if (document.querySelector("#remember")) {
-                                    if (document.querySelector("#remember").checked === true) {
-                                        window.localStorage.setItem("remenberUser", "true");
-                                    } else {
-                                        window.localStorage.setItem("remenberUser", "false");
-                                    }
-                                }
+                            if (window.localStorage.getItem("remember") === "true"){
+                                window.localStorage.setItem("username", document.querySelector("#username").value);
+                                window.localStorage.setItem("password", document.querySelector("#password").value);
+                            }
 
-                                if (window.localStorage.getItem("remenberUser") === "true"){
-                                    window.localStorage.setItem("username", document.querySelector("#username").value);
-                                    window.localStorage.setItem("password", document.querySelector("#password").value);
-                                }
+                            if (window.localStorage.getItem("remember") === "false"){
+                                window.localStorage.setItem("username", document.querySelector("#username").value);
+                                window.localStorage.setItem("password", document.querySelector("#password").value);
+                            }
+                            
+                            this.signIn(res.user.uid);
+                            this.getInfoClient(res.user.uid);
 
-                                if (window.localStorage.getItem("remenberUser") === "false"){
-                                    window.localStorage.setItem("username", "");
-                                    window.localStorage.setItem("password", "");
-                                }
-
-                                if (window.localStorage.getItem("token") != "" && window.localStorage.getItem("getTutorial") === "true") {
-                                    if (document.querySelector("#nextLink")) {
-                                        document.querySelector("#nextLink").click();
-                                    }
+                            setTimeout(() => {
+                                if (window.localStorage.getItem("token") != "") {
+                                    this.$store.state.token = window.localStorage.getItem("token");
+                                    this.$store.state.isLoggedIn = true;
+                                    this.$store.state.user = JSON.parse(window.localStorage.getItem("user"));
+                                    window.localStorage.setItem("user", "");
                                 }
 
-                                if (window.localStorage.getItem("token") != "" && window.localStorage.getItem("getTutorial") === "false") {
-                                    if (document.querySelector("#nextLink2")) {
-                                        document.querySelector("#nextLink2").click();
-                                    }
-                                }
-                            });
+                                console.log(this.$store.getters);
+                                
+                                this.$store.getters.isLoggedIn === true && this.$store.getters.tutorial === true
+                                    ? this.$router.push("/tutorial")
+                                    : this.$router.push("/home");
+                            }, 1000);
                         }).catch((error) => {
                             document.querySelector("[data-error='error']").classList.remove("d-none");
                             document.querySelector("[data-error='error']").innerText = "Contraseña o Usuario incorrectos por favor verifique.";
@@ -158,17 +195,18 @@
                 }
             }
         },
+        beforeMount() {
+            this.$store.getters.isLoggedIn
+                ? this.$router.push("/home")
+                : this.$store.state.token = "", this.$store.state.isLoggedIn = false;
+        },
         mounted() {
-            if (window.localStorage.getItem("remenberUser") === "true"){
+            if (window.localStorage.getItem("remember") === "true"){
                 document.querySelector("#remember").checked = true;
                 document.querySelector("#username").value = window.localStorage.getItem("username");
                 document.querySelector("#password").value = window.localStorage.getItem("password");
             }
-            if (window.localStorage.getItem("token") != "") {
-                if (document.querySelector("#nextLink2")) {
-                    document.querySelector("#nextLink2").click();
-                }
-            }
+            console.log(this.$store.getters);
         }
     }
 </script>

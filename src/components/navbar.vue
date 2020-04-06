@@ -5,12 +5,12 @@
                <div class="d-flex saldo">
                    <img class="img-fluid logo" :src="image" alt="">
                    <p>Saldo:</p>
-                   <span>10,999,00€</span>
+                   <span>{{ this.$store.getters.user.accounts.propia.value }}€</span>
                 </div> 
             </div>
             <div class="col-md-4 col-12 order">
                 <div class="d-flex justify-content-center align-items-center menu">
-                    <h5>Monica Clements</h5>
+                    <h5>{{ this.$store.getters.user.name }} {{ this.$store.getters.user.lastname }}</h5>
                     <button class="btn"  v-b-modal.menu-modal> <i class="fas fa-bars"></i></button>
                 </div>
             </div>

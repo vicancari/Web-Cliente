@@ -108,7 +108,7 @@
     import checkimg from "../assets/img/icons/check.svg";
     import image from "../assets/img/logo.png";
     import LoadScript from "vue-plugin-load-script";
-    var $ = require("jquery");
+    var Jquery = require("jquery");
 
     Vue.use(LoadScript);
     Vue.loadScript("https://maps.google.com/maps/api/js?key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho&libraries=places&region=es&sensor=false&amp;language=es");
@@ -376,7 +376,7 @@
                 var Mes = mes <= 9 ? "0" + mes : mes;
                 var AnnoActual = date.getFullYear();
 
-                $.post(
+                Jquery.post(
                     'http://localhost:9990/api/cliente/registro/',
                     {
                         email: this.formEmail.value,
@@ -397,7 +397,7 @@
                         // console.log(json);
                         if (json.next === "OK") {
                             setTimeout(() => {
-                                $.post('http://localhost:9990/api/auth/Bynumber/', {name: `${json.name.toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();})}`, phone: `${json.phone}`}, function(resp) {
+                                Jquery.post('http://localhost:9990/api/auth/Bynumber/', {name: `${json.name.toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();})}`, phone: `${json.phone}`}, function(resp) {
                                     // console.log(resp);
                                     if (resp.disabled === false) {
                                         this.btnModal = document.querySelector(`#btn-modal`);
@@ -431,7 +431,7 @@
                 });
             },
             async getStreetAddressFrom(lat, long) {
-                $.post("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + lat + "," + long + "&key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho", function(data) {
+                Jquery.post("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + lat + "," + long + "&key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho", function(data) {
                     this.formAddress = document.querySelector("#address");
                     this.formCountry = document.querySelector("#country");
                     this.formCity = document.querySelector("#city");

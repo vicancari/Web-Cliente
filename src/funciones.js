@@ -51,6 +51,55 @@ export default {
             return false;
         }
     },
+    progress__event() {
+        var configprogress = { onUploadProgress: progressEvent => {
+                this.EstatusProgress(Math.floor((progressEvent.loaded * 100) / progressEvent.total));
+            }
+        };
+        return configprogress;
+    },
+    EstatusProgress(value) {
+        var ProgressP = document.querySelector("#Progress__P");
+        var ProgressC = document.querySelector("#Progress__C");
+        if (ProgressP && ProgressC) {
+            ProgressP.style.display = "block";
+            if (value < 100) {
+                ProgressC.style.width = value + '%';
+            } else {
+                ProgressC.style.width = value + '%';
+                setTimeout(function() { ProgressP.style.display = "none"; ProgressC.style.width = '0%'; }, 500);
+            }
+        }
+    },
+    initGoogleMap(e, g, address) {
+        var map, marker;
+        var geocoder = new g.maps.Geocoder();
+
+        geocoder.geocode({"address": address}, function(results, status) {
+            if (status === "OK") {
+                results[0].address_components.forEach(_country => {
+                    console.log(_country);
+                    var coords = {
+                        lat: results[0].geometry.location.lat(),
+                        lng: results[0].geometry.location.lng()
+                    }
+
+                    map = new g.maps.Map(e, {
+                        center: coords,
+                        zoom: 3
+                    });
+
+                    marker = new g.maps.Marker({
+                        position: coords,
+                        map: map,
+                        title: address
+                    });
+                });
+            }
+        });
+
+        console.log(marker);
+    },
     searchDirection(e, google, geoCode) {
         var autocomplete = google;
         var geocoder = geoCode;
@@ -63,6 +112,12 @@ export default {
                     if (formCountry) {
                         formCountry.value = `${_country.long_name}`;
                     }
+
+                    if (document.querySelector("#lat") && document.querySelector("#lng")) {
+                        document.querySelector("#lat").value = results[0].geometry.location.lat();
+                        document.querySelector("#lng").value = results[0].geometry.location.lng();
+                    }
+
                     $.post("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + results[0].geometry.location.lat() +","+ results[0].geometry.location.lng() + "&key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho", function(data) {
                         // console.log(data);
                         var formCity = document.querySelector("#city");
@@ -92,6 +147,12 @@ export default {
                             });
                         }
                     });
+
+                    if (document.querySelector("#lat") && document.querySelector("#lng")) {
+                        document.querySelector("#lat").value = place.geometry.location.lat();
+                        document.querySelector("#lng").value = place.geometry.location.lng();
+                    }
+
                     $.post("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + place.geometry.location.lat() + "," + place.geometry.location.lng() + "&key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho", function(data) {
                         // console.log(data);
                         var formCity = document.querySelector("#city");
@@ -116,6 +177,12 @@ export default {
                         });
                     }
                 });
+                
+                if (document.querySelector("#lat") && document.querySelector("#lng")) {
+                    document.querySelector("#lat").value = place.geometry.location.lat();
+                    document.querySelector("#lng").value = place.geometry.location.lng();
+                }
+
                 $.post("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + place.geometry.location.lat() + "," + place.geometry.location.lng() + "&key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho", function(data) {
                     // console.log(data);
                     var formCity = document.querySelector("#city");

@@ -1,6 +1,6 @@
 let config = {
     secret: "Pl@d3C0mp4nY",
-    dominio: "",
+    dominio: "http://localhost:9990/api",
     dominioWeb: "http://localhost:8080/#/",
     idiomas: [
         {

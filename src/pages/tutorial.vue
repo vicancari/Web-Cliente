@@ -41,48 +41,58 @@
         </section>
         <router-link style="display: none;" id="nextLink2" to="/home"></router-link>
         <b-modal id="modal-map" centered hide-footer hide-header>
-            <div style="width: 100%"><iframe width="100%" height="400" src="https://maps.google.com/maps?width=100%&height=300&hl=es&coord=9.0224304, -69.73829669999999&q=Les%20Rambles%2C%201%20Barcelona%2C%20Spain+(Web%20cliente)&ie=UTF8&t=&z=14&iwloc=B&output=embed" frameborder="0" scrolling="no" marginheight="0" marginwidth="0"><a href="https://www.mapsdirections.info/calcular-ruta.html">Calcular Ruta</a></iframe></div>
+            <div style="width: 100%">
+                <div style="width: 100%; height: 350px; background: #eee;" id="GMaps" @click="loadMap"></div>
+            </div>
            <router-link to="/home"><button class="btn btnAceptar">Aceptar</button></router-link>
         </b-modal>
     </div>
 </template>
 
 <script>
-import Arrow from '../assets/img/arrow-next.png';
-import checkimg from "../assets/img/icons/check.svg";
+    import Vue from "vue";
+    import Arrow from '../assets/img/arrow-next.png';
+    import checkimg from "../assets/img/icons/check.svg";
+    import LoadScript from "vue-plugin-load-script";
+    
+    Vue.use(LoadScript);
+    Vue.loadScript("https://maps.google.com/maps/api/js?key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho&libraries=places&region=es&sensor=false&amp;language=es");
 
-export default {
-    name: 'tutorial',
-    data: function () {
-        return {
-            arrow: Arrow,
-            count: 1,
-            direction: false,
-            checkimg: checkimg
-        }
-    },
-    methods: {
-        next(){
-            this.count++;  
-            if (this.count >= 4) {
-                this.count = 4;
-                this.direction = true;
+    export default {
+        name: 'tutorial',
+        data: function () {
+            return {
+                arrow: Arrow,
+                count: 1,
+                direction: false,
+                checkimg: checkimg
             }
-        }
-    },
-    mounted() {
-        if (window.localStorage.getItem("getTutorial") != "false") {
-            window.localStorage.setItem("getTutorial", "false");
-            return false;
-        }
+        },
+        methods: {
+            next() {
+                this.count++;  
+                if (this.count >= 4) {
+                    this.count = 4;
+                    this.direction = true;
+                }
+            },
+            loadMap() {
+                if (document.querySelector("#GMaps")) {
+                    setTimeout(() => {
+                        document.querySelector("#GMaps").setAttribute("onclick", `return funciones.initGoogleMap(document.querySelector("#GMaps"), google, '${this.$store.getters.user.address}')`);
+                    }, 1000);
+                }
+            }
+        },
+        mounted() {
+            console.log(this.$store.getters);
 
-        if (window.localStorage.getItem("getTutorial") === "false") {
-            if (document.querySelector("#nextLink2")) {
-                document.querySelector("#nextLink2").click();
+            if (this.$store.getters.tutorial === true) {
+                this.$store.state.tutorial = false;
+                return false;
             }
-        }
-    },
-}
+        },
+    }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
