@@ -10,6 +10,7 @@ export default function(/* { ssrContext } */) {
             status: "",
             token: "",
             tutorial: true,
+            coords: {},
             user: {}
         },
         getters: {
@@ -18,6 +19,7 @@ export default function(/* { ssrContext } */) {
             authStatus: state => state.status,
             status: state => state.status,
             tutorial: state => state.tutorial,
+            coords: state => state.coords,
             user: state => state.user
         },
         plugins: [createPersistedState()]

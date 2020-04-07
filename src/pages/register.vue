@@ -47,9 +47,9 @@
                         <p data-error="city" class="msgError d-none">*msgError</p>
                     </div>
                     <div class="form-group">
-                        <input type="text" id="address" onkeyup="funciones.searchDirection(this, new google.maps.places.Autocomplete(this), new google.maps.Geocoder());" class="form-control" required>
+                        <input type="text" id="address" v-on:keyup="placeAddress" class="form-control" required>
                         <label class="form-control-placeholder" for="address">Direccion</label>
-                        <span style="outline: none; cursor: pointer;" class="mapMarket"><i class="fas fa-map-marker-alt"></i></span>
+                        <span style="outline: none; cursor: pointer;" class="mapMarket"><i class="fas fa-map-marker-alt" v-b-modal.modal-map v-on:click="loadMap"></i></span>
                         <p data-error="address" class="msgError d-none">*msgError</p>
                     </div>
                      <div class="form-group botonera">
@@ -92,6 +92,13 @@
             </form>
         </div>
 
+        <b-modal id="modal-map" centered hide-footer hide-header>
+            <div style="width: 100%;">
+                <input id="pac-input" autocomplete="off" class="form-control controls d-none" type="text" placeholder="">
+                <div style="width: 100%; height: 400px; background: #eee;" id="GMaps"></div>
+            </div>
+        </b-modal>
+
         <b-modal :modal-class="myclass" centered  id="my-modal" ref="my-modal"  hide-footer hide-header>  
             <div class="d-block text-center">
                 <img :src="checkimg" alt="">
@@ -103,21 +110,19 @@
 </template>
 
 <script>
-    import Vue from "vue";
+    import GoogleMapsApiLoader from "google-maps-api-loader";
+    // import Vue from "vue";
     import funciones from "../funciones.js";
     import checkimg from "../assets/img/icons/check.svg";
     import image from "../assets/img/logo.png";
-    import LoadScript from "vue-plugin-load-script";
+    // import LoadScript from "vue-plugin-load-script";
     var Jquery = require("jquery");
-
-    Vue.use(LoadScript);
-    Vue.loadScript("https://maps.google.com/maps/api/js?key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho&libraries=places&region=es&sensor=false&amp;language=es");
-    Vue.loadScript("https://code.jquery.com/jquery-3.4.1.js");
 
     export default {
         name: 'register',
         data: function () {
             return {
+                apiKey: "AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho",
                 form: "",
                 btnModal: "",
                 image: image,
@@ -145,19 +150,27 @@
                 autocomplete: "",
                 geocoder: "",
                 ubiLat: "",
-                ubiLong: "",
+                ubiLng: "",
                 fechaPermitida: "",
                 dateActualValue: "",
                 password: "",
                 cArea: "",
                 confPass: "",
+                google: "",
+                map: "",
+                marke: "",
             }
         },
         async created() {
             var ubicacion = await this.geo();
             this.ubiLat = ubicacion.lat;
-            this.ubiLong = ubicacion.lon;
+            this.ubiLng = ubicacion.lon;
             this.getStreetAddressFrom(ubicacion.lat, ubicacion.lon);
+
+            this.$store.state.coords = {
+                lat: ubicacion.lat,
+                lng: ubicacion.lon
+            }
         },
         methods: {
             showPassword() {
@@ -239,7 +252,7 @@
                     } else {
                         if (this.formEmail.value != "" && this.formName.value != "" && this.formLastname.value != "" && this.formDni.value != "" && this.formDni.value.length >= 8) {
                             this.section = 2;
-                            this.getStreetAddressFrom(this.ubiLat, this.ubiLong);
+                            this.getStreetAddressFrom(this.ubiLat, this.ubiLng);
                         }
                     }
                 }
@@ -414,6 +427,135 @@
                     }
                 );
             },
+            initMap() {
+                console.log(this.$store.getters);
+                this.myMap = document.querySelector("#GMaps");
+                this.map = new this.google.maps.Map(this.myMap, {
+                    center: {
+                        lat: this.$store.getters.coords.lat,
+                        lng: this.$store.getters.coords.lng
+                    },
+                    zoom: 16,
+                    mapTypeId: 'roadmap'
+                });
+
+                this.marker = new this.google.maps.Marker({
+                    position: {
+                        lat: this.$store.getters.coords.lat,
+                        lng: this.$store.getters.coords.lng
+                    },
+                    map: this.map
+                });
+            }, 
+            placeAddress() {
+                var e = document.getElementById('address');
+                var geocoder = new this.google.maps.Geocoder();
+                var autocomplete = new this.google.maps.places.SearchBox(e);
+
+                geocoder.geocode({"address": e.value}, function(results, status) {
+                    if (status === "OK") {
+                        results[0].address_components.forEach(_country => {
+                            // console.log(_country);
+                            var formCountry = document.querySelector("#country");
+                            if (formCountry) {
+                                formCountry.value = `${_country.long_name}`;
+                            }
+
+                            if (document.querySelector("#lat") && document.querySelector("#lng")) {
+                                document.querySelector("#lat").value = results[0].geometry.location.lat();
+                                document.querySelector("#lng").value = results[0].geometry.location.lng();
+                                this.loadCoords(results[0].geometry.location.lat(), results[0].geometry.location.lng());
+                            }
+
+                            Jquery.post("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + results[0].geometry.location.lat() +","+ results[0].geometry.location.lng() + "&key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho", function(data) {
+                                // console.log(data);
+                                var formCity = document.querySelector("#city");
+                                if (formCity) {
+                                    formCity.value = `${data.results[0].address_components[3].long_name}`;
+                                }
+                            });
+                        });
+                    }
+                });
+
+                autocomplete.addListener('place_changed', function() {
+                    var place = autocomplete.getPlace();
+                    e.addEventListener("onchange", () => {
+                        if (!place.geometry) {
+                            // document.querySelector("#origen").value = "Error";
+                            // console.log("error");
+                        } else {
+                            // document.querySelector("#origen").value = place.geometry.location.lat() +" "+ place.geometry.location.lng();
+                            geocoder.geocode({"address": e.value}, function(results, status) {
+                                if (status === "OK") {
+                                    results[0].address_components.forEach(_country => {
+                                        var formCountry = document.querySelector("#country");
+                                        if (formCountry) {
+                                            formCountry.value = `${_country.long_name}`;
+                                        }
+                                    });
+                                }
+                            });
+
+                            if (document.querySelector("#lat") && document.querySelector("#lng")) {
+                                document.querySelector("#lat").value = place.geometry.location.lat();
+                                document.querySelector("#lng").value = place.geometry.location.lng();
+                                this.loadCoords(place.geometry.location.lat(), place.geometry.location.lng());
+                            }
+
+                            Jquery.post("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + place.geometry.location.lat() + "," + place.geometry.location.lng() + "&key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho", function(data) {
+                                // console.log(data);
+                                var formCity = document.querySelector("#city");
+                                if (formCity) {
+                                    formCity.value = `${data.results[0].address_components[3].long_name}`;
+                                }
+                            });
+                        }
+                    });
+                    if (!place.geometry) {
+                        // document.querySelector("#origen").value = "Error";
+                        // console.log("error");
+                    } else {
+                        // document.querySelector("#origen").value = place.geometry.location.lat() +" "+ place.geometry.location.lng();
+                        geocoder.geocode({"address": e.value}, function(results, status) {
+                            if (status === "OK") {
+                                results[0].address_components.forEach(_country => {
+                                    var formCountry = document.querySelector("#country");
+                                    if (formCountry) {
+                                        formCountry.value = `${_country.long_name}`;
+                                    }
+                                });
+                            }
+                        });
+                        
+                        if (document.querySelector("#lat") && document.querySelector("#lng")) {
+                            document.querySelector("#lat").value = place.geometry.location.lat();
+                            document.querySelector("#lng").value = place.geometry.location.lng();
+                            this.loadCoords(place.geometry.location.lat(), place.geometry.location.lng());
+                        }
+
+                        Jquery.post("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + place.geometry.location.lat() + "," + place.geometry.location.lng() + "&key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho", function(data) {
+                            // console.log(data);
+                            var formCity = document.querySelector("#city");
+                            if (formCity) {
+                                formCity.value = `${data.results[0].address_components[3].long_name}`;
+                            }
+                        });
+                    }
+                });
+            },
+            loadCoords(lat, lng) {
+                this.$store.state.coords = {
+                    lat: lat,
+                    lng: lng
+                }
+            },
+            loadMap() {
+                setTimeout(() => {
+                    this.initMap();
+                    console.log("ready");
+                }, 950);
+            },
             async geo() {
                 return new Promise((resolve, reject) => {
                     navigator.geolocation.getCurrentPosition(
@@ -456,8 +598,12 @@
                 });
             }
         },
-        mounted() {
-            console.log("");
+        async mounted() {
+            const googleMapApi = await GoogleMapsApiLoader({
+                apiKey: this.apiKey,
+                libraries: ['places']
+            });
+            this.google = googleMapApi;
         }
     }
 </script>
@@ -631,10 +777,86 @@
 </style>
 
 <style lang="css">
-    #GmapMark .modal.show .modal-dialog {
-        max-width: 100vw !important;
+    #modal-map .modal-dialog {
+        width: 80vw !important;
+        min-width: 80vw !important;
     }
-    #GmapMark .modal.show .modal-dialog .modal-content {
-        height: 70vh !important;
+
+    #description {
+        font-family: Roboto;
+        font-size: 15px;
+        font-weight: 300;
+    }
+
+    #infowindow-content .title {
+        font-weight: bold;
+    }
+
+    #infowindow-content {
+        display: none;
+    }
+
+    #map #infowindow-content {
+        display: inline;
+    }
+
+    .pac-card {
+        margin: 10px 10px 0 0;
+        border-radius: 2px 0 0 2px;
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        outline: none;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        background-color: #fff;
+        font-family: Roboto;
+    }
+
+    #pac-container {
+        padding-bottom: 12px;
+        margin-right: 12px;
+    }
+
+    .pac-controls {
+        display: inline-block;
+        padding: 5px 11px;
+    }
+
+    .pac-controls label {
+        font-family: Roboto;
+        font-size: 13px;
+        font-weight: 300;
+    }
+
+    #pac-input {
+        position: absolute;
+        z-index: 100;
+        left: .75rem;
+        bottom: 1.45rem;
+        background-color: #fff;
+        font-family: Roboto;
+        font-size: 15px;
+        font-weight: 300;
+        margin-left: 12px;
+        padding: 0 11px 0 13px;
+        text-overflow: ellipsis;
+        outline: none !important;
+        width: 400px;
+        box-shadow: none !important;
+    }
+
+    #pac-input:focus {
+        border-color: #4d90fe;
+    }
+
+    #title {
+        color: #fff;
+        background-color: #4d90fe;
+        font-size: 25px;
+        font-weight: 500;
+        padding: 6px 12px;
+    }
+
+    #target {
+        width: 345px;
     }
 </style>

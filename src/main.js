@@ -21,7 +21,7 @@ window.api = api;
 
 Vue.use(BootstrapVue);
 
-Vue.config.productionTip = false;
+Vue.config.productionTip = true;
 Vue.use(Vuex);
 
 new Vue({

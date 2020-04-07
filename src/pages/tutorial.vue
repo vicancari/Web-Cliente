@@ -20,7 +20,7 @@
                     </transition>
                     <transition name="fade" v-if="count == 4" >
                         <div class="boxText" v-bind:class="{ 'text-red': count = 4 }">
-                            <i class="fas fa-map-marker-alt iconMarket" v-b-modal.modal-map></i>
+                            <i class="fas fa-map-marker-alt iconMarket" @click="loadMap" v-b-modal.modal-map></i>
                             <p>Introduce tu ubicación para que descubras, restaurantes y establecimientos de la familia Raus cerca de ti</p>
                         </div>
                     </transition>
@@ -41,22 +41,23 @@
         </section>
         <router-link style="display: none;" id="nextLink2" to="/home"></router-link>
         <b-modal id="modal-map" centered hide-footer hide-header>
-            <div style="width: 100%">
-                <div style="width: 100%; height: 350px; background: #eee;" id="GMaps" @click="loadMap"></div>
+            <div style="width: 100%;">
+                <input id="pac-input" autocomplete="off" class="form-control controls d-none" type="text" placeholder="">
+                <div style="width: 100%; height: 400px; background: #eee;" id="GMaps"></div>
             </div>
-           <router-link to="/home"><button class="btn btnAceptar">Aceptar</button></router-link>
         </b-modal>
     </div>
 </template>
 
 <script>
-    import Vue from "vue";
+    import GoogleMapsApiLoader from "google-maps-api-loader";
+    // import Vue from "vue";
     import Arrow from '../assets/img/arrow-next.png';
     import checkimg from "../assets/img/icons/check.svg";
-    import LoadScript from "vue-plugin-load-script";
+    // import LoadScript from "vue-plugin-load-script";
     
-    Vue.use(LoadScript);
-    Vue.loadScript("https://maps.google.com/maps/api/js?key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho&libraries=places&region=es&sensor=false&amp;language=es");
+    // Vue.use(LoadScript);
+    // Vue.loadScript("https://maps.google.com/maps/api/js?key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho&libraries=places&region=es&sensor=false&amp;language=es");
 
     export default {
         name: 'tutorial',
@@ -65,7 +66,8 @@
                 arrow: Arrow,
                 count: 1,
                 direction: false,
-                checkimg: checkimg
+                checkimg: checkimg,
+                google: "",
             }
         },
         methods: {
@@ -74,24 +76,57 @@
                 if (this.count >= 4) {
                     this.count = 4;
                     this.direction = true;
+                    this.$router.push("/home");
                 }
             },
+            initMap() {
+                var geocoder = new this.google.maps.Geocoder();
+                console.log(this.$store.getters.user.address);
+                geocoder.geocode({"address": this.$store.getters.user.address}, function(results, status) {
+                    if (status === "OK") {
+                        results[0].address_components.forEach(_country => {
+                            console.log(_country);
+                            this.myMap = document.querySelector("#GMaps");
+                            this.map = new this.google.maps.Map(this.myMap, {
+                                center: {
+                                    lat: results[0].geometry.location.lat(),
+                                    lng: results[0].geometry.location.lng()
+                                },
+                                zoom: 16,
+                                mapTypeId: 'roadmap'
+                            });
+
+                            this.marker = new this.google.maps.Marker({
+                                position: {
+                                    lat: results[0].geometry.location.lat(),
+                                    lng: results[0].geometry.location.lng()
+                                },
+                                map: this.map
+                            });
+                        });
+                    }
+                });
+            },
             loadMap() {
-                if (document.querySelector("#GMaps")) {
-                    setTimeout(() => {
-                        document.querySelector("#GMaps").setAttribute("onclick", `return funciones.initGoogleMap(document.querySelector("#GMaps"), google, '${this.$store.getters.user.address}')`);
-                    }, 1000);
-                }
+                setTimeout(() => {
+                    this.initMap();
+                    console.log("ready");
+                }, 950);
             }
         },
-        mounted() {
-            console.log(this.$store.getters);
+        async mounted() {
+            const googleMapApi = await GoogleMapsApiLoader({
+                apiKey: "AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho",
+                libraries: ['places']
+            });
+            this.google = googleMapApi;
 
             if (this.$store.getters.tutorial === true) {
                 this.$store.state.tutorial = false;
                 return false;
             }
-        },
+            console.log(this.$store.getters);
+        }
     }
 </script>
 
