@@ -47,6 +47,11 @@
                         <p data-error="city" class="msgError d-none">*msgError</p>
                     </div>
                     <div class="form-group">
+                        <input type="text" id="code-postal" onkeypress="return funciones.campoNumber(event);" class="form-control" required>
+                        <label class="form-control-placeholder" for="code-postal">Código postal</label>
+                        <p data-error="code-postal" class="msgError d-none">*msgError</p>
+                    </div>
+                    <div class="form-group">
                         <input type="text" id="address" v-on:keyup="placeAddress" class="form-control" required>
                         <label class="form-control-placeholder" for="address">Direccion</label>
                         <span style="outline: none; cursor: pointer;" class="mapMarket"><i class="fas fa-map-marker-alt" v-b-modal.modal-map v-on:click="loadMap"></i></span>
@@ -57,11 +62,6 @@
                     </div>
                 </div>
                 <div class="form1" v-if="section == 3">
-                    <div class="form-group">
-                        <input type="text" id="code-postal" onkeypress="return funciones.campoNumber(event);" class="form-control" required>
-                        <label class="form-control-placeholder" for="code-postal">Código postal</label>
-                        <p data-error="code-postal" class="msgError d-none">*msgError</p>
-                    </div>
                     <div class="form-group">
                         <input type="number" id="telephone" onkeypress="return funciones.campoNumber(event);" class="form-control" required>
                         <label class="form-control-placeholder" for="telephone">Teléfono</label>
@@ -110,6 +110,7 @@
 </template>
 
 <script>
+    import config from "../config.js";
     import GoogleMapsApiLoader from "google-maps-api-loader";
     // import Vue from "vue";
     import funciones from "../funciones.js";
@@ -125,8 +126,8 @@
                 apiKey: "AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho",
                 form: "",
                 btnModal: "",
-                image: image,
-                checkimg: checkimg,
+                image: config.rutaWeb(image),
+                checkimg: config.rutaWeb(checkimg),
                 showHide: true,
                 type: "password",
                 icon: "fas fa-eye",

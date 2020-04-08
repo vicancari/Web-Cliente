@@ -404,6 +404,7 @@
 </template>
 
 <script>
+    import config from "../config.js";
     /* Components */
     import carousel from 'vue-owl-carousel'
     import Navbar from '../components/navbar';
@@ -430,13 +431,13 @@
         },
         data: function () {
             return {
-                searchImg: searchImg,
-                shared: shared,
-                arrowPrev: arrowPrev,
-                arrowNext: arrowNext, 
-                imgPin: imgPin,
-                star: star,
-                chevRight: chevRight,
+                searchImg: config.rutaWeb(searchImg),
+                shared: config.rutaWeb(shared),
+                arrowPrev: config.rutaWeb(arrowPrev),
+                arrowNext: config.rutaWeb(arrowNext), 
+                imgPin: config.rutaWeb(imgPin),
+                star: config.rutaWeb(star),
+                chevRight: config.rutaWeb(chevRight),
                 slide: 0,
                 sliding: null,
                 responsive : "{0:{items:1,nav:false},600:{items:3,nav:true}}",

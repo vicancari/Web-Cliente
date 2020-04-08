@@ -108,26 +108,25 @@
     </div>
 </template>
 <script>
-
-/* Images */
-import avatar from '../assets/img/avatar.png';
-import back from '../assets/img/icons/flechavolver.svg';
-import lapiz from '../assets/img/icons/lapizeditar.svg';
-import pin from '../assets/img/icons/pin-blue.png';
+    import config from "../config.js";
+    /* Images */
+    import avatar from '../assets/img/avatar.png';
+    import back from '../assets/img/icons/flechavolver.svg';
+    import lapiz from '../assets/img/icons/lapizeditar.svg';
+    import pin from '../assets/img/icons/pin-blue.png';
 
 
 export default {
     name: 'profile',
-    components: {
-    },
-  data: function () {
+    components: {},
+    data: function () {
         return {
             myclass: ['modal-profile'],
             modalEdit: ['modal-edit'],
-            avatar: avatar,
-            back: back,
-            lapiz: lapiz,
-            pin: pin,
+            avatar: config.rutaWeb(avatar),
+            back: config.rutaWeb(back),
+            lapiz: config.rutaWeb(lapiz),
+            pin: config.rutaWeb(pin),
             showInput: '',
             icon: "fas fa-eye",
             type: "password",
@@ -164,7 +163,7 @@ export default {
                 this.icon = "fas fa-eye-slash"
             }
         },
-         showPassword2() {
+        showPassword2() {
             if(this.type2 === "password") {
                 this.type2 = "text"
                 this.icon2 = "fas fa-eye"
@@ -173,7 +172,7 @@ export default {
                 this.icon2 = "fas fa-eye-slash"
             }
         },
-         showPassword3() {
+        showPassword3() {
             if(this.type3 === "password") {
                 this.type3 = "text"
                 this.icon3 = "fas fa-eye"
@@ -181,9 +180,8 @@ export default {
                 this.type3 = "password"
                 this.icon3 = "fas fa-eye-slash"
             }
-        },
+        }
     }
-   
 }
 </script>
 

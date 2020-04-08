@@ -122,31 +122,24 @@
 </template>
 
 <script>
+    import config from "../config.js";
+    /* Images */
+    import back from '../assets/img/icons/flechavolver.svg';
+    import rausFamilia from '../assets/img/icons/icono-raus-family.svg';
 
-
-/* Images */
-import back from '../assets/img/icons/flechavolver.svg';
-import rausFamilia from '../assets/img/icons/icono-raus-family.svg';
-
-
-
-export default {
-    name: 'saldo-familia',
-    components: {
-    },
-  data: function () {
-        return {
-            myclass: ['modal-alert'],
-            saldoFamilia: ['modal-saldo-familia'],
-            back: back,
-            rausFamilia:rausFamilia
-        }
-    },
-    methods: {
-    
+    export default {
+        name: 'saldo-familia',
+        components: {},
+        data: function () {
+            return {
+                myclass: ['modal-alert'],
+                saldoFamilia: ['modal-saldo-familia'],
+                back: config.rutaWeb(back),
+                rausFamilia: config.rutaWeb(rausFamilia)
+            }
+        },
+        methods: {}
     }
-   
-}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

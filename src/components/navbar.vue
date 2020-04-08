@@ -45,64 +45,56 @@
 </template>
 
 <script>
-/* IMG */
-import image from "../assets/img/logo.png";
-import notification from "../assets/img/notification.png";
-import message from "../assets/img/message.png";
-import timeline from "../assets/img/timeline.png";
-import raus from "../assets/img/raus.png";
-import caretRight from "../assets/img/caret-right.png";
-/* Components */
-import Menu from '../modals/menu';
-import Send from '../modals/send';
-import modalBeneficios from '../modals/modal-beneficios';
-import modalBIncentivos from '../modals/modal-incentivos';
-import modalPropio from '../modals/modal-propio';
-import modalFavoritos from '../modals/modal-favoritos';
-import Recargar from '../modals/recargar';
-import saldoFamilia from '../modals/saldo-familia';
-import Profile from '../modals/profile';
-import Historial from '../modals/historial';
-import Configuracion from '../modals/configuracion';
-import Explorar from '../modals/explorar';
+    import config from "../config.js";
+    /* IMG */
+    import image from "../assets/img/logo.png";
+    import notification from "../assets/img/notification.png";
+    import message from "../assets/img/message.png";
+    import timeline from "../assets/img/timeline.png";
+    import raus from "../assets/img/raus.png";
+    import caretRight from "../assets/img/caret-right.png";
+    /* Components */
+    import Menu from '../modals/menu';
+    import Send from '../modals/send';
+    import modalBeneficios from '../modals/modal-beneficios';
+    import modalBIncentivos from '../modals/modal-incentivos';
+    import modalPropio from '../modals/modal-propio';
+    import modalFavoritos from '../modals/modal-favoritos';
+    import Recargar from '../modals/recargar';
+    import saldoFamilia from '../modals/saldo-familia';
+    import Profile from '../modals/profile';
+    import Historial from '../modals/historial';
+    import Configuracion from '../modals/configuracion';
+    import Explorar from '../modals/explorar';
 
-
-
-
-
-
-export default {
-    
-  name: 'navbar',
-  data: function () {
-        return {
-            image: image,
-            notification: notification,
-            message: message,
-            raus: raus,
-            timeline: timeline,
-            caretRight: caretRight
-        }
-    },
-    components: {
-        Menu,
-        Send,
-        modalBeneficios,
-        modalBIncentivos,
-        modalPropio,
-        modalFavoritos,
-        Recargar,
-        saldoFamilia,
-        Profile,
-        Historial,
-        Configuracion,
-        Explorar
-    },
-    methods: {
-        
+    export default {
+        name: 'navbar',
+        data: function () {
+            return {
+                image: config.rutaWeb(image),
+                notification: config.rutaWeb(notification),
+                message: config.rutaWeb(message),
+                raus: config.rutaWeb(raus),
+                timeline: config.rutaWeb(timeline),
+                caretRight: config.rutaWeb(caretRight)
+            }
+        },
+        components: {
+            Menu,
+            Send,
+            modalBeneficios,
+            modalBIncentivos,
+            modalPropio,
+            modalFavoritos,
+            Recargar,
+            saldoFamilia,
+            Profile,
+            Historial,
+            Configuracion,
+            Explorar
+        },
+        methods: {}
     }
-   
-}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

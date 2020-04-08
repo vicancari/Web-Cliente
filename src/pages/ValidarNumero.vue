@@ -33,6 +33,7 @@
 </template>
 
 <script>
+    import config from "../config.js";
     // import funciones from "../funciones.js";
     import checkimg from "../assets/img/icons/check.svg";
     import image from "../assets/img/logo.png";
@@ -44,8 +45,8 @@
             return {
                 form: "",
                 btnModal: "",
-                image: image,
-                checkimg: checkimg,
+                image: config.rutaWeb(image),
+                checkimg: config.rutaWeb(checkimg),
                 showHide: true,
                 type: "password",
                 icon: "fas fa-eye",

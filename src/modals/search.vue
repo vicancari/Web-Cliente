@@ -18,26 +18,21 @@
 </template>
 
 <script>
+    import config from "../config.js";
+    /* Images */
+    import searchImg from '../assets/img/search.png';
 
-
-/* Images */
-import searchImg from '../assets/img/search.png';
-
-export default {
-    name: 'search',
-    components: {
-    },
-  data: function () {
-        return {
-            myclass: ['modal-search'],
-            searchImg: searchImg
-        }
-    },
-    methods: {
-    
+    export default {
+        name: 'search',
+        components: {},
+        data: function () {
+            return {
+                myclass: ['modal-search'],
+                searchImg: config.rutaWeb(searchImg)
+            }
+        },
+        methods: {}
     }
-   
-}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

@@ -20,24 +20,16 @@
 </template>
 
 <script>
-
-
-/* Images */
-
-export default {
-    name: 'modal-beneficios',
-    components: {
-    },
-  data: function () {
-        return {
-            myclass: ['modal-beneficios'],
-        }
-    },
-    methods: {
-    
+    export default {
+        name: 'modal-beneficios',
+        components: {},
+        data: function () {
+            return {
+                myclass: ['modal-beneficios'],
+            }
+        },
+        methods: {}
     }
-   
-}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

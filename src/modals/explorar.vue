@@ -20,29 +20,23 @@
 </template>
 
 <script>
+    import config from "../config.js";
+    /* Images */
+    import back from '../assets/img/icons/flechavolver.svg';
+    import explorar from '../assets/img/timeline.png';
 
-
-/* Images */
-import back from '../assets/img/icons/flechavolver.svg';
-import explorar from '../assets/img/timeline.png';
-
-
-export default {
-    name: 'explorar',
-    components: {
-    },
-  data: function () {
-        return {
-            myclass: ['modal-explorar'],
-            back: back,
-            explorar: explorar
-        }
-    },
-    methods: {
-    
+    export default {
+        name: 'explorar',
+        components: {},
+        data: function () {
+            return {
+                myclass: ['modal-explorar'],
+                back: config.rutaWeb(back),
+                explorar: config.rutaWeb(explorar)
+            }
+        },
+        methods: {}
     }
-   
-}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

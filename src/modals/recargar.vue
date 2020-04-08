@@ -82,31 +82,27 @@
     </div>
 </template>
 <script>
+    import config from "../config.js";
+    /* Images */
+    import agregar from '../assets/img/icons/menu/agregarazul.svg';
+    import close from '../assets/img/icons/close.svg';
+    import tarjeta from '../assets/img/icons/iconotarjetag.svg';
 
-/* Images */
-import agregar from '../assets/img/icons/menu/agregarazul.svg';
-import close from '../assets/img/icons/close.svg';
-import tarjeta from '../assets/img/icons/iconotarjetag.svg';
-
-export default {
-    name: 'recargar',
-    components: {
-    },
-  data: function () {
-        return {
-            myclass: ['modal-recargar'],
-            agregar: agregar,
-            tarjeta: tarjeta,
-            close: close,
-            active: '',
-            formShow: false
-        }
-    },
-    methods: {
-    
+    export default {
+        name: 'recargar',
+        components: {},
+        data: function () {
+            return {
+                myclass: ['modal-recargar'],
+                agregar: config.rutaWeb(agregar),
+                tarjeta: config.rutaWeb(tarjeta),
+                close: config.rutaWeb(close),
+                active: '',
+                formShow: false
+            }
+        },
+        methods: {} 
     }
-   
-}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

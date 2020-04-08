@@ -58,29 +58,25 @@
 </template>
 
 <script>
+    import config from "../config.js";
+    /* Images */
+    import back from '../assets/img/icons/flechavolver.svg';
+    import settings from '../assets/img/icons/menu/configuracionazul.svg';
+    import arrow from '../assets/img/arrow-down.png';
 
-/* Images */
-import back from '../assets/img/icons/flechavolver.svg';
-import config from '../assets/img/icons/menu/configuracionazul.svg';
-import arrow from '../assets/img/arrow-down.png';
-
-export default {
-    name: 'configuracion',
-    components: {
-    },
-  data: function () {
-        return {
-            myclass: ['modal-configuracion'],
-            back: back,
-            config: config,
-            arrow: arrow
-        }
-    },
-    methods: {
-    
+    export default {
+        name: 'configuracion',
+        components: {},
+        data: function () {
+            return {
+                myclass: ['modal-configuracion'],
+                back: config.rutaWeb(back),
+                config: config.rutaWeb(settings),
+                arrow: config.rutaWeb(arrow)
+            }
+        },
+        methods: {}
     }
-   
-}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

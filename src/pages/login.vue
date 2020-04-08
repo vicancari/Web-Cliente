@@ -43,12 +43,10 @@
 </template>
 
 <script>
-    import image from "../assets/img/logo.png";
-    import Vue from "vue";
+    import config from "../config.js";
+    import image from  "../assets/img/logo.png";
     import * as firebase from "firebase";
     
-    // import funciones from "../funciones.js";
-    import LoadScript from "vue-plugin-load-script";
     var Jquery = require("jquery");
 
     const configOptions = {
@@ -63,15 +61,11 @@
     };
     firebase.initializeApp(configOptions);
 
-    Vue.use(LoadScript);
-    Vue.loadScript("https://maps.google.com/maps/api/js?key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho&libraries=places&region=es&sensor=false&amp;language=es");
-    Vue.loadScript("https://code.jquery.com/jquery-3.4.1.js");
-
     export default {
         name: 'login',
         data: function () {
             return {
-                image: image,
+                image: config.rutaWeb(image),
                 showHide: true,
                 type: "password",
                 icon: "fas fa-eye",
@@ -94,7 +88,7 @@
             signIn(id) {
                 Jquery.ajax({
                     type: "POST",
-                    url: "http://localhost:9990/api/auth/signIn/",
+                    url: config.rutaApi("/auth/signIn/"),
                     data: {
                         uid: id
                     },
@@ -113,7 +107,7 @@
             getInfoClient(id) {
                 Jquery.ajax({
                     type: "POST",
-                    url: "http://localhost:9990/api/cliente/info/",
+                    url: config.rutaApi("/cliente/info/"),
                     data: {
                         uid: id
                     },
@@ -136,7 +130,7 @@
                 if (this.formUsername.value.substr(0, 1) === "+") {
                     Jquery.ajax({
                         type: "GET",
-                        url: "http://localhost:9990/api/cliente/list/",
+                        url: config.rutaApi("/cliente/list/"),
                         dataType: "json",
                         beforeSend: function () {
                             console.log("buscando clintes");
@@ -186,7 +180,7 @@
                                 this.$store.getters.isLoggedIn === true && this.$store.getters.tutorial === true
                                     ? this.$router.push("/tutorial")
                                     : this.$router.push("/home");
-                            }, 1000);
+                            }, 2000);
                         }).catch((error) => {
                             document.querySelector("[data-error='error']").classList.remove("d-none");
                             document.querySelector("[data-error='error']").innerText = "Contraseña o Usuario incorrectos por favor verifique.";

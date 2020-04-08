@@ -59,32 +59,26 @@
 </template>
 
 <script>
+    import config from "../config.js";
+    import check from '../assets/img/icons/check-blanco.svg';
 
-import check from '../assets/img/icons/check-blanco.svg';
-
-/* Images */
-
-export default {
-    name: 'send',
-    components: {
-    },
-  data: function () {
-        return {
-            myclass: ['modal-send'],
-            payment: ['modal-payment'],
-            check: check,
-        }
-    },
-    methods: {
-        Pay(){
-            this.$refs['modal-send'].hide();
-            this.$refs['modal-payment'].show();
-
-            
+    export default {
+        name: 'send',
+        components: {},
+        data: function () {
+            return {
+                myclass: ['modal-send'],
+                payment: ['modal-payment'],
+                check: config.rutaWeb(check),
+            }
+        },
+        methods: {
+            Pay(){
+                this.$refs['modal-send'].hide();
+                this.$refs['modal-payment'].show();            
+            }
         }
     }
-   
-}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

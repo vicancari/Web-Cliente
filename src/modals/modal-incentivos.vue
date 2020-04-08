@@ -26,17 +26,13 @@
 
 export default {
     name: 'modal-incentivos',
-    components: {
-    },
-  data: function () {
+    components: {},
+    data: function () {
         return {
             myclass: ['modal-beneficios'],
         }
     },
-    methods: {
-    
-    }
-   
+    methods: {}
 }
 </script>
 

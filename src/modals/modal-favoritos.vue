@@ -35,31 +35,24 @@
 </template>
 
 <script>
-import heartred from '../assets/img/icons/heartred.svg';
-import arrowNext from '../assets/img/arrow-next.png';
-import back from '../assets/img/icons/flechavolver.svg';
+    import config from "../config";
+    import heartred from '../assets/img/icons/heartred.svg';
+    import arrowNext from '../assets/img/arrow-next.png';
+    import back from '../assets/img/icons/flechavolver.svg';
 
-
-
-/* Images */
-
-export default {
-    name: 'modal-favoritos',
-    components: {
-    },
-  data: function () {
-        return {
-            myclass: ['modal-favoritos'],
-            back: back,
-            arrowNext: arrowNext,
-            heartred: heartred
-        }
-    },
-    methods: {
-    
+    export default {
+        name: 'modal-favoritos',
+        components: {},
+        data: function () {
+            return {
+                myclass: ['modal-favoritos'],
+                back: config.rutaWeb(back),
+                arrowNext: config.rutaWeb(arrowNext),
+                heartred: config.rutaWeb(heartred)
+            }
+        },
+        methods: {}
     }
-   
-}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

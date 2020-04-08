@@ -50,6 +50,7 @@
 </template>
 
 <script>
+    import config from "../config.js";
     import GoogleMapsApiLoader from "google-maps-api-loader";
     // import Vue from "vue";
     import Arrow from '../assets/img/arrow-next.png';
@@ -66,7 +67,7 @@
                 arrow: Arrow,
                 count: 1,
                 direction: false,
-                checkimg: checkimg,
+                checkimg: config.rutaWeb(checkimg),
                 google: "",
             }
         },
@@ -76,7 +77,12 @@
                 if (this.count >= 4) {
                     this.count = 4;
                     this.direction = true;
-                    this.$router.push("/home");
+                    if (this.$store.getters.isLoggedIn === true) {
+                        this.$router.push("/home");
+                    } else {
+                        this.$store.state.tutorial = true;
+                        this.$router.push("/");
+                    }
                 }
             },
             initMap() {

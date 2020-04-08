@@ -71,48 +71,46 @@
 </template>
 
 <script>
+    import config from "../config.js";
+    /* Images */
+    import hearthfavorite from '../assets/img/icons/menu/heart-favorite.png';
+    import point from '../assets/img/icons/menu/point.png';
+    import heartred from '../assets/img/icons/heartred.svg';
+    import recharge from '../assets/img/icons/menu/agregarazul.svg';
+    import rausFamilia from '../assets/img/icons/icono-raus-family.svg';
+    import perfil from '../assets/img/icons/menu/perfilazul.svg';
+    import history from '../assets/img/icons/menu/historialazul.svg';
+    import settings from '../assets/img/icons/menu/configuracionazul.svg';
+    import salirazul from '../assets/img/icons/menu/salirazul.svg';
+    import back from '../assets/img/icons/flechavolver.svg';
 
-/* Images */
-import hearthfavorite from '../assets/img/icons/menu/heart-favorite.png';
-import point from '../assets/img/icons/menu/point.png';
-import heartred from '../assets/img/icons/heartred.svg';
-import recharge from '../assets/img/icons/menu/agregarazul.svg';
-import rausFamilia from '../assets/img/icons/icono-raus-family.svg';
-import perfil from '../assets/img/icons/menu/perfilazul.svg';
-import history from '../assets/img/icons/menu/historialazul.svg';
-import config from '../assets/img/icons/menu/configuracionazul.svg';
-import salirazul from '../assets/img/icons/menu/salirazul.svg';
-import back from '../assets/img/icons/flechavolver.svg';
-
-export default {
-    name: 'menu',
-    components: {
-    },
-    data: function () {
-        return {
-           myclass: ['modal-menu'],
-           hearthfavorite: hearthfavorite,
-           point: point,
-           heartred: heartred,
-           recharge: recharge,
-           rausFamilia: rausFamilia,
-           perfil: perfil,
-           history: history,
-           config: config,
-           salirazul: salirazul,
-           back: back
-
-        }
-    },
-    methods: {
-        logout() {
-            this.$store.state.token = "";
-            this.$store.state.isLoggedIn = false;
-            this.$store.state.user = {};
-            this.$router.push("/");
+    export default {
+        name: 'menu',
+        components: {},
+        data: function () {
+            return {
+                myclass: ['modal-menu'],
+                hearthfavorite: config.rutaWeb(hearthfavorite),
+                point: config.rutaWeb(point),
+                heartred: config.rutaWeb(heartred),
+                recharge: config.rutaWeb(recharge),
+                rausFamilia: config.rutaWeb(rausFamilia),
+                perfil: config.rutaWeb(perfil),
+                history: config.rutaWeb(history),
+                config: config.rutaWeb(settings),
+                salirazul: config.rutaWeb(salirazul),
+                back: config.rutaWeb(back)
+            }
+        },
+        methods: {
+            logout() {
+                this.$store.state.token = "";
+                this.$store.state.isLoggedIn = false;
+                this.$store.state.user = {};
+                this.$router.push("/");
+            }
         }
     }
-}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

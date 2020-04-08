@@ -186,39 +186,28 @@
 </template>
 
 <script>
+    import config from "../config.js";
+    import reloj from '../assets/img/icons/reloj.svg';
+    import back from '../assets/img/icons/flechavolver.svg';
+    import arrow from '../assets/img/arrow-down.png';
+    import compartir from '../assets/img/icons/compartir.svg';
+    import descargar from '../assets/img/icons/icondescargar.svg';
 
-import reloj from '../assets/img/icons/reloj.svg';
-import back from '../assets/img/icons/flechavolver.svg';
-import arrow from '../assets/img/arrow-down.png';
-
-import compartir from '../assets/img/icons/compartir.svg';
-import descargar from '../assets/img/icons/icondescargar.svg';
-
-
-
-
-
-/* Images */
-
-export default {
-    name: 'historial',
-    components: {
-    },
-  data: function () {
-        return {
-            myclass: ['modal-historial'],
-            reloj: reloj,
-            back: back,
-            arrow: arrow,
-            compartir: compartir,
-            descargar: descargar
-        }
-    },
-    methods: {
-
+    export default {
+        name: 'historial',
+        components: {},
+        data: function () {
+            return {
+                myclass: ['modal-historial'],
+                reloj: config.rutaWeb(reloj),
+                back: config.rutaWeb(back),
+                arrow: config.rutaWeb(arrow),
+                compartir: config.rutaWeb(compartir),
+                descargar: config.rutaWeb(descargar)
+            }
+        },
+        methods: {}
     }
-   
-}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
