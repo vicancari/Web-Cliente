@@ -77,7 +77,7 @@
                 if (this.count >= 4) {
                     this.count = 4;
                     this.direction = true;
-                    if (this.$store.getters.isLoggedIn === true) {
+                    if (this.$store.getters.isLoggedIn === true || this.$store.getters.token != "" || this.$store.getters.token != null) {
                         this.$router.push("/home");
                     } else {
                         this.$store.state.tutorial = true;

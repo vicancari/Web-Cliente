@@ -1,10 +1,10 @@
-var MODE_ENV = 1; // 1 produccion - 2 developer
+var MODE_ENV = 2; // 1 produccion - 2 developer
 
 let config = {
     dominioApi_dev: "http://localhost:9990/api",
     dominioWeb_dev: "http://localhost:8080",
     dominioApi_prod: "https://myraus.com:9990/api",
-    dominioWeb_prod: "https://myraus.com/cliente",
+    dominioWeb_prod: "https://myraus.com/cliente/",
     idiomas: [
         {
             value: "aa",

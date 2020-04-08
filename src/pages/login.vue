@@ -88,7 +88,7 @@
             signIn(id) {
                 Jquery.ajax({
                     type: "POST",
-                    url: config.rutaApi("/auth/signIn/"),
+                    url: config.rutaApi("auth/signIn/"),
                     data: {
                         uid: id
                     },
@@ -107,7 +107,7 @@
             getInfoClient(id) {
                 Jquery.ajax({
                     type: "POST",
-                    url: config.rutaApi("/cliente/info/"),
+                    url: config.rutaApi("cliente/info/"),
                     data: {
                         uid: id
                     },
@@ -130,7 +130,7 @@
                 if (this.formUsername.value.substr(0, 1) === "+") {
                     Jquery.ajax({
                         type: "GET",
-                        url: config.rutaApi("/cliente/list/"),
+                        url: config.rutaApi("cliente/list/"),
                         dataType: "json",
                         beforeSend: function () {
                             console.log("buscando clintes");
@@ -170,9 +170,15 @@
                             setTimeout(() => {
                                 if (window.localStorage.getItem("token") != "") {
                                     this.$store.state.token = window.localStorage.getItem("token");
-                                    this.$store.state.isLoggedIn = true;
-                                    this.$store.state.user = JSON.parse(window.localStorage.getItem("user"));
-                                    window.localStorage.setItem("user", "");
+
+                                    if (this.$store.state.token != "" || this.$store.state.token != null) {
+                                        this.$store.state.isLoggedIn = true;
+                                        this.$store.state.user = JSON.parse(window.localStorage.getItem("user"));
+                                        window.localStorage.setItem("user", "");
+                                    } else {
+                                        console.log("Error: API no esta corriendo con certificado ssl.");
+                                        return false;
+                                    }
                                 }
 
                                 console.log(this.$store.getters);

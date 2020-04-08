@@ -391,7 +391,7 @@
                 var AnnoActual = date.getFullYear();
 
                 Jquery.post(
-                    'http://localhost:9990/api/cliente/registro/',
+                    config.rutaApi('cliente/registro/'),
                     {
                         email: this.formEmail.value,
                         phone: `+${funciones.codigoArea(this.formCountry.value)}${this.formTel.value}`,
@@ -411,7 +411,7 @@
                         // console.log(json);
                         if (json.next === "OK") {
                             setTimeout(() => {
-                                Jquery.post('http://localhost:9990/api/auth/Bynumber/', {name: `${json.name.toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();})}`, phone: `${json.phone}`}, function(resp) {
+                                Jquery.post(config.rutaApi('auth/Bynumber/'), {name: `${json.name.toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();})}`, phone: `${json.phone}`}, function(resp) {
                                     // console.log(resp);
                                     if (resp.disabled === false) {
                                         this.btnModal = document.querySelector(`#btn-modal`);
