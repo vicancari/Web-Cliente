@@ -1,4 +1,4 @@
-var $ = require("jquery");
+// var $ = require("jquery");
 
 export default {
     calcularDistancia(lat1, lon1, lat2, lon2) {
@@ -70,128 +70,6 @@ export default {
                 setTimeout(function() { ProgressP.style.display = "none"; ProgressC.style.width = '0%'; }, 500);
             }
         }
-    },
-    initGoogleMap(e, g, address) {
-        var map, marker;
-        var geocoder = new g.maps.Geocoder();
-
-        geocoder.geocode({"address": address}, function(results, status) {
-            if (status === "OK") {
-                results[0].address_components.forEach(_country => {
-                    console.log(_country);
-                    var coords = {
-                        lat: results[0].geometry.location.lat(),
-                        lng: results[0].geometry.location.lng()
-                    }
-
-                    map = new g.maps.Map(e, {
-                        center: coords,
-                        zoom: 3
-                    });
-
-                    marker = new g.maps.Marker({
-                        position: coords,
-                        map: map,
-                        title: address
-                    });
-                });
-            }
-        });
-
-        console.log(marker);
-    },
-    searchDirection(e, google, geoCode) {
-        var autocomplete = google;
-        var geocoder = geoCode;
-
-        geocoder.geocode({"address": e.value}, function(results, status) {
-            if (status === "OK") {
-                results[0].address_components.forEach(_country => {
-                    // console.log(_country);
-                    var formCountry = document.querySelector("#country");
-                    if (formCountry) {
-                        formCountry.value = `${_country.long_name}`;
-                    }
-
-                    if (document.querySelector("#lat") && document.querySelector("#lng")) {
-                        document.querySelector("#lat").value = results[0].geometry.location.lat();
-                        document.querySelector("#lng").value = results[0].geometry.location.lng();
-                    }
-
-                    $.post("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + results[0].geometry.location.lat() +","+ results[0].geometry.location.lng() + "&key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho", function(data) {
-                        // console.log(data);
-                        var formCity = document.querySelector("#city");
-                        if (formCity) {
-                            formCity.value = `${data.results[0].address_components[3].long_name}`;
-                        }
-                    });
-                });
-            }
-        });
-
-        autocomplete.addListener('place_changed', function() {
-            var place = autocomplete.getPlace();
-            e.addEventListener("onchange", () => {
-                if (!place.geometry) {
-                    // document.querySelector("#origen").value = "Error";
-                    // console.log("error");
-                } else {
-                    // document.querySelector("#origen").value = place.geometry.location.lat() +" "+ place.geometry.location.lng();
-                    geocoder.geocode({"address": e.value}, function(results, status) {
-                        if (status === "OK") {
-                            results[0].address_components.forEach(_country => {
-                                var formCountry = document.querySelector("#country");
-                                if (formCountry) {
-                                    formCountry.value = `${_country.long_name}`;
-                                }
-                            });
-                        }
-                    });
-
-                    if (document.querySelector("#lat") && document.querySelector("#lng")) {
-                        document.querySelector("#lat").value = place.geometry.location.lat();
-                        document.querySelector("#lng").value = place.geometry.location.lng();
-                    }
-
-                    $.post("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + place.geometry.location.lat() + "," + place.geometry.location.lng() + "&key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho", function(data) {
-                        // console.log(data);
-                        var formCity = document.querySelector("#city");
-                        if (formCity) {
-                            formCity.value = `${data.results[0].address_components[3].long_name}`;
-                        }
-                    });
-                }
-            });
-            if (!place.geometry) {
-                // document.querySelector("#origen").value = "Error";
-                // console.log("error");
-            } else {
-                // document.querySelector("#origen").value = place.geometry.location.lat() +" "+ place.geometry.location.lng();
-                geocoder.geocode({"address": e.value}, function(results, status) {
-                    if (status === "OK") {
-                        results[0].address_components.forEach(_country => {
-                            var formCountry = document.querySelector("#country");
-                            if (formCountry) {
-                                formCountry.value = `${_country.long_name}`;
-                            }
-                        });
-                    }
-                });
-                
-                if (document.querySelector("#lat") && document.querySelector("#lng")) {
-                    document.querySelector("#lat").value = place.geometry.location.lat();
-                    document.querySelector("#lng").value = place.geometry.location.lng();
-                }
-
-                $.post("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + place.geometry.location.lat() + "," + place.geometry.location.lng() + "&key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho", function(data) {
-                    // console.log(data);
-                    var formCity = document.querySelector("#city");
-                    if (formCity) {
-                        formCity.value = `${data.results[0].address_components[3].long_name}`;
-                    }
-                });
-            }
-        });
     },
     validar_clave(e) {
         if (e.value.length >= 8 && e.value.length <= 15) {		
@@ -2189,6 +2067,122 @@ export default {
             "_id": "BRA",
             "country_id": "30",
             "pais_name": "Brazil",
+            "phone_code": "55",
+            "departamento": [
+                {
+                "zone_id": "440",
+                "name": "Acre"
+                },
+                {
+                "zone_id": "441",
+                "name": "Alagoas"
+                },
+                {
+                "zone_id": "442",
+                "name": "Amapa"
+                },
+                {
+                "zone_id": "443",
+                "name": "Amazonas"
+                },
+                {
+                "zone_id": "444",
+                "name": "Bahia"
+                },
+                {
+                "zone_id": "445",
+                "name": "Ceara"
+                },
+                {
+                "zone_id": "446",
+                "name": "Distrito Federal"
+                },
+                {
+                "zone_id": "447",
+                "name": "Espirito Santo"
+                },
+                {
+                "zone_id": "448",
+                "name": "Goias"
+                },
+                {
+                "zone_id": "449",
+                "name": "Maranhao"
+                },
+                {
+                "zone_id": "450",
+                "name": "Mato Grosso"
+                },
+                {
+                "zone_id": "451",
+                "name": "Mato Grosso do Sul"
+                },
+                {
+                "zone_id": "452",
+                "name": "Minas Gerais"
+                },
+                {
+                "zone_id": "453",
+                "name": "Para"
+                },
+                {
+                "zone_id": "454",
+                "name": "Paraiba"
+                },
+                {
+                "zone_id": "455",
+                "name": "Parana"
+                },
+                {
+                "zone_id": "456",
+                "name": "Pernambuco"
+                },
+                {
+                "zone_id": "457",
+                "name": "Piaui"
+                },
+                {
+                "zone_id": "458",
+                "name": "Rio de Janeiro"
+                },
+                {
+                "zone_id": "459",
+                "name": "Rio Grande do Norte"
+                },
+                {
+                "zone_id": "460",
+                "name": "Rio Grande do Sul"
+                },
+                {
+                "zone_id": "461",
+                "name": "Rondonia"
+                },
+                {
+                "zone_id": "462",
+                "name": "Roraima"
+                },
+                {
+                "zone_id": "463",
+                "name": "Santa Catarina"
+                },
+                {
+                "zone_id": "464",
+                "name": "Sao Paulo"
+                },
+                {
+                "zone_id": "465",
+                "name": "Sergipe"
+                },
+                {
+                "zone_id": "466",
+                "name": "Tocantins"
+                }
+            ]
+            },
+            {
+            "_id": "BRA",
+            "country_id": "30",
+            "pais_name": "Brasil",
             "phone_code": "55",
             "departamento": [
                 {
