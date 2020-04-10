@@ -43,23 +43,10 @@
 </template>
 
 <script>
+    var Jquery = require("jquery");
     import config from "../config.js";
     import image from  "../assets/img/logo.png";
     import * as firebase from "firebase";
-    
-    var Jquery = require("jquery");
-
-    const configOptions = {
-        apiKey: "AIzaSyDMMmvx93kGW0ZiHpkbqFTopre63FHogzE",
-        authDomain: "raus-4de7b.firebaseapp.com",
-        databaseURL: "https://raus-4de7b.firebaseio.com",
-        projectId: "raus-4de7b",
-        storageBucket: "raus-4de7b.appspot.com",
-        messagingSenderId: "474517791609",
-        appId: "1:474517791609:web:81aff774436ec0c00d45a8",
-        measurementId: "G-8NV2FVKNJY"
-    };
-    firebase.initializeApp(configOptions);
 
     export default {
         name: 'login',
@@ -104,28 +91,14 @@
                     }
                 });
             },
-            getInfoClient(id) {
-                Jquery.ajax({
-                    type: "POST",
-                    url: config.rutaApi("cliente/info/"),
-                    data: {
-                        uid: id
-                    },
-                    dataType: "json",
-                    beforeSend: function () {
-                        console.log("Buscando cliente....");
-                    },
-                    success: function(data) {
-                        window.localStorage.setItem("user", JSON.stringify(data));
-                    },
-                    error: function(data) {
-                        console.log(data);
-                    }
-                });
-            },
             async login() {
+                this.$store.commit("loading");
                 this.formUsername = document.querySelector("#username");
                 this.formPassword = document.querySelector("#password");
+
+                setTimeout(() => {
+                    this.$store.commit("notLoading");
+                }, 2000);
 
                 if (this.formUsername.value.substr(0, 1) === "+") {
                     Jquery.ajax({
@@ -165,42 +138,39 @@
                             }
                             
                             this.signIn(res.user.uid);
-                            this.getInfoClient(res.user.uid);
 
                             setTimeout(() => {
                                 if (window.localStorage.getItem("token") != "") {
                                     this.$store.state.token = window.localStorage.getItem("token");
-
-                                    if (this.$store.state.token != "" || this.$store.state.token != null) {
-                                        this.$store.state.isLoggedIn = true;
-                                        this.$store.state.user = JSON.parse(window.localStorage.getItem("user"));
-                                        window.localStorage.setItem("user", "");
-                                    } else {
-                                        console.log("Error: API no esta corriendo con certificado ssl.");
-                                        return false;
-                                    }
+                                    this.$store.state.isLoggedIn = true;
+                                    this.$store.state.uid = res.user.uid;
                                 }
 
                                 console.log(this.$store.getters);
-                                
-                                this.$store.getters.isLoggedIn === true && this.$store.getters.tutorial === true
+                                this.$store.commit("done");
+                                this.$store.getters.isFirstTime === true
                                     ? this.$router.push("/tutorial")
                                     : this.$router.push("/home");
-                            }, 2000);
+                            }, 1000);
                         }).catch((error) => {
                             document.querySelector("[data-error='error']").classList.remove("d-none");
                             document.querySelector("[data-error='error']").innerText = "Contraseña o Usuario incorrectos por favor verifique.";
                             console.log(error);
+                            this.$store.commit("error");
                         });
                 }
             }
         },
-        beforeMount() {
-            this.$store.getters.isLoggedIn
-                ? this.$router.push("/home")
-                : this.$store.state.token = "", this.$store.state.isLoggedIn = false;
-        },
-        mounted() {
+        async mounted() {
+            if (this.$store.getters.isLoggedIn === true) {
+                this.$router.push("/home");
+            } else {
+                this.$store.state.isLoggedIn = false;
+                this.$store.state.token = "";
+                this.$store.state.uid = "";
+                this.$store.state.isFirstTime = this.$store.state.isFirstTime === false ? false : true;
+            }
+
             if (window.localStorage.getItem("remember") === "true"){
                 document.querySelector("#remember").checked = true;
                 document.querySelector("#username").value = window.localStorage.getItem("username");

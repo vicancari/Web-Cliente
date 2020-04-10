@@ -7,20 +7,45 @@ export default function(/* { ssrContext } */) {
     const Store = new Vuex.Store({
         state: {
             isLoggedIn: false,
-            status: "",
             token: "",
-            tutorial: true,
-            coords: {},
+            uid: "",
+            isFirstTime: true,
+            status: "",
             user: {}
         },
         getters: {
             isLoggedIn: state => state.isLoggedIn,
             token: state => state.token,
-            authStatus: state => state.status,
+            uid: state => state.uid,
+            isFirstTime: state => state.isFirstTime,
             status: state => state.status,
-            tutorial: state => state.tutorial,
-            coords: state => state.coords,
             user: state => state.user
+        },
+        mutations: {
+            notLoading(state) {
+                state.status = "";
+            },
+            loading(state) {
+                state.status = "loading";
+            },
+            error(state) {
+                state.status = "error";
+            },
+            done(state) {
+                state.status = "done";
+            },
+            logout(state) {
+                state.isLoogedIn = false;
+                state.token = "";
+                state.isFirstTime === false ? false : true;
+                state["user"] = {};
+            },
+            logout_in_isFirstTime(state) {
+                state.isLoogedIn = false;
+                state.token = "";
+                state.isFirstTime = true;
+                state["user"] = {};
+            }
         },
         plugins: [createPersistedState()]
     });

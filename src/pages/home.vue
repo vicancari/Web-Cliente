@@ -442,12 +442,24 @@
                 sliding: null,
                 responsive : "{0:{items:1,nav:false},600:{items:3,nav:true}}",
                 activeSection: 1,
-                listRestaurantes: {}
+                listRestaurantes: {},
             }
         },
         async beforeMount() {
-            this.listRestaurantes = await api.get(`restaurantes/list/`);
-            console.log(this.listRestaurantes);
+            if (this.$store.getters.isLoggedIn === true) {
+                this.$store.state.user = await api.post("cliente/info/", {uid: this.$store.getters.uid});
+                this.listRestaurantes = await api.get(`restaurantes/list/`);
+                console.log(this.listRestaurantes);
+                this.$store.commit("done");
+            }
+
+            if (this.$store.getters.isLoggedIn === false) {
+                this.$store.state.token = "";
+                this.$store.state.uid = "";
+                this.$store.state.user = {};
+                this.$store.commit("error");
+                this.$router.push("/");
+            }
         },
         methods: {
             onSlideStart() {
@@ -466,6 +478,7 @@
             }
         },
         mounted() {
+            this.$store.commit("loading");
             console.log(this.$store.getters);
             console.log(this.$store.getters.isLoggedIn);
         }

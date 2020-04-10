@@ -57,7 +57,7 @@
                     <img class="imgMenu" :src="history" alt="">
                     <p>Historial</p>
                 </button>
-                 <button class="btn btnMenu" @click="$bvModal.hide('menu-modal')" v-b-modal.modal-configuracion>
+                <button class="btn btnMenu" @click="$bvModal.hide('menu-modal')" v-b-modal.modal-configuracion>
                     <img class="imgMenu" :src="config" alt="">
                     <p>Config</p>
                 </button>
@@ -65,6 +65,7 @@
                     <img class="imgMenu" :src="salirazul" alt="">
                     <p>Salir</p>
                 </button>
+                <router-link to="/" id="nextLogout" style="display: none;"></router-link>
             </div>
         </b-modal>
     </div>
@@ -86,7 +87,6 @@
 
     export default {
         name: 'menu',
-        components: {},
         data: function () {
             return {
                 myclass: ['modal-menu'],
@@ -104,10 +104,12 @@
         },
         methods: {
             logout() {
-                this.$store.state.token = "";
-                this.$store.state.isLoggedIn = false;
-                this.$store.state.user = {};
-                this.$router.push("/");
+                if (this.$store.getters.isLoggedIn === true) {
+                    this.$store.state.isLoggedIn = false;
+                    this.$store.state.token = "";
+                    this.$store.state.user = {};
+                    this.$router.push("/");
+                }
             }
         }
     }

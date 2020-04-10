@@ -5,7 +5,7 @@
                <div class="d-flex saldo">
                    <img class="img-fluid logo" :src="image" alt="">
                    <p>Saldo:</p>
-                   <span>{{ this.$store.getters.user.accounts.propia.value }}€</span>
+                   <span>{{ this.$store.getters.user === "" || this.$store.getters.user === {} || this.$store.getters.user === null ? "0" : this.$store.getters.user.accounts.propia.value }}€</span>
                 </div> 
             </div>
             <div class="col-md-4 col-12 order">

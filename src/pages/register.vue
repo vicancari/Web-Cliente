@@ -104,7 +104,7 @@
                     <div class="form-group botonera">
                         <button type="button" id="btnRegistar" disabled class="btn btnRegister" @click="register">Entrar a raus</button>
                         <button type="button" style="display: none;" id="btn-modal" v-b-modal.my-modal></button>
-                        <router-link style="display: none;" id="nextLink" to="/validar-numero">next</router-link>
+                        <router-link style="display: none;" @click="okRegister" id="nextLink" to="/validar-numero">next</router-link>
                     </div>
                 </div>
                 <div class="d-none">
@@ -441,9 +441,11 @@
                 console.log(this.dataForm);
 
                 if (document.querySelector("#telephone").value != "" && document.querySelector("#password").value != "" && document.querySelector("#confPassword").value != "") {
-                    Jquery.post(
-                        config.rutaApi('cliente/registro/'),
-                        {
+                    this.$store.commit("loading");
+                    Jquery.ajax({
+                        type: "POST",
+                        url: config.rutaApi("cliente/registro/"),
+                        data: {
                             email: this.dataForm.email,
                             phone: this.dataForm.carea + this.dataForm.phone,
                             password: this.dataForm.cPass,
@@ -459,12 +461,16 @@
                             name: this.dataForm.name,
                             zipcode: this.dataForm.zipcode
                         },
-                        function(resp) {
-                            var json = resp;
-                            // console.log(json);
-                            if (json.next === "OK") {
+                        dataType: "json",
+                        beforeSend: function () {
+                            console.log("Registrando...");
+                        },
+                        success: function(data) {
+                            var d = JSON.parse(JSON.stringify(data));
+                            
+                            if (d.next === "OK") {
                                 setTimeout(() => {
-                                    Jquery.post(config.rutaApi('auth/Bynumber/'), {name: `${json.name.toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();})}`, phone: `${json.phone}`}, function(resp) {
+                                    Jquery.post(config.rutaApi('auth/Bynumber/'), {name: `${d.name.toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();})}`, phone: `${d.phone}`}, function(resp) {
                                         // console.log(resp);
                                         if (resp.disabled === false) {
                                             this.btnModal = document.querySelector(`#btn-modal`);
@@ -478,9 +484,16 @@
                                     });
                                 }, 500);
                             }
+                        },
+                        error: function(data) {
+                            console.log(data);
+                            this.$store.commit("error");
                         }
-                    );
+                    });
                 }
+            },
+            okRegister() {
+                this.$store.commit("done");
             },
             initMap(_lat, _lng, _address) {
                 if (this.section == 2) {
@@ -736,6 +749,7 @@
                 libraries: ['places']
             });
             this.google = googleMapApi;
+            this.$store.state.status = "";
 
             var t = setInterval(() => {
                 if (this.section === 2) {
@@ -941,16 +955,19 @@
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                padding: .25rem;
-                border-radius: 0;
+                border-radius: 3px;
                 border: 0px;
+                border-left: 1px solid #fff;
                 border-bottom: 2px solid #435463;
+                padding: 0 .25rem 0px 0;
+                overflow: hidden;
+                height: 40px;
                 
                 &_img {
-                    background: #eee;
                     display: block;
-                    width: max-content;
-                    height: 100%;
+                    width: 55px;
+                    height: 55px;
+                    margin-right: 2px;
                     object-fit: cover;
                     object-position: center center;
                 }
@@ -1093,5 +1110,19 @@
 
     #modal-map .modal-body {
         padding: 0 !important;
+    }
+
+    .boxTelephone .boxTelephone__right .form-control {
+        text-align: left !important;
+    }
+
+    .boxTelephone .boxTelephone__right .form-control-placeholder {
+        left: 0 !important;
+        transform: translate(0, 0) !important;
+    }
+
+    .boxTelephone .boxTelephone__right .form-control:focus + .form-control-placeholder, .boxTelephone__right .form-control:valid + .form-control-placeholder {
+        left: 0 !important;
+        transform: translate3d(0, -100%, 0) !important;
     }
 </style>

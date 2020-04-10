@@ -99,7 +99,10 @@
                     });
                 }
             }
-        }
+        },
+        mounted() {
+            this.$store.state.status = "";
+        },
     }
 </script>
 

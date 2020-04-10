@@ -1,13 +1,18 @@
 <template>
   <div id="app">
     <router-view></router-view>
+    <preloader v-show="this.$store.getters.status === 'loading'"></preloader>
   </div>
 </template>
 
 <script>
+  import preloader from "./components/preloader.vue";
   export default {
     name: 'App',
-    
+    components: { preloader },
+    mounted() {
+      console.log(this.$store.getters);
+    },
   }
 </script>
 
