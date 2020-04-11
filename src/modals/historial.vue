@@ -201,7 +201,7 @@
                 myclass: ['modal-historial'],
                 reloj: config.rutaWeb(reloj),
                 back: config.rutaWeb(back),
-                arrow: config.rutaWeb(arrow),
+                arrow: arrow,
                 compartir: config.rutaWeb(compartir),
                 descargar: config.rutaWeb(descargar)
             }

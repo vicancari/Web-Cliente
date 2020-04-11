@@ -47,7 +47,7 @@
             return {
                 myclass: ['modal-favoritos'],
                 back: config.rutaWeb(back),
-                arrowNext: config.rutaWeb(arrowNext),
+                arrowNext: arrowNext,
                 heartred: config.rutaWeb(heartred)
             }
         },

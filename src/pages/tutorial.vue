@@ -54,8 +54,8 @@
         methods: {
             next() {
                 this.count++;  
-                if (this.count >= 4) {
-                    this.count = 4;
+                if (this.count >= 3) {
+                    this.count = 3;
                     this.direction = true;
                     if (this.$store.getters.isLoggedIn === true || this.$store.getters.token != "" || this.$store.getters.token != null) {
                         this.$router.push("/home");

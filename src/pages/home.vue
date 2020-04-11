@@ -13,7 +13,7 @@
         <div class="bodySection">
             <div class="box">
                 <h5 class="titlePromotions">Promociones</h5>
-                <carousel class="carouselEdit"
+                <carousel v-if="this.listPromocion.promotions.length != 0" class="carouselEdit"
                     :autoplay="false" 
                     :nav="false" 
                     :items="3"
@@ -47,91 +47,7 @@
                             </div>
                         </div>
                     </b-card>
-                    <b-card
-                        img-src="https://picsum.photos/600/300/?image=25"
-                        img-alt="Image"
-                        img-top
-                        tag="article"
-                        class="mb-2 cardStyle"
-                        >
-                        <div class="body">
-                            <div class="text">
-                                <h5>Pizza napolitana 4 quesos</h5>
-                                <p>Es una pirzza Lorem ipsum dolor sit amet consectetur adipisicing elit. Saepe quidem consequatur quis ratione dis</p>
-                            </div>
-                            <div class="price">
-                                <div class="number" v-b-tooltip.hover title="10.000,00 €">
-                                    <p>10</p>
-                                    <span>,50€</span>
-                                </div>
-                                <button class="btn"><img class="img-fluid img-shared" :src="shared" alt=""></button>
-                            </div>
-                        </div>
-                    </b-card>
-                    <b-card
-                        img-src="https://picsum.photos/600/300/?image=25"
-                        img-alt="Image"
-                        img-top
-                        tag="article"
-                        class="mb-2 cardStyle"
-                        >
-                        <div class="body">
-                            <div class="text">
-                                <h5>Pizza napolitana 4 quesos</h5>
-                                <p>Es una pirzza Lorem ipsum dolor sit amet consectetur adipisicing elit. Saepe quidem consequatur quis ratione dis</p>
-                            </div>
-                            <div class="price">
-                                <div class="number" v-b-tooltip.hover title="10.000,00 €">
-                                    <p>10</p>
-                                    <span>,50€</span>
-                                </div>
-                                <button class="btn"><img class="img-fluid img-shared" :src="shared" alt=""></button>
-                            </div>
-                        </div>
-                    </b-card>
-                    <b-card
-                        img-src="https://picsum.photos/600/300/?image=25"
-                        img-alt="Image"
-                        img-top
-                        tag="article"
-                        class="mb-2 cardStyle"
-                        >
-                        <div class="body">
-                            <div class="text">
-                                <h5>Pizza napolitana 4 quesos</h5>
-                                <p>Es una pirzza Lorem ipsum dolor sit amet consectetur adipisicing elit. Saepe quidem consequatur quis ratione dis</p>
-                            </div>
-                            <div class="price">
-                                <div class="number" v-b-tooltip.hover title="10.000,00 €">
-                                    <p>10</p>
-                                    <span>,50€</span>
-                                </div>
-                                <button class="btn"><img class="img-fluid img-shared" :src="shared" alt=""></button>
-                            </div>
-                        </div>
-                    </b-card>
-                    <b-card
-                        img-src="https://picsum.photos/600/300/?image=25"
-                        img-alt="Image"
-                        img-top
-                        tag="article"
-                        class="mb-2 cardStyle"
-                        >
-                        <div class="body">
-                            <div class="text">
-                                <h5>Pizza napolitana 4 quesos</h5>
-                                <p>Es una pirzza Lorem ipsum dolor sit amet consectetur adipisicing elit. Saepe quidem consequatur quis ratione dis</p>
-                            </div>
-                            <div class="price">
-                                <div class="number" v-b-tooltip.hover title="10.000,00 €">
-                                    <p>10</p>
-                                    <span>,50€</span>
-                                </div>
-                                <button class="btn"><img class="img-fluid img-shared" :src="shared" alt=""></button>
-                            </div>
-                        </div>
-                    </b-card>
-                   <template slot="prev">
+                    <template slot="prev">
                        <span class="prev carouselPrev">
                            <img class="img-fluid" :src="arrowPrev" alt="">
                        </span>
@@ -142,6 +58,9 @@
                         </span>
                     </template>
                 </carousel>
+                <div v-else class="box-mensaje">
+                    <p style="margin: 1.5rem 0; padding: 1rem; background: rgb(245, 83, 83); color: #fff; font-weight: bold !important; border-radius: 5px; box-shadow: 1px 1px 5px 0 rgba(0,0,0,.25);">Todavia no hay promociones...</p>
+                </div>
                 <div class="row navSection">
                     <div class="col-5">
                         <button class="btn btnProductos" @click="showSectionHome(1)" v-bind:class="{ 'active': activeSection == 1, '': activeSection == 2 }">
@@ -161,239 +80,88 @@
                     </div>
                 </div>
                 <div class="row alignHorizontal" v-if="activeSection == 2">
-                    <div v-for="rest in this.listRestaurantes" :key="rest.uid" :id="rest.uid" class="col-md-6 col-12 mb-4">
-                        <b-card
-                            :img-src="rest.photo"
-                            :img-alt="rest.name"
-                            img-top
-                            tag="article"
-                            class="card-horizontal"
-                            >
-                            <div class="body">
-                                <div class="text">
-                                    <h5 class="title">{{ rest.name }}</h5>
-                                    <button class="btn">Ir <img :src="chevRight" alt=""></button>
-                                    <div class="star-content">
-                                        <div class="row">
-                                            <div class="col-3">
-                                                <div class="box">
-                                                    <img :src="star" alt="">
-                                                    <span>4/5</span>
-                                                    <h6>Sabor</h6>
+                    <div v-if="this.listRestaurantes != {}" style="width: 100%; margin: 0;" class="row">
+                        <div v-for="rest in this.listRestaurantes" :key="rest.uid" :id="rest.uid" class="col-md-6 col-12 mb-4">
+                            <b-card
+                                :img-src="rest.photo"
+                                :img-alt="rest.name"
+                                img-top
+                                tag="article"
+                                class="card-horizontal"
+                                >
+                                <div class="body">
+                                    <div class="text">
+                                        <h5 class="title">{{ rest.name }}</h5>
+                                        <button class="btn">Ir <img :src="chevRight" alt=""></button>
+                                        <div class="star-content">
+                                            <div class="row">
+                                                <div class="col-3">
+                                                    <div class="box">
+                                                        <img :src="star" alt="">
+                                                        <span>4/5</span>
+                                                        <h6>Sabor</h6>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div class="col-3">
-                                                 <div class="box">
-                                                    <img :src="star" alt="">
-                                                    <span>4/5</span>
-                                                    <h6>Atención</h6>
+                                                <div class="col-3">
+                                                    <div class="box">
+                                                        <img :src="star" alt="">
+                                                        <span>4/5</span>
+                                                        <h6>Atención</h6>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div class="col-3">
-                                                 <div class="box">
-                                                    <img :src="star" alt="">
-                                                    <span>4/5</span>
-                                                    <h6>Lugar</h6>
+                                                <div class="col-3">
+                                                    <div class="box">
+                                                        <img :src="star" alt="">
+                                                        <span>4/5</span>
+                                                        <h6>Lugar</h6>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div class="col-3">
-                                                 <div class="box">
-                                                    <img :src="star" alt="">
-                                                    <span>5/5</span>
-                                                    <h6>Tiempo</h6>
+                                                <div class="col-3">
+                                                    <div class="box">
+                                                        <img :src="star" alt="">
+                                                        <span>5/5</span>
+                                                        <h6>Tiempo</h6>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </b-card>
+                            </b-card>
+                        </div>
+                    </div>
+                    <div v-else class="box-mensaje">
+                        <p style="width: 100%; text-align: center; margin: 1.5rem 0; padding: 1rem; background: rgb(245, 83, 83); color: #fff; font-weight: bold !important; border-radius: 5px; box-shadow: 1px 1px 5px 0 rgba(0,0,0,.25);">Todavia no hay restaurantes cercanos a ti...</p>
                     </div>
                 </div>
                 <div class="row alignHorizontal" v-if="activeSection == 1">
-                    <div class="col-12 col-sm-6 col-md-4 col-lg-3 p-0 mb-4">
-                        <b-card
-                            img-src="https://picsum.photos/600/300/?image=25"
-                            img-alt="Image"
-                            img-top
-                            tag="article"
-                            class="mb-2 cardStyle"
-                            >
-                            <div class="body">
-                                <div class="text">
-                                    <h5>Pizza napolitana 4 quesos</h5>
-                                    <p>Es una pirzza Lorem ipsum dolor sit amet consectetur adipisicing elit. Saepe quidem consequatur quis ratione dis</p>
-                                </div>
-                                <div class="price">
-                                    <div class="number" v-b-tooltip.hover title="10.000,00 €">
-                                        <p>10</p>
-                                        <span>,50€</span>
+                    <div v-if="this.listProductos.length != 0" style="width: 100%; margin: 0;" class="row">
+                        <div class="col-12 col-sm-6 col-md-4 col-lg-3 p-0 mb-4">
+                            <b-card
+                                img-src="https://picsum.photos/600/300/?image=25"
+                                img-alt="Image"
+                                img-top
+                                tag="article"
+                                class="mb-2 cardStyle"
+                                >
+                                <div class="body">
+                                    <div class="text">
+                                        <h5>Pizza napolitana 4 quesos</h5>
+                                        <p>Es una pirzza Lorem ipsum dolor sit amet consectetur adipisicing elit. Saepe quidem consequatur quis ratione dis</p>
                                     </div>
-                                    <button class="btn"><img class="img-fluid img-shared" :src="shared" alt=""></button>
+                                    <div class="price">
+                                        <div class="number" v-b-tooltip.hover title="10.000,00 €">
+                                            <p>10</p>
+                                            <span>,50€</span>
+                                        </div>
+                                        <button class="btn"><img class="img-fluid img-shared" :src="shared" alt=""></button>
+                                    </div>
                                 </div>
-                            </div>
-                        </b-card>
+                            </b-card>
+                        </div>
                     </div>
-                    <div class="col-12 col-sm-6 col-md-4 col-lg-3 p-0 mb-4">
-                        <b-card
-                            img-src="https://picsum.photos/600/300/?image=25"
-                            img-alt="Image"
-                            img-top
-                            tag="article"
-                            class="mb-2 cardStyle"
-                            >
-                            <div class="body">
-                                <div class="text">
-                                    <h5>Pizza napolitana 4 quesos</h5>
-                                    <p>Es una pirzza Lorem ipsum dolor sit amet consectetur adipisicing elit. Saepe quidem consequatur quis ratione dis</p>
-                                </div>
-                                <div class="price">
-                                    <div class="number" v-b-tooltip.hover title="10.000,00 €">
-                                        <p>10</p>
-                                        <span>,50€</span>
-                                    </div>
-                                    <button class="btn"><img class="img-fluid img-shared" :src="shared" alt=""></button>
-                                </div>
-                            </div>
-                        </b-card>
-                    </div>
-                    <div class="col-12 col-sm-6 col-md-4 col-lg-3 p-0 mb-4">
-                        <b-card
-                            img-src="https://picsum.photos/600/300/?image=25"
-                            img-alt="Image"
-                            img-top
-                            tag="article"
-                            class="mb-2 cardStyle"
-                            >
-                            <div class="body">
-                                <div class="text">
-                                    <h5>Pizza napolitana 4 quesos</h5>
-                                    <p>Es una pirzza Lorem ipsum dolor sit amet consectetur adipisicing elit. Saepe quidem consequatur quis ratione dis</p>
-                                </div>
-                                <div class="price">
-                                    <div class="number" v-b-tooltip.hover title="10.000,00 €">
-                                        <p>10</p>
-                                        <span>,50€</span>
-                                    </div>
-                                    <button class="btn"><img class="img-fluid img-shared" :src="shared" alt=""></button>
-                                </div>
-                            </div>
-                        </b-card>
-                    </div>
-                    <div class="col-12 col-sm-6 col-md-4 col-lg-3 p-0 mb-4">
-                        <b-card
-                            img-src="https://picsum.photos/600/300/?image=25"
-                            img-alt="Image"
-                            img-top
-                            tag="article"
-                            class="mb-2 cardStyle"
-                            >
-                            <div class="body">
-                                <div class="text">
-                                    <h5>Pizza napolitana 4 quesos</h5>
-                                    <p>Es una pirzza Lorem ipsum dolor sit amet consectetur adipisicing elit. Saepe quidem consequatur quis ratione dis</p>
-                                </div>
-                                <div class="price">
-                                    <div class="number" v-b-tooltip.hover title="10.000,00 €">
-                                        <p>10</p>
-                                        <span>,50€</span>
-                                    </div>
-                                    <button class="btn"><img class="img-fluid img-shared" :src="shared" alt=""></button>
-                                </div>
-                            </div>
-                        </b-card>
-                    </div>
-                    <div class="col-12 col-sm-6 col-md-4 col-lg-3 p-0 mb-4">
-                        <b-card
-                            img-src="https://picsum.photos/600/300/?image=25"
-                            img-alt="Image"
-                            img-top
-                            tag="article"
-                            class="mb-2 cardStyle"
-                            >
-                            <div class="body">
-                                <div class="text">
-                                    <h5>Pizza napolitana 4 quesos</h5>
-                                    <p>Es una pirzza Lorem ipsum dolor sit amet consectetur adipisicing elit. Saepe quidem consequatur quis ratione dis</p>
-                                </div>
-                                <div class="price">
-                                    <div class="number" v-b-tooltip.hover title="10.000,00 €">
-                                        <p>10</p>
-                                        <span>,50€</span>
-                                    </div>
-                                    <button class="btn"><img class="img-fluid img-shared" :src="shared" alt=""></button>
-                                </div>
-                            </div>
-                        </b-card>
-                    </div>
-                    <div class="col-12 col-sm-6 col-md-4 col-lg-3 p-0 mb-4">
-                        <b-card
-                            img-src="https://picsum.photos/600/300/?image=25"
-                            img-alt="Image"
-                            img-top
-                            tag="article"
-                            class="mb-2 cardStyle"
-                            >
-                            <div class="body">
-                                <div class="text">
-                                    <h5>Pizza napolitana 4 quesos</h5>
-                                    <p>Es una pirzza Lorem ipsum dolor sit amet consectetur adipisicing elit. Saepe quidem consequatur quis ratione dis</p>
-                                </div>
-                                <div class="price">
-                                    <div class="number" v-b-tooltip.hover title="10.000,00 €">
-                                        <p>10</p>
-                                        <span>,50€</span>
-                                    </div>
-                                    <button class="btn"><img class="img-fluid img-shared" :src="shared" alt=""></button>
-                                </div>
-                            </div>
-                        </b-card>
-                    </div>
-                    <div class="col-12 col-sm-6 col-md-4 col-lg-3 p-0 mb-4">
-                        <b-card
-                            img-src="https://picsum.photos/600/300/?image=25"
-                            img-alt="Image"
-                            img-top
-                            tag="article"
-                            class="mb-2 cardStyle"
-                            >
-                            <div class="body">
-                                <div class="text">
-                                    <h5>Pizza napolitana 4 quesos</h5>
-                                    <p>Es una pirzza Lorem ipsum dolor sit amet consectetur adipisicing elit. Saepe quidem consequatur quis ratione dis</p>
-                                </div>
-                                <div class="price">
-                                    <div class="number" v-b-tooltip.hover title="10.000,00 €">
-                                        <p>10</p>
-                                        <span>,50€</span>
-                                    </div>
-                                    <button class="btn"><img class="img-fluid img-shared" :src="shared" alt=""></button>
-                                </div>
-                            </div>
-                        </b-card>
-                    </div>
-                    <div class="col-12 col-sm-6 col-md-4 col-lg-3 p-0 mb-4">
-                        <b-card
-                            img-src="https://picsum.photos/600/300/?image=25"
-                            img-alt="Image"
-                            img-top
-                            tag="article"
-                            class="mb-2 cardStyle"
-                            >
-                            <div class="body">
-                                <div class="text">
-                                    <h5>Pizza napolitana 4 quesos</h5>
-                                    <p>Es una pirzza Lorem ipsum dolor sit amet consectetur adipisicing elit. Saepe quidem consequatur quis ratione dis</p>
-                                </div>
-                                <div class="price">
-                                    <div class="number" v-b-tooltip.hover title="10.000,00 €">
-                                        <p>10</p>
-                                        <span>,50€</span>
-                                    </div>
-                                    <button class="btn"><img class="img-fluid img-shared" :src="shared" alt=""></button>
-                                </div>
-                            </div>
-                        </b-card>
+                    <div v-else class="box-mensaje">
+                        <p style="width: 100%; text-align: center; margin: 1.5rem 0; padding: 1rem; background: rgb(245, 83, 83); color: #fff; font-weight: bold !important; border-radius: 5px; box-shadow: 1px 1px 5px 0 rgba(0,0,0,.25);">Todavia no hay productos...</p>
                     </div>
                 </div>
             </div>
@@ -404,7 +172,7 @@
 </template>
 
 <script>
-    import config from "../config.js";
+    // import config from "../config.js";
     /* Components */
     import carousel from 'vue-owl-carousel'
     import Navbar from '../components/navbar';
@@ -431,25 +199,43 @@
         },
         data: function () {
             return {
-                searchImg: config.rutaWeb(searchImg),
-                shared: config.rutaWeb(shared),
-                arrowPrev: config.rutaWeb(arrowPrev),
-                arrowNext: config.rutaWeb(arrowNext), 
-                imgPin: config.rutaWeb(imgPin),
-                star: config.rutaWeb(star),
-                chevRight: config.rutaWeb(chevRight),
+                searchImg: searchImg,
+                shared: shared,
+                arrowPrev: arrowPrev,
+                arrowNext: arrowNext, 
+                imgPin: imgPin,
+                star: star,
+                chevRight: chevRight,
                 slide: 0,
                 sliding: null,
                 responsive : "{0:{items:1,nav:false},600:{items:3,nav:true}}",
-                activeSection: 1,
+                activeSection: 2,
                 listRestaurantes: {},
+                listPromocion: {},
+                listProductos: []
             }
         },
         async beforeMount() {
             if (this.$store.getters.isLoggedIn === true) {
                 this.$store.state.user = await api.post("cliente/info/", {uid: this.$store.getters.uid});
                 this.listRestaurantes = await api.get(`restaurantes/list/`);
+                this.listProductos = await api.get(`products/`);
+                this.listPromocion = await api.get("promotions/");
+                var _MB = this.$store.getters.user.accounts;
+                var _books = _MB.books.value;
+                var _eats = _MB.eats.value;
+                var _fuel = _MB.fuel.value;
+                var _gyms = _MB.gyms.value;
+                var _kids = _MB.kids.value;
+                var _propia = _MB.propia.value;
+                var _trips = _MB.trips.value;
+                var total = _books + _eats + _fuel + _gyms + _kids + _propia + _trips;
+
+                this.$store.state.myBalance = total;
+
                 console.log(this.listRestaurantes);
+                console.log(this.$store.getters.user);
+
                 this.$store.commit("done");
             }
 
@@ -457,6 +243,7 @@
                 this.$store.state.token = "";
                 this.$store.state.uid = "";
                 this.$store.state.user = {};
+                this.$store.state.myBalance = 0;
                 this.$store.commit("error");
                 this.$router.push("/");
             }
@@ -680,5 +467,9 @@
                 }
             }
         }
+    }
+
+    .box-mensaje {
+        width: 100%;
     }
 </style>

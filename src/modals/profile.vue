@@ -123,10 +123,10 @@ export default {
         return {
             myclass: ['modal-profile'],
             modalEdit: ['modal-edit'],
-            avatar: config.rutaWeb(avatar),
+            avatar: avatar,
             back: config.rutaWeb(back),
             lapiz: config.rutaWeb(lapiz),
-            pin: config.rutaWeb(pin),
+            pin: pin,
             showInput: '',
             icon: "fas fa-eye",
             type: "password",

@@ -4,7 +4,7 @@ let config = {
     dominioApi_dev: "http://localhost:9990/api",
     dominioWeb_dev: "http://localhost:8080",
     dominioApi_prod: "https://myraus.com:9999/api",
-    dominioWeb_prod: "https://myraus.com/cliente/",
+    dominioWeb_prod: "https://myraus.com/personas/",
     idiomas: [
         {
             value: "aa",

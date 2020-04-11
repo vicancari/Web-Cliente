@@ -5,7 +5,7 @@
                <div class="d-flex saldo">
                    <img class="img-fluid logo" :src="image" alt="">
                    <p>Saldo:</p>
-                   <span>{{ this.$store.getters.user === "" || this.$store.getters.user === {} || this.$store.getters.user === null ? "0" : this.$store.getters.user.accounts.propia.value }}€</span>
+                   <span id="myBalance">{{ this.$store.getters.myBalance }}€</span>
                 </div> 
             </div>
             <div class="col-md-4 col-12 order">
@@ -45,7 +45,7 @@
 </template>
 
 <script>
-    import config from "../config.js";
+    // import config from "../config.js";
     /* IMG */
     import image from "../assets/img/logo.png";
     import notification from "../assets/img/notification.png";
@@ -71,12 +71,13 @@
         name: 'navbar',
         data: function () {
             return {
-                image: config.rutaWeb(image),
-                notification: config.rutaWeb(notification),
-                message: config.rutaWeb(message),
-                raus: config.rutaWeb(raus),
-                timeline: config.rutaWeb(timeline),
-                caretRight: config.rutaWeb(caretRight)
+                myBalance: 0,
+                image: image,
+                notification: notification,
+                message: message,
+                raus: raus,
+                timeline: timeline,
+                caretRight: caretRight
             }
         },
         components: {

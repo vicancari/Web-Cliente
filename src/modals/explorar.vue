@@ -32,7 +32,7 @@
             return {
                 myclass: ['modal-explorar'],
                 back: config.rutaWeb(back),
-                explorar: config.rutaWeb(explorar)
+                explorar: explorar
             }
         },
         methods: {}

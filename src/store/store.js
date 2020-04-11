@@ -11,6 +11,7 @@ export default function(/* { ssrContext } */) {
             uid: "",
             isFirstTime: true,
             status: "",
+            myBalance: 0,
             user: {}
         },
         getters: {
@@ -19,6 +20,7 @@ export default function(/* { ssrContext } */) {
             uid: state => state.uid,
             isFirstTime: state => state.isFirstTime,
             status: state => state.status,
+            myBalance: state => state.myBalance,
             user: state => state.user
         },
         mutations: {

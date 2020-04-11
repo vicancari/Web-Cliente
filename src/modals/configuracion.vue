@@ -72,7 +72,7 @@
                 myclass: ['modal-configuracion'],
                 back: config.rutaWeb(back),
                 config: config.rutaWeb(settings),
-                arrow: config.rutaWeb(arrow)
+                arrow: arrow
             }
         },
         methods: {}

@@ -90,8 +90,8 @@
         data: function () {
             return {
                 myclass: ['modal-menu'],
-                hearthfavorite: config.rutaWeb(hearthfavorite),
-                point: config.rutaWeb(point),
+                hearthfavorite: hearthfavorite,
+                point: point,
                 heartred: config.rutaWeb(heartred),
                 recharge: config.rutaWeb(recharge),
                 rausFamilia: config.rutaWeb(rausFamilia),
@@ -108,6 +108,7 @@
                     this.$store.state.isLoggedIn = false;
                     this.$store.state.token = "";
                     this.$store.state.user = {};
+                    this.$store.state.myBalance = 0;
                     this.$router.push("/");
                 }
             }

@@ -22,7 +22,7 @@
                         <p data-error="lastname" class="msgError d-none">*msgError</p>
                     </div>
                     <div class="form-group">
-                        <input type="text" maxlength="12" autocomplete="off" id="dni" onkeypress="if(this.value.length==this.getAttribute('maxlength')) return false; return funciones.campoNumber(event);" class="form-control" v-model="dataForm.dni" required >
+                        <input type="text" maxlength="25" autocomplete="off" id="dni" onkeypress="if(this.value.length==this.getAttribute('maxlength')) return false;" class="form-control" v-model="dataForm.dni" required >
                         <label class="form-control-placeholder" for="dni">Dni</label>
                         <p data-error="dni" class="msgError d-none">*msgError</p>
                     </div>
@@ -32,8 +32,8 @@
                 </div>
                 <div class="form1" v-if="section == 2">
                     <div class="form-group">
-                        <input type="date" id="birthday" autocomplete="off" class="form-control date" required>
-                        <label class="form-control-placeholder" for="date">Fecha denacimiento</label>
+                        <datepicker id="birthday" @cleared="valorRemove" value="DD/MM/YYYY" autocomplete="off" :class="pickerClass" :language="es" :format="dateFormat" required></datepicker>
+                        <label style="opacity: 1 !important; font-size: 75% !important; left: 50% !important; transform: translate3d(-50%, -100%, 0) !important;" class="form-control-placeholder" for="date">Fecha denacimiento</label>
                         <p data-error="birthday" class="msgError d-none">*msgError</p>
                     </div>
                     <div class="form-group">
@@ -152,17 +152,24 @@
     import checkimg from "../assets/img/icons/check.svg";
     import image from "../assets/img/logo.png";
     import arrowLeft from "../assets/img/icons/flechavolver.svg";
+
+    import Datepicker from 'vuejs-datepicker';
+    import { es } from 'vuejs-datepicker/dist/locale'
     // import LoadScript from "vue-plugin-load-script";
     var Jquery = require("jquery");
 
     export default {
         name: 'register',
+        components: {Datepicker},
         data: function () {
             return {
                 apiKey: "AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho",
+                es: es,
                 form: "",
+                pickerClass: "form-control date",
                 btnModal: "",
-                image: config.rutaWeb(image),
+                dateFormat: 'dd-MM-yyyy',
+                image: image,
                 checkimg: config.rutaWeb(checkimg),
                 arrowLeft: config.rutaWeb(arrowLeft),
                 section: 1,
@@ -221,6 +228,11 @@
             }
         },
         methods: {
+            valorRemove: function() {
+                if (document.querySelector("#birthday")) {
+                    document.querySelector("#birthday").value = this.fechaPermitida;
+                }
+            },
             showPassword(e) {
                 var _parent = e.target.parentNode.parentNode;
                 var _input = _parent.firstElementChild;
@@ -319,7 +331,7 @@
                     return false;
                 }
 
-                if (parseInt(document.querySelector("#birthday").value.split("-")[0]) > parseInt(this.fechaPermitida.split("-")[0])) {
+                if (parseInt(document.querySelector("#birthday").value.split("-")[2]) > parseInt(window.localStorage.getItem("fPermitida").split("-")[2])) {
                     document.querySelector("[data-error='birthday']").innerText = "La fecha de nacimiento no es valida. debe ser mayor de 15 años en adelante.";
                     document.querySelector("[data-error='birthday']").classList.remove("d-none");
 
@@ -376,7 +388,7 @@
 
                 if (document.querySelector("#birthday").value != "" && document.querySelector("#country").value != "" && document.querySelector("#city").value != "" && document.querySelector("#address").value != "" && document.querySelector("#code-postal").value != "") {
                     this.dataForm.address = document.querySelector("#address").value;
-                    this.dataForm.birthday = document.querySelector("#birthday").value;
+                    this.dataForm.birthday = `${document.querySelector("#birthday").value.split("-")[2]}-${document.querySelector("#birthday").value.split("-")[1]}-${document.querySelector("#birthday").value.split("-")[0]}`;
                     this.dataForm.city = document.querySelector("#city").value;
                     this.dataForm.zipcode = document.querySelector("#code-postal").value;
                     this.dataForm.country = document.querySelector("#country").value;
@@ -542,7 +554,7 @@
                                         document.querySelector("#country").value = _getType.long_name;
                                         this.cArea = "+"+funciones.codigoArea(document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
                                         if (this.cArea != "" || this.cArea != undefined) {
-                                            this.flagImg = `https:/myraus.com/cliente/flag-icons/${document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();}).split(" ").join("-")}.png`;
+                                            this.flagImg = `https:/myraus.com/flag-icons/${document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();}).split(" ").join("-")}.png`;
                                             document.querySelector("#input-flag").value = this.flagImg;
                                             document.querySelector("#input-carea").value = this.cArea;
                                         }
@@ -608,7 +620,7 @@
                                         document.querySelector("#country").value = _getType.long_name;
                                         this.cArea = "+"+funciones.codigoArea(document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
                                         if (this.cArea != "" || this.cArea != undefined) {
-                                            this.flagImg = `https:/myraus.com/cliente/flag-icons/${document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();}).split(" ").join("-")}.png`;
+                                            this.flagImg = `https:/myraus.com/flag-icons/${document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();}).split(" ").join("-")}.png`;
                                             document.querySelector("#input-flag").value = this.flagImg;
                                             document.querySelector("#input-carea").value = this.cArea;
                                         }
@@ -647,7 +659,7 @@
                                         document.querySelector("#country").value = _getType.long_name;
                                         this.cArea = "+"+funciones.codigoArea(document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
                                         if (this.cArea != "" || this.cArea != undefined) {
-                                            this.flagImg = `https:/myraus.com/cliente/flag-icons/${document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();}).split(" ").join("-")}.png`;
+                                            this.flagImg = `https:/myraus.com/flag-icons/${document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();}).split(" ").join("-")}.png`;
                                             document.querySelector("#input-flag").value = this.flagImg;
                                             document.querySelector("#input-carea").value = this.cArea;
                                         }
@@ -708,9 +720,11 @@
                             var mes = date.getMonth() + 1;
                             var Mes = mes <= 9 ? "0" + mes : mes;
                             var AnnoActual = date.getFullYear();
-                            this.fechaPermitida = `${AnnoActual - 15}-${Mes}-${Dia}`;
+                            this.fechaPermitida = `${Dia}-${Mes}-${AnnoActual - 15}`;
+
                             if (document.querySelector("#birthday")) {
                                 document.querySelector("#birthday").value = this.fechaPermitida;
+                                window.localStorage.setItem("fPermitida", this.fechaPermitida);
                             }
 
                             if (document.querySelector("#address")) document.querySelector("#address").value = results[0].formatted_address;
@@ -722,7 +736,7 @@
                                         document.querySelector("#country").value = _getType.long_name;
                                         this.cArea = "+"+funciones.codigoArea(document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
                                         if (this.cArea != "" || this.cArea != undefined) {
-                                            this.flagImg = `https:/myraus.com/cliente/flag-icons/${document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();}).split(" ").join("-")}.png`;
+                                            this.flagImg = `https:/myraus.com/flag-icons/${document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();}).split(" ").join("-")}.png`;
                                             document.querySelector("#input-flag").value = this.flagImg;
                                             document.querySelector("#input-carea").value = this.cArea;
                                         }
@@ -1122,7 +1136,27 @@
     }
 
     .boxTelephone .boxTelephone__right .form-control:focus + .form-control-placeholder, .boxTelephone__right .form-control:valid + .form-control-placeholder {
-        left: 0 !important;
-        transform: translate3d(0, -100%, 0) !important;
+        left: 0 !important; transform: translate3d(0, -100%, 0) !important;
+    }
+
+    .vdp-datepicker * {
+        box-sizing: border-box;
+        width: 100%;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        border-radius: 0;
+        outline: none !important;
+        text-align: center;
+    }
+
+    .vdp-datepicker__calendar {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100;
+        background: #fff;
+        width: 300px;
+        border: 1px solid #ccc;
     }
 </style>

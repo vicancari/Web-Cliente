@@ -18,7 +18,7 @@
 </template>
 
 <script>
-    import config from "../config.js";
+    // import config from "../config.js";
     /* Images */
     import searchImg from '../assets/img/search.png';
 
@@ -28,7 +28,7 @@
         data: function () {
             return {
                 myclass: ['modal-search'],
-                searchImg: config.rutaWeb(searchImg)
+                searchImg: searchImg
             }
         },
         methods: {}
