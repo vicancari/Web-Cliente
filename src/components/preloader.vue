@@ -14,6 +14,7 @@
   :root {
     --wh: 5%;
     --borderWidth: 5px;
+    --first-color: #31428b;
   }
 
   .boxPreloader {
@@ -49,10 +50,10 @@
         width: calc(55px + var(--wh));
         height: calc(55px + var(--wh));
         border-radius: 50%;
-        border-top: solid var(--borderWidth) var(--yellow);
-        border-bottom: solid var(--borderWidth) var(--yellow);
+        border-top: solid var(--borderWidth) var(--first-color);
+        border-bottom: solid var(--borderWidth) var(--first-color);
         border-left: solid var(--borderWidth) transparent;
-        border-right: solid var(--borderWidth) var(--yellow);
+        border-right: solid var(--borderWidth) var(--first-color);
 
         -webkit-transform-origin: center center 0; 
         -moz-transform-origin: center center 0; 

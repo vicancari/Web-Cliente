@@ -26,8 +26,9 @@
                         <label class="form-control-placeholder" for="dni">Dni</label>
                         <p data-error="dni" class="msgError d-none">*msgError</p>
                     </div>
-                    <div class="form-group botonera">
+                    <div class="form-group botonera formRegister">
                         <a class="btn btnRegister" @click="nextForm">Siguiente</a>
+                        <a class="btn btnBack" @click="irAllogin">Cancelar</a>
                     </div>
                 </div>
                 <div class="form1" v-if="section == 2">
@@ -57,8 +58,9 @@
                         <span style="outline: none; cursor: pointer;" class="mapMarket"><i class="fas fa-map-marker-alt" id="loadMap" v-b-modal.modal-map v-on:click="loadMap"></i></span>
                         <p data-error="address" class="msgError d-none">*msgError</p>
                     </div>
-                    <div class="form-group botonera">
+                    <div class="form-group botonera formRegister">
                         <a class="btn btnRegister" @click="nextFormTwo">Siguiente</a>
+                        <a class="btn btnBack" @click="backOne">Volver</a>
                     </div>
                 </div>
                 <div class="form1" v-if="section == 3">
@@ -66,7 +68,7 @@
                         <div class="boxTelephone">
                             <div class="boxTelephone__left">
                                 <div class="code-area">
-                                    <img id="bandera" src="" class="code-area_img">
+                                    <img id="bandera" src="https://myraus.com/flag-icons/Peru.png" class="code-area_img">
                                     <span id="cArea" class="code-area_code">+000</span>
                                 </div>
                             </div>
@@ -78,7 +80,7 @@
                         <p data-error="telephone" class="msgError d-none">*msgError</p>
                     </div>
                     <div class="form-group">
-                        <input type="password" id="password" maxlength="15" onkeypress="if(this.value.length==this.getAttribute('maxlength')) return false;" autocomplete="off" onkeyup="return funciones.validar_clave(this);" class="form-control" v-model="dataForm.password" required >
+                        <input type="password" id="password" maxlength="15" onkeypress="if(this.value.length==this.getAttribute('maxlength')) return false;" autocomplete="off" onkeyup="return funciones.validar_clave(this);" v-on:keyup="valiPass" class="form-control" v-model="dataForm.password" required >
                         <label class="form-control-placeholder" for="password">Contraseña</label>
                         <a style="padding-left: 0; padding-right: 0;" class="btn btnShow" @click="showPassword">
                             <i style="display: inline-block; width: 40px; padding: .5rem 0;" class="fas fa-eye"></i>
@@ -86,7 +88,7 @@
                         <p data-error="password" class="msgError d-none">*msgError</p>
                     </div>
                     <div class="form-group">
-                        <input type="password" id="confPassword" maxlength="15" onkeypress="if(this.value.length==this.getAttribute('maxlength')) return false;" autocomplete="off" class="form-control" v-model="dataForm.cPass" required >
+                        <input type="password" id="confPassword" maxlength="15" onkeypress="if(this.value.length==this.getAttribute('maxlength')) return false;" v-on:keyup="valiPass" autocomplete="off" class="form-control" v-model="dataForm.cPass" required >
                         <label class="form-control-placeholder" for="confPassword">Confirmar contraseña</label>
                         <a style="padding-left: 0; padding-right: 0;" class="btn btnShow" @click="showPassword">
                             <i style="display: inline-block; width: 40px; padding: .5rem 0;" class="fas fa-eye"></i>
@@ -101,10 +103,12 @@
                         </a>
                         <p data-error="cPass" class="msgError d-none">*msgError</p>
                     </div>
-                    <div class="form-group botonera">
-                        <button type="button" id="btnRegistar" disabled class="btn btnRegister" @click="register">Entrar a raus</button>
+                    <div class="form-group botonera formRegister">
+                        <button type="button" id="btnRegistar" disabled class="btn btnRegister _cBlue" @click="register">Entrar a raus</button>
+                        <button type="button" class="btn btnBack" @click="backTwo">Volver</button>
                         <button type="button" style="display: none;" id="btn-modal" v-b-modal.my-modal></button>
                         <router-link style="display: none;" @click="okRegister" id="nextLink" to="/validar-numero">next</router-link>
+                        <router-link style="display: none;" @click="reload" id="aqui" to="/register">next</router-link>
                     </div>
                 </div>
                 <div class="d-none">
@@ -155,6 +159,7 @@
 
     import Datepicker from 'vuejs-datepicker';
     import { es } from 'vuejs-datepicker/dist/locale'
+    import api from "../api.js"
     // import LoadScript from "vue-plugin-load-script";
     var Jquery = require("jquery");
 
@@ -181,12 +186,14 @@
                 ubiLng: "",
                 fechaPermitida: "",
                 dateActualValue: "",
+                errorUserExist: false,
                 password: "",
                 cArea: "",
                 google: "",
                 map: "",
                 marke: "",
                 flagImg: "",
+                error: "",
                 markers: [],
                 dataForm: {
                     email: "",
@@ -228,6 +235,53 @@
             }
         },
         methods: {
+            valiPass(e) {
+                if (e.target.getAttribute("id") === "confPassword") {
+                    if (e.target.value.length >= 8) {
+                        if (document.querySelector("#password").value != document.querySelector("#confPassword").value) {
+                            document.querySelector("[data-error='confPassword']").innerText = "Las contraseñas no coinciden, por favor verifique.";
+                            document.querySelector("[data-error='confPassword']").classList.remove("d-none");
+                            document.querySelector("#btnRegistar").disabled = true;
+        
+                            return false;
+                        }
+    
+                        if (document.querySelector("#password").value === document.querySelector("#confPassword").value) {
+                            document.querySelector("[data-error='confPassword']").innerText = "";
+                            document.querySelector("[data-error='confPassword']").classList.add("d-none");
+                            document.querySelector("#btnRegistar").disabled = false;
+        
+                            return false;
+                        }
+                    }
+                }
+
+                if (e.target.getAttribute("id") === "password") {
+                    if (document.querySelector("#confPassword").value === "") {
+                        if (document.querySelector("#password").value != document.querySelector("#confPassword").value) {
+                            document.querySelector("#btnRegistar").disabled = true;
+        
+                            return false;
+                        }
+                    } else {
+                        if (document.querySelector("#password").value != document.querySelector("#confPassword").value) {
+                            document.querySelector("[data-error='confPassword']").innerText = "Las contraseñas no coinciden, por favor verifique.";
+                            document.querySelector("[data-error='confPassword']").classList.remove("d-none");
+                            document.querySelector("#btnRegistar").disabled = true;
+        
+                            return false;
+                        }
+                    }
+
+                    if (document.querySelector("#password").value === document.querySelector("#confPassword").value) {
+                        document.querySelector("[data-error='confPassword']").innerText = "";
+                        document.querySelector("[data-error='confPassword']").classList.add("d-none");
+                        document.querySelector("#btnRegistar").disabled = false;
+    
+                        return false;
+                    }
+                }
+            },
             valorRemove: function() {
                 if (document.querySelector("#birthday")) {
                     document.querySelector("#birthday").value = this.fechaPermitida;
@@ -258,6 +312,11 @@
                     }
                 }
             },
+            irAllogin() {
+                this.$router.push("/");
+            },
+            backOne() { this.section = 1 },
+            backTwo() { this.section = 2 },
             nextForm() {
                 if (document.querySelector("#email").value === "") {
                     document.querySelector("[data-error='email']").innerText = "El email esta vacio, por favor completelo.";
@@ -265,7 +324,7 @@
 
                     setTimeout(() => {
                         document.querySelector("[data-error='email']").classList.add("d-none");
-                    }, 2500);
+                    }, 3500);
 
                     return false;
                 }
@@ -276,7 +335,7 @@
 
                     setTimeout(() => {
                         document.querySelector("[data-error='name']").classList.add("d-none");
-                    }, 2500);
+                    }, 3500);
 
                     return false;
                 }
@@ -287,7 +346,7 @@
 
                     setTimeout(() => {
                         document.querySelector("[data-error='lastname']").classList.add("d-none");
-                    }, 2500);
+                    }, 3500);
 
                     return false;
                 }
@@ -298,7 +357,7 @@
 
                     setTimeout(() => {
                         document.querySelector("[data-error='dni']").classList.add("d-none");
-                    }, 2500);
+                    }, 3500);
 
                     return false;
                 } else {
@@ -308,7 +367,7 @@
 
                         setTimeout(() => {
                             document.querySelector("[data-error='dni']").classList.add("d-none");
-                        }, 2500);
+                        }, 3500);
 
                         return false;
                     } else {
@@ -326,7 +385,7 @@
 
                     setTimeout(() => {
                         document.querySelector("[data-error='birthday']").classList.add("d-none");
-                    }, 2500);
+                    }, 3500);
 
                     return false;
                 }
@@ -337,7 +396,7 @@
 
                     setTimeout(() => {
                         document.querySelector("[data-error='birthday']").classList.add("d-none");
-                    }, 2500);
+                    }, 3500);
 
                     return false;
                 }
@@ -348,7 +407,7 @@
 
                     setTimeout(() => {
                         document.querySelector("[data-error='code-postal']").classList.add("d-none");
-                    }, 2500);
+                    }, 3500);
 
                     return false;
                 }
@@ -359,7 +418,7 @@
 
                     setTimeout(() => {
                         document.querySelector("[data-error='country']").classList.add("d-none");
-                    }, 2500);
+                    }, 3500);
 
                     return false;
                 }
@@ -370,7 +429,7 @@
 
                     setTimeout(() => {
                         document.querySelector("[data-error='city']").classList.add("d-none");
-                    }, 2500);
+                    }, 3500);
 
                     return false;
                 }
@@ -381,7 +440,7 @@
 
                     setTimeout(() => {
                         document.querySelector("[data-error='address']").classList.add("d-none");
-                    }, 2500);
+                    }, 3500);
 
                     return false;
                 }
@@ -402,7 +461,7 @@
 
                     setTimeout(() => {
                         document.querySelector("[data-error='telephone']").classList.add("d-none");
-                    }, 2500);
+                    }, 3500);
 
                     return false;
                 }
@@ -413,7 +472,7 @@
 
                     setTimeout(() => {
                         document.querySelector("[data-error='password']").classList.add("d-none");
-                    }, 2500);
+                    }, 3500);
 
                     return false;
                 }
@@ -424,7 +483,7 @@
 
                     setTimeout(() => {
                         document.querySelector("[data-error='confPassword']").classList.add("d-none");
-                    }, 2500);
+                    }, 3500);
 
                     return false;
                 }
@@ -435,7 +494,7 @@
 
                     setTimeout(() => {
                         document.querySelector("[data-error='confPassword']").classList.add("d-none");
-                    }, 2500);
+                    }, 3500);
 
                     return false;
                 }
@@ -454,58 +513,50 @@
 
                 if (document.querySelector("#telephone").value != "" && document.querySelector("#password").value != "" && document.querySelector("#confPassword").value != "") {
                     this.$store.commit("loading");
-                    Jquery.ajax({
-                        type: "POST",
-                        url: config.rutaApi("cliente/registro/"),
-                        data: {
-                            email: this.dataForm.email,
-                            phone: this.dataForm.carea + this.dataForm.phone,
-                            password: this.dataForm.cPass,
-                            address: this.dataForm.address,
-                            birthday: this.dataForm.birthday,
-                            city: this.dataForm.city,
-                            country: this.dataForm.country,
-                            createt_ad: this.dataForm.createt_ad,
-                            dni: this.dataForm.dni,
-                            lastname: this.dataForm.lastname,
-                            lat: this.dataForm.lat,
-                            lng: this.dataForm.lng,
-                            name: this.dataForm.name,
-                            zipcode: this.dataForm.zipcode
-                        },
-                        dataType: "json",
-                        beforeSend: function () {
-                            console.log("Registrando...");
-                        },
-                        success: function(data) {
-                            var d = JSON.parse(JSON.stringify(data));
-                            
-                            if (d.next === "OK") {
-                                setTimeout(() => {
-                                    Jquery.post(config.rutaApi('auth/Bynumber/'), {name: `${d.name.toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();})}`, phone: `${d.phone}`}, function(resp) {
-                                        // console.log(resp);
-                                        if (resp.disabled === false) {
-                                            this.btnModal = document.querySelector(`#btn-modal`);
-                                            this.btnModal.click();
-                                            setTimeout(() => {
-                                                if (document.querySelector("#nextLink")) {
-                                                    document.querySelector("#nextLink").click();
-                                                }
-                                            }, 1000);
+                    var data = {
+                        email: this.dataForm.email,
+                        phone: this.dataForm.carea + this.dataForm.phone,
+                        password: this.dataForm.cPass,
+                        address: this.dataForm.address,
+                        birthday: this.dataForm.birthday,
+                        city: this.dataForm.city,
+                        country: this.dataForm.country,
+                        createt_ad: this.dataForm.createt_ad,
+                        dni: this.dataForm.dni,
+                        lastname: this.dataForm.lastname,
+                        lat: this.dataForm.lat,
+                        lng: this.dataForm.lng,
+                        name: this.dataForm.name,
+                        zipcode: this.dataForm.zipcode
+                    };
+                    api.post('cliente/registro/', data).then(res => {
+                        if (res.next === "OK") {
+                            api.post('auth/Bynumber', {name: `${res.name.toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();})}`, phone: `${res.phone}`}).then(res => {
+                                if (res.disabled === false) {
+                                    this.btnModal = document.querySelector(`#btn-modal`);
+                                    this.btnModal.click();
+                                    setTimeout(() => {
+                                        if (document.querySelector("#nextLink")) {
+                                            document.querySelector("#nextLink").click();
                                         }
-                                    });
-                                }, 500);
-                            }
-                        },
-                        error: function(data) {
-                            console.log(data);
-                            this.$store.commit("error");
+                                    }, 1000);
+                                }
+                            }).catch(err => {
+                                console.log(err);
+                            });
                         }
+                    }).catch(err => {
+                        this.error = err;
+                        console.log(err);
+                        document.querySelector("#aqui").click();
                     });
                 }
             },
             okRegister() {
                 this.$store.commit("done");
+            },
+            reload() {
+                this.$store.commit("notLoading");
             },
             initMap(_lat, _lng, _address) {
                 if (this.section == 2) {
@@ -554,7 +605,7 @@
                                         document.querySelector("#country").value = _getType.long_name;
                                         this.cArea = "+"+funciones.codigoArea(document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
                                         if (this.cArea != "" || this.cArea != undefined) {
-                                            this.flagImg = `https:/myraus.com/flag-icons/${document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();}).split(" ").join("-")}.png`;
+                                            this.flagImg = `https://myraus.com/flag-icons/${document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();}).split(" ").join("-")}.png`;
                                             document.querySelector("#input-flag").value = this.flagImg;
                                             document.querySelector("#input-carea").value = this.cArea;
                                         }
@@ -620,7 +671,7 @@
                                         document.querySelector("#country").value = _getType.long_name;
                                         this.cArea = "+"+funciones.codigoArea(document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
                                         if (this.cArea != "" || this.cArea != undefined) {
-                                            this.flagImg = `https:/myraus.com/flag-icons/${document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();}).split(" ").join("-")}.png`;
+                                            this.flagImg = `https://myraus.com/flag-icons/${document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();}).split(" ").join("-")}.png`;
                                             document.querySelector("#input-flag").value = this.flagImg;
                                             document.querySelector("#input-carea").value = this.cArea;
                                         }
@@ -659,7 +710,7 @@
                                         document.querySelector("#country").value = _getType.long_name;
                                         this.cArea = "+"+funciones.codigoArea(document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
                                         if (this.cArea != "" || this.cArea != undefined) {
-                                            this.flagImg = `https:/myraus.com/flag-icons/${document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();}).split(" ").join("-")}.png`;
+                                            this.flagImg = `https://myraus.com/flag-icons/${document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();}).split(" ").join("-")}.png`;
                                             document.querySelector("#input-flag").value = this.flagImg;
                                             document.querySelector("#input-carea").value = this.cArea;
                                         }
@@ -736,7 +787,7 @@
                                         document.querySelector("#country").value = _getType.long_name;
                                         this.cArea = "+"+funciones.codigoArea(document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
                                         if (this.cArea != "" || this.cArea != undefined) {
-                                            this.flagImg = `https:/myraus.com/flag-icons/${document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();}).split(" ").join("-")}.png`;
+                                            this.flagImg = `https://myraus.com/flag-icons/${document.querySelector("#country").value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();}).split(" ").join("-")}.png`;
                                             document.querySelector("#input-flag").value = this.flagImg;
                                             document.querySelector("#input-carea").value = this.cArea;
                                         }
@@ -941,14 +992,14 @@
 
         .msgError{
             color: red;
-            background: #fff;
+            // background: #fff;
             font-size: 12px;
             text-align: center;
             padding: .75rem;
-            border-radius: 5px;
-            font-weight: bold !important;
-            letter-spacing: 0.065rem;
-            text-shadow: 1px 1px 1px rgba(0, 0, 0, .45);
+            // border-radius: 5px;
+            // font-weight: bold !important;
+            // letter-spacing: 0.065rem;
+            // text-shadow: 1px 1px 1px rgba(0, 0, 0, .45);
         }
     }
 
@@ -961,34 +1012,32 @@
         &__left {
             position: relative;
             width: 80px;
-            margin-right: .5rem;
+            margin-right: 0;
 
             .code-area {
                 width: 100%;
-                background: #fff;
+                background: transparent;
                 display: flex;
                 justify-content: center;
                 align-items: center;
                 border-radius: 3px;
                 border: 0px;
-                border-left: 1px solid #fff;
-                border-bottom: 2px solid #435463;
+                border-bottom: 1px solid #435463;
                 padding: 0 .25rem 0px 0;
                 overflow: hidden;
-                height: 40px;
+                height: 38px;
                 
                 &_img {
                     display: block;
-                    width: 55px;
-                    height: 55px;
+                    width: auto;
+                    height: 75%;
                     margin-right: 2px;
                     object-fit: cover;
                     object-position: center center;
                 }
 
                 &_code {
-                    font-size: .95rem;
-                    font-weight: bold !important;
+                    font-size: .85rem;
                     margin-left: .15rem;
                 }
             }
@@ -996,7 +1045,7 @@
 
         &__right {
             position: relative;
-            width: calc((100% - 80px) - .5rem);
+            width: calc((100% - 80px));
         }
     }
 </style>
@@ -1008,7 +1057,7 @@
     }
 
     #description {
-        font-family: Roboto;
+        font-family: var(--font);
         font-size: 15px;
         font-weight: 300;
     }
@@ -1033,7 +1082,7 @@
         outline: none;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
         background-color: #fff;
-        font-family: Roboto;
+        font-family: var(--font);
     }
 
     #pac-container {
@@ -1047,7 +1096,7 @@
     }
 
     .pac-controls label {
-        font-family: Roboto;
+        font-family: var(--font);
         font-size: 13px;
         font-weight: 300;
     }
@@ -1063,7 +1112,7 @@
     #pac-input {
         display: inline-block;
         background-color: #fff;
-        font-family: Roboto;
+        font-family: var(--font);
         font-size: 15px;
         font-weight: 300;
         margin-left: 12px;
@@ -1087,6 +1136,15 @@
         cursor: pointer;
     }
 
+    .btn.btnBack {
+        background-color: white;
+        border-radius: 0px;
+        border-color: #455d6b;
+        padding: 0px 30px;
+        color: #455d6b !important;
+        margin-left: .5rem;
+    }
+
     .btn.btn-darkblue:hover {
         color: #fff !important;
     }
@@ -1102,7 +1160,8 @@
     .row-googlemaps {
         position: absolute;
         top: 70%;
-        width: 100%;
+        width: calc(100% - 58px);
+        margin: 0 !important;
         z-index: 1;
     }
 
@@ -1158,5 +1217,26 @@
         background: #fff;
         width: 300px;
         border: 1px solid #ccc;
+    }
+
+    .box-login form .botonera.formRegister {
+        width: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        flex-direction: row !important;
+        padding-top: 40px !important;
+    }
+
+    .btn.btnRegister._cBlue {
+        background-color: var(--blue) !important;
+    }
+
+    .box-login form .botonera.formRegister .btn {
+        margin: 0 !important;
+    }
+
+    .box-login form .botonera.formRegister .btn.btnBack {
+        margin-left: .5rem !important;
     }
 </style>

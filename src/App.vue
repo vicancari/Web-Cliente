@@ -6,23 +6,55 @@
 </template>
 
 <script>
+  import axios from "axios";
   import preloader from "./components/preloader.vue";
   export default {
     name: 'App',
+    data() {
+      return {
+        resolve: "",
+        reject: ""
+      }
+    },
     components: { preloader },
+    created() {
+      axios.interceptors.response.use(undefined, function(err) {
+        return new Promise(function(resolve, reject) {
+          if (err.status === 401 && err.config && !err.config.__isRetryRequest) {
+            this.resolve = resolve;
+            this.reject = reject;
+            window.localStorage.clear();
+            this.$store.state.isLoggedIn = false;
+            this.$store.state.token = "";
+            this.$store.state.uid = "";
+            this.$store.state.isFirstTime = this.$store.state.isFirstTime === false ? false : true;
+          }
+          throw err;
+        });
+      });
+    },
     mounted() {
-      console.log(this.$store.getters);
+      // console.log(this.$store.getters);
     },
   }
 </script>
 
 <style lang="scss">
+@font-face {
+	font-family: "SEGUIHIS";
+	src: url(assets/font/SEGUIHIS.TTF);
+}
+
+:root {
+  --font: "SEGUIHIS";
+}
 
 html,
 body {
-    margin:0;
-    padding:0;
-    height:100%;
+  margin:0;
+  padding:0;
+  height:100%;
+  font-family: var(--font) !important;
 }
 
 
@@ -36,7 +68,7 @@ h6,h5,h4,h3,h2,h1,p,span,label{
   box-shadow: none !important;
 }
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  font-family: var(--font);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;

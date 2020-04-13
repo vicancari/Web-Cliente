@@ -13,7 +13,7 @@
         <div class="bodySection">
             <div class="box">
                 <h5 class="titlePromotions">Promociones</h5>
-                <carousel v-if="this.listPromocion.promotions.length != 0" class="carouselEdit"
+                <carousel v-if="this.listPromocion.length != 0" class="carouselEdit"
                     :autoplay="false" 
                     :nav="false" 
                     :items="3"
@@ -80,7 +80,7 @@
                     </div>
                 </div>
                 <div class="row alignHorizontal" v-if="activeSection == 2">
-                    <div v-if="this.listRestaurantes != {}" style="width: 100%; margin: 0;" class="row">
+                    <div style="width: 100%; margin: 0;" class="row">
                         <div v-for="rest in this.listRestaurantes" :key="rest.uid" :id="rest.uid" class="col-md-6 col-12 mb-4">
                             <b-card
                                 :img-src="rest.photo"
@@ -130,7 +130,7 @@
                             </b-card>
                         </div>
                     </div>
-                    <div v-else class="box-mensaje">
+                    <div id="restaurantes" class="box-mensaje d-none">
                         <p style="width: 100%; text-align: center; margin: 1.5rem 0; padding: 1rem; background: rgb(245, 83, 83); color: #fff; font-weight: bold !important; border-radius: 5px; box-shadow: 1px 1px 5px 0 rgba(0,0,0,.25);">Todavia no hay restaurantes cercanos a ti...</p>
                     </div>
                 </div>
@@ -174,6 +174,7 @@
 <script>
     // import config from "../config.js";
     /* Components */
+    import GoogleMapsApiLoader from "google-maps-api-loader";
     import carousel from 'vue-owl-carousel'
     import Navbar from '../components/navbar';
     /* Modals */
@@ -199,6 +200,7 @@
         },
         data: function () {
             return {
+                apiKey: "AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho",
                 searchImg: searchImg,
                 shared: shared,
                 arrowPrev: arrowPrev,
@@ -211,41 +213,16 @@
                 responsive : "{0:{items:1,nav:false},600:{items:3,nav:true}}",
                 activeSection: 2,
                 listRestaurantes: {},
-                listPromocion: {},
-                listProductos: []
-            }
-        },
-        async beforeMount() {
-            if (this.$store.getters.isLoggedIn === true) {
-                this.$store.state.user = await api.post("cliente/info/", {uid: this.$store.getters.uid});
-                this.listRestaurantes = await api.get(`restaurantes/list/`);
-                this.listProductos = await api.get(`products/`);
-                this.listPromocion = await api.get("promotions/");
-                var _MB = this.$store.getters.user.accounts;
-                var _books = _MB.books.value;
-                var _eats = _MB.eats.value;
-                var _fuel = _MB.fuel.value;
-                var _gyms = _MB.gyms.value;
-                var _kids = _MB.kids.value;
-                var _propia = _MB.propia.value;
-                var _trips = _MB.trips.value;
-                var total = _books + _eats + _fuel + _gyms + _kids + _propia + _trips;
-
-                this.$store.state.myBalance = total;
-
-                console.log(this.listRestaurantes);
-                console.log(this.$store.getters.user);
-
-                this.$store.commit("done");
-            }
-
-            if (this.$store.getters.isLoggedIn === false) {
-                this.$store.state.token = "";
-                this.$store.state.uid = "";
-                this.$store.state.user = {};
-                this.$store.state.myBalance = 0;
-                this.$store.commit("error");
-                this.$router.push("/");
+                listRestauranteslength: 0,
+                listPromocion: {
+                    length: 0,
+                    data: []
+                },
+                listProductos: {
+                    length: 0,
+                    data: []
+                },
+                google: "",
             }
         },
         methods: {
@@ -264,10 +241,111 @@
                 }
             }
         },
+        async beforeMount() {
+            const googleMapApi = await GoogleMapsApiLoader({
+                apiKey: this.apiKey,
+                libraries: ['places']
+            });
+            this.google = googleMapApi;
+
+            if (this.$store.getters.isLoggedIn === false) {
+                window.localStorage.clear();
+                this.$store.state.token = "";
+                this.$store.state.uid = "";
+                this.$store.state.user = {};
+                this.$store.state.myBalance = 0;
+                this.$store.commit("notLoading");
+                this.$router.push("/");
+            } else {
+                if (this.$store.getters.isLoggedIn === true) {
+                    if (this.$store.getters.token != "" || this.$store.getters.token != null) {
+                        if (this.$store.getters.uid != "") {
+                            this.$store.state.user = await api.post("cliente/info/", {uid: this.$store.getters.uid});
+
+                            if (this.$store.getters.user.country != "") {
+                                await api.get(`restaurantes/list/`).then(res => {
+                                    // -> restaurantes cerca de mi.
+                                    var myCountry = this.$store.getters.user.country;
+                                    var geoCode = new this.google.maps.Geocoder();
+                                    var cant = 0;
+                                    var _list = [];
+                                    var notData = false;
+    
+                                    res.forEach(el => {
+                                        geoCode.geocode({"latLng": new this.google.maps.LatLng(el.lat, el.lng)}, function(results, status) {
+                                            if (status === "OK") {
+                                                results[0].address_components.forEach(_getType => {
+                                                    if (_getType.types[0] === "country") {
+                                                        var _country = _getType.long_name;
+                                                        if (_country === myCountry) {
+                                                            _list.push({
+                                                                uid: el.place_id,
+                                                                name: el.name,
+                                                                photo: el.photo,
+                                                                lat: el.lat,
+                                                                lng: el.lng
+                                                            });
+                                                            cant = cant + 1;
+                                                            if (cant > 0) {
+                                                                notData = true;
+                                                            }
+                                                        }
+                                                        if (notData === false) {
+                                                            document.querySelector("#restaurantes").classList.remove("d-none");
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    });
+
+                                    this.listRestaurantes = _list;
+                                }).catch(err => {
+                                    console.log(err);
+                                });
+                            }
+
+                            this.listProductos.data = await api.get(`products/`);
+                            this.listPromocion.data = await api.get("promotions/");
+                            var _MB = this.$store.getters.user.accounts;
+                            var _books = _MB.books.value;
+                            var _eats = _MB.eats.value;
+                            var _fuel = _MB.fuel.value;
+                            var _gyms = _MB.gyms.value;
+                            var _kids = _MB.kids.value;
+                            var _propia = _MB.propia.value;
+                            var _trips = _MB.trips.value;
+                            var total = _books + _eats + _fuel + _gyms + _kids + _propia + _trips;
+            
+                            this.$store.state.myBalance = total;
+
+                            console.log(this.$store.getters.user);
+                            this.$store.commit("done");
+                        } else {
+                            window.localStorage.clear();
+                            this.$store.state.token = "";
+                            this.$store.state.uid = "";
+                            this.$store.state.user = {};
+                            this.$store.state.myBalance = 0;
+                            this.$store.commit("notLoading");
+                            this.$router.push("/");
+                        }
+                    } else {
+                        window.localStorage.clear();
+                        this.$store.state.token = "";
+                        this.$store.state.uid = "";
+                        this.$store.state.user = {};
+                        this.$store.state.myBalance = 0;
+                        this.$store.commit("notLoading");
+                        this.$router.push("/");
+                    }
+                }
+            }
+        },
         mounted() {
             this.$store.commit("loading");
-            console.log(this.$store.getters);
-            console.log(this.$store.getters.isLoggedIn);
+            // console.log(this.$store.getters);
+            // console.log(this.$store.getters.isLoggedIn);
         }
     }
 </script>
