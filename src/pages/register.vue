@@ -158,8 +158,9 @@
     import arrowLeft from "../assets/img/icons/flechavolver.svg";
 
     import Datepicker from 'vuejs-datepicker';
-    import { es } from 'vuejs-datepicker/dist/locale'
-    import api from "../api.js"
+    import { es } from 'vuejs-datepicker/dist/locale';
+    // import store from "../store/store.js";
+    import api from "../api.js";
     // import LoadScript from "vue-plugin-load-script";
     var Jquery = require("jquery");
 
@@ -532,10 +533,12 @@
                     api.post('cliente/registro/', data).then(res => {
                         if (res.next === "OK") {
                             api.post('auth/Bynumber', {name: `${res.name.toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();})}`, phone: `${res.phone}`}).then(res => {
+                                console.log(res);
                                 if (res.disabled === false) {
                                     this.btnModal = document.querySelector(`#btn-modal`);
                                     this.btnModal.click();
                                     setTimeout(() => {
+                                        window.localStorage.setItem("phoneNumber", data.phone);
                                         if (document.querySelector("#nextLink")) {
                                             document.querySelector("#nextLink").click();
                                         }

@@ -10,6 +10,7 @@ export default function(/* { ssrContext } */) {
             token: "",
             uid: "",
             isFirstTime: true,
+            phoneNumber: "",
             status: "",
             myBalance: 0,
             user: {}
@@ -19,6 +20,7 @@ export default function(/* { ssrContext } */) {
             token: state => state.token,
             uid: state => state.uid,
             isFirstTime: state => state.isFirstTime,
+            phoneNumber: state => state.phoneNumber,
             status: state => state.status,
             myBalance: state => state.myBalance,
             user: state => state.user

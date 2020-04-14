@@ -1,12 +1,13 @@
-import Vue from 'vue'
-import router from 'vue-router'
-import Login from '@/pages/login'
-import Register from '@/pages/register'
-import validarNumero from '@/pages/ValidarNumero'
+import Vue from 'vue';
+import router from 'vue-router';
+import Login from '@/pages/login';
+import Register from '@/pages/register';
+import validarNumero from '@/pages/ValidarNumero';
 import Home from '@/pages/home';
-import Tutorial from '@/pages/tutorial'
+import Tutorial from '@/pages/tutorial';
+import recovery from '@/pages/recovery';
 
-Vue.use(router)
+Vue.use(router);
 
 export default new router({
   routes: [
@@ -34,6 +35,11 @@ export default new router({
       path: '/tutorial',
       name: 'tutorial',
       component: Tutorial
+    },
+    {
+      path: '/recovery/:token',
+      name: 'recovery',
+      component: recovery
     }
   ]
 })

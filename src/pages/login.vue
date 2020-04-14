@@ -12,10 +12,10 @@
                     <p data-error="username" class="msgError d-none">*msgError</p>
                 </div>
                 <div class="form-group  mb-0">
-                    <input :type="type" id="password" class="form-control" required >
+                    <input type="password" id="password" class="form-control" required >
                     <label class="form-control-placeholder" for="password">Password</label>
-                    <a class="btn btnShow" @click="showPassword">
-                        <i :class="icon" ></i>
+                    <a style="padding-left: 0; padding-right: 0;" class="btn btnShow" @click="showPassword">
+                        <i style="display: inline-block; width: 40px; padding: .5rem 0; cursor: pointer;" class="fas fa-eye" ></i>
                     </a>
                     <p data-error="password" class="msgError d-none">*msgError</p>
                 </div>
@@ -28,7 +28,7 @@
                             </div>
                         </div>
                         <div class="col-6">
-                            <button type="button" class="btn color-blue my-2 btnNew">Nueva contraseña</button>
+                            <button type="button" class="btn color-blue my-2 btnNew" @click="OpenModr(1)">Nueva contraseña</button>
                         </div>
                     </div>
                 </div>
@@ -38,68 +38,101 @@
                     <router-link style="display: none;" id="nextLink2" to="/home"></router-link>
                     <a class="btn btnRegister"><router-link to="/register">Registrarse</router-link></a>
                 </div>
+            </form>
 
-                <div class="modal fade" id="recuperar" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-                    <div class="modal-dialog modal-dialog-centered" role="document">
-                        <div class="modal-content sizeModal3 py-1" style="max-width: 100% !important;">
-                            <a href="">
-                                <img class="iconBackModalMap" data-dismiss="modal" src="img/icons/flechavolver.svg" width="30px" alt="" @click="recuperar=defaultrecuperar">
-                            </a>
-                            <div class="modal-body text-lightblue paddingModalBody-fide">
-                                <h4 class="text-center mt-2">Recuperar contraseña</h4>
-                                <div class="row text-center mt-4 rowbutton">
-                                    <div class="col-12">
-                                        <div class="text-center" v-if="recuperar.type=='0'">
-                                            <button @click="recuperar.type = 1" class="btn btn-darkblue btnResponsive" >Email</button>
-                                        </div>
-
-                                        <div class="text-center" v-if="recuperar.type=='0'">
-                                            <button @click="recuperar.type = 2" class="btn btn-darkblue btnResponsive" >Teléfono</button>
-                                        </div>
-
-                                        <div class="inputBox" v-if="recuperar.type==1">
-                                            <input type="text" placeholder="Eje: raus@raus.com" v-model="recuperar.email">
-                                            <label></label>
-                                        </div>
-                                        
-                                        <div class="inputBox" v-if="recuperar.type==2">
-                                            <input type="text" placeholder="Eje: +10000000" v-model="recuperar.email" :readonly="recuperar.waitcode">
-                                            <label></label>
-                                        </div>
-                                        <div class="inputBox" v-if="recuperar.waitcode && recuperar.type==2 && recuperar.formulario=='0'">
-                                            <input type="text" v-model="recuperar.codigo" @input="recuperar.codigo = $event.target.value.toUpperCase()" placeholder="Ingresa el código enviado aquí" maxlength="4">
-                                            <label></label>
-                                        </div>
-                                        <div class="text-center" v-if="!recuperar.waitcode && recuperar.type==1">
-                                            <button @click="Sendmail" class="btn btn-darkblue btnResponsive" >Enviar correo</button>
-                                        </div>
-                                        <div class="text-center" v-if="!recuperar.waitcode && recuperar.type==2 && recuperar.formulario=='0'">
-                                            <button @click="singinPhone(2)" class="btn btn-darkblue btnResponsive" >Verificar teléfono</button>
-                                        </div>
-                                        <div class="text-center" v-if="recuperar.waitcode && recuperar.type==2 && recuperar.formulario=='0'">
-                                            <button @click="VerifycodeRecuperar" class="btn btn-darkblue btnResponsive" >Verificar código</button>
-                                        </div>
-                                        <div class="inputBox" v-if="recuperar.formulario==1">
-                                            <input placeholder="Nueva contraseña" :type="!showd?'password':'text'" v-model="$v.forget.password.$model" :class="$v.forget.password.$error?'has-error':''" required>
-                                            <label></label>
-                                        </div>
-                                        <div class="inputBox" v-if="recuperar.formulario==1">
-                                            <input placeholder="Conirmar contraseña" :type="!showt?'password':'text'" v-model="$v.forget.passwordtwo.$model" :class="$v.forget.passwordtwo.$error?'has-error':''" required>
-                                            <label></label>
-                                        </div>
-                                        <div class="text-center" v-if="recuperar.formulario==1">
-                                            <button @click="changePass" class="btn btn-darkblue btnResponsive">Crear nueva contraseña</button>
-                                        </div>
-                                        <p v-if="errd" class="pError">{{errd}}</p>
-                                        <p v-if="errt" class="" style="color:blue;">{{errt}}</p>
-                                        <p class="pError mb-2" v-if="$v.forget.password.$error || $v.forget.passwordtwo.$error">La contraseña debe contener mínimo 8 y máximo 15 caracteres, al menos un dígito, una letra mayúscula, una letra minuscula y un caracter especial.</p>
+            <div class="modal" id="modalphone" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content sizeModal3 py-1" style="max-width: 100% !important;">
+                        <a>
+                            <img class="iconBackModalMap" src="../assets/img/icons/flechavolver.svg" width="30px" alt="">
+                        </a>
+                        <div class="modal-body text-lightblue paddingModalBody-fide">
+                            <h4 class="text-center mt-2">Teléfono</h4>
+                            <div class="row text-center mt-4 rowbutton">
+                                <div class="col-12">
+                                    <div class="inputBox">
+                                        <input type="text" placeholder="(+000000)" v-model="$v.user.email.$model" @keyup="OpenMod" :readonly="waitcode">
+                                        <label></label>
                                     </div>
+                                    <div class="inputBox" v-if="waitcode">
+                                        <input type="text" v-model="codigo" @input="codigo = $event.target.value.toUpperCase()" placeholder="Ingresa el código enviado aquí" maxlength="4">
+                                        <label></label>
+                                    </div>
+                                    <div class="text-center" v-if="!waitcode">
+                                        <button @click="singinPhone(1)" class="btn btn-darkblue btnResponsive" >Verificar teléfono</button>
+                                    </div>
+                                    <div class="text-center" v-if="waitcode">
+                                        <button @click="Verifycode" class="btn btn-darkblue btnResponsive" >Verificar código</button>
+                                    </div>
+                                    <p v-if="errd" class="pError">{{errd}}</p>
+                                    <p v-if="errt" class="" style="color:blue;">{{errt}}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </form>
+            </div>
+
+            <div class="modal" id="recuperar" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content sizeModal3 py-1" style="max-width: 100% !important;">
+                        <a>
+                            <img class="iconBackModalMap" src="../assets/img/icons/flechavolver.svg" width="30px" alt="" @click="OpenModr(2)">
+                        </a>
+                        <div class="modal-body text-lightblue paddingModalBody-fide">
+                            <h4 class="text-center mt-2">Recuperar contraseña</h4>
+                            <div class="row text-center mt-4 rowbutton">
+                                <div class="col-12">
+                                    <div class="text-center" v-if="recuperar.type=='0'">
+                                        <button @click="recuperar.type = 1" class="btn btn-darkblue btnResponsive" >Email</button>
+                                    </div>
+
+                                    <div class="text-center" v-if="recuperar.type=='0'">
+                                        <button @click="recuperar.type = 2" class="btn btn-darkblue btnResponsive" >Teléfono</button>
+                                    </div>
+
+                                    <div class="inputBox" v-if="recuperar.type==1">
+                                        <input type="text" placeholder="Eje: raus@raus.com" v-model="recuperar.email">
+                                        <label></label>
+                                    </div>
+                                    
+                                    <div class="inputBox" v-if="recuperar.type==2">
+                                        <input type="text" placeholder="Eje: +10000000" v-model="recuperar.email" :readonly="recuperar.waitcode">
+                                        <label></label>
+                                    </div>
+                                    <div class="inputBox" v-if="recuperar.waitcode && recuperar.type==2 && recuperar.formulario=='0'">
+                                        <input type="text" v-model="recuperar.codigo" @input="recuperar.codigo = $event.target.value.toUpperCase()" placeholder="Ingresa el código enviado aquí" maxlength="4">
+                                        <label></label>
+                                    </div>
+                                    <div class="text-center" v-if="!recuperar.waitcode && recuperar.type==1">
+                                        <button @click="Sendmail" class="btn btn-darkblue btnResponsive" >Enviar correo</button>
+                                    </div>
+                                    <div class="text-center" v-if="!recuperar.waitcode && recuperar.type==2 && recuperar.formulario=='0'">
+                                        <button @click="singinPhone(2)" class="btn btn-darkblue btnResponsive" >Verificar teléfono</button>
+                                    </div>
+                                    <div class="text-center" v-if="recuperar.waitcode && recuperar.type==2 && recuperar.formulario=='0'">
+                                        <button @click="VerifycodeRecuperar" class="btn btn-darkblue btnResponsive" >Verificar código</button>
+                                    </div>
+                                    <div class="inputBox" v-if="recuperar.formulario==1">
+                                        <input placeholder="Nueva contraseña" :type="!showd?'password':'text'" v-model="$v.forget.password.$model" :class="$v.forget.password.$error?'has-error':''" required>
+                                        <label></label>
+                                    </div>
+                                    <div class="inputBox" v-if="recuperar.formulario==1">
+                                        <input placeholder="Conirmar contraseña" :type="!showt?'password':'text'" v-model="$v.forget.passwordtwo.$model" :class="$v.forget.passwordtwo.$error?'has-error':''" required>
+                                        <label></label>
+                                    </div>
+                                    <div class="text-center" v-if="recuperar.formulario==1">
+                                        <button @click="changePass" class="btn btn-darkblue btnResponsive">Crear nueva contraseña</button>
+                                    </div>
+                                    <p v-if="errd" class="pError">{{errd}}</p>
+                                    <p v-if="errt" class="" style="color:blue;">{{errt}}</p>
+                                    <p class="pError mb-2" v-if="$v.forget.password.$error || $v.forget.passwordtwo.$error">La contraseña debe contener mínimo 8 y máximo 15 caracteres, al menos un dígito, una letra mayúscula, una letra minuscula y un caracter especial.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -111,12 +144,15 @@
     import * as firebase from "firebase";
     import { required, minLength } from 'vuelidate/lib/validators'
     import axios from "axios";
+    // import store from "../store/store.js";
+    import api from "../api.js";
 
     export default {
         name: 'login',
         data: function () {
             return {
                 image: config.rutaWeb(image),
+                event: "",
                 showHide: true,
                 type: "password",
                 icon: "fas fa-eye",
@@ -124,6 +160,7 @@
                 formPassword: "",
                 dataUser: {},
                 dataToken: "",
+                isNaN: NaN,
                 recuperar: {
                     email: '',
                     waitcode: false,
@@ -142,6 +179,10 @@
                     password: '',
                     passwordtwo: ''
                 },
+                user: {
+                    email : '',
+                    password: ''
+                },
                 codigo: '',
                 err:'',
                 show:false,
@@ -156,13 +197,12 @@
         },
         watch:{
             showM() {
-                var $ = Jquery;
                 if (this.showM) {
-                    $('#modalphone').modal('show');
+                    document.querySelector('#modalphone').modal('show');
                     this.codigo = "";
                     this.waitcode = false;
                 } else {
-                    $('#modalphone').modal('hide');
+                    document.querySelector('#modalphone').modal('hide');
                 }
             }
         },
@@ -210,13 +250,29 @@
             }
         },
         methods: {
-            showPassword() {
-                if(this.type === "password") {
-                    this.type = "text"
-                    this.icon = "fas fa-eye"
-                } else {
-                    this.type = "password"
-                    this.icon = "fas fa-eye-slash"
+            showPassword(e) {
+                var _parent = e.target.parentNode.parentNode;
+                var _input = _parent.firstElementChild;
+                var _icon = e.target;
+
+                if (_input.getAttribute("type") === "password") {
+                    if (_icon.classList.contains("fa-eye")) {
+                        _input.setAttribute("type", "text");
+                        _icon.classList.remove("fa-eye");
+                        _icon.classList.add("fa-eye-slash");
+
+                        return false;
+                    }
+                }
+
+                if (_input.getAttribute("type") === "text") {
+                    if (_icon.classList.contains("fa-eye-slash")) {
+                        _input.setAttribute("type", "password");
+                        _icon.classList.remove("fa-eye-slash");
+                        _icon.classList.add("fa-eye");
+
+                        return false;
+                    }
                 }
             },
             signIn(id) {
@@ -239,7 +295,6 @@
                 });
             },
             OpenModr(op) {
-                var $ = Jquery;
                 this.recuperar = {
                     email: '',
                     waitcode: false,
@@ -248,11 +303,19 @@
                     formulario: "0"
                 };
                 if (op==1) {
-                    $('#recuperar').modal('show');
+                    document.querySelector('#recuperar').classList.add("__show");
                 } else {
-                    $('#recuperar').modal('hide');
+                    document.querySelector('#recuperar').classList.remove('__show');
                 }
             },
+            OpenModr2(op) {
+                if (op==1) {
+                    document.querySelector('#modalphone').classList.add("__show");
+                } else {
+                    document.querySelector('#modalphone').classList.remove('__show');
+                }
+            },
+            OpenMod(e) { this.event = e },
             async login() {
                 this.formUsername = document.querySelector("#username");
                 this.formPassword = document.querySelector("#password");
@@ -280,55 +343,166 @@
                 }
 
                 if (this.formUsername.value != "" && this.formPassword != "") {
-                    this.$store.commit("loading");
-                    if (this.formUsername.value.substr(0, 1) === "+") {
-                        // Sesion por numberPhone.
-                    } else {
-                        firebase.auth().signInWithEmailAndPassword(this.formUsername.value, this.formPassword.value)
-                            .then((res) => {
-                                if (document.querySelector("#remember")) {
-                                    if (document.querySelector("#remember").checked === true) {
-                                        window.localStorage.setItem("remember", "true");
-                                    } else {
-                                        window.localStorage.setItem("remember", "false");
+                    var isNumber = isNaN(document.querySelector("#username").value);
+                    if (!isNumber) {
+                        if (document.querySelector("#username").value.substr(0, 1) != "+") {
+                            document.querySelector("[data-error='username']").innerText = "Lo sentimos pero el número de telefono debe llevar el codigo de area al inicio del país de origen de la cuenta. Ejemplo: +000 seguido de tu número de telefono.";
+                            document.querySelector("[data-error='username']").classList.remove("d-none");
+
+                            setTimeout(() => {
+                                document.querySelector("[data-error='username']").classList.add("d-none");
+                            }, 3500);
+
+                            return false;
+                        } else {
+                            this.$store.commit("loading");
+                            setTimeout(() => {
+                                this.$store.commit("notLoading");
+                            }, 3000);
+
+                            api.get(`auth/signInPhone/${this.formUsername.value}`).then(res => {
+                                firebase.auth().signInWithEmailAndPassword(res.email, this.formPassword.value).then((res) => {
+                                    if (document.querySelector("#remember")) {
+                                        if (document.querySelector("#remember").checked === true) {
+                                            window.localStorage.setItem("remember", "true");
+                                        } else {
+                                            window.localStorage.setItem("remember", "false");
+                                        }
                                     }
-                                }
-
-                                if (window.localStorage.getItem("remember") === "true"){
-                                    window.localStorage.setItem("username", document.querySelector("#username").value);
-                                    window.localStorage.setItem("password", document.querySelector("#password").value);
-                                }
-
-                                if (window.localStorage.getItem("remember") === "false"){
-                                    window.localStorage.setItem("username", document.querySelector("#username").value);
-                                    window.localStorage.setItem("password", document.querySelector("#password").value);
-                                }
-                                
-                                this.signIn(res.user.uid);
-
-                                if (window.localStorage.getItem("token") != "") {
-                                    this.$store.state.token = window.localStorage.getItem("token");
-                                    this.$store.state.isLoggedIn = true;
-                                    this.$store.state.uid = res.user.uid;
-                                }
+    
+                                    if (window.localStorage.getItem("remember") === "true"){
+                                        window.localStorage.setItem("username", document.querySelector("#username").value);
+                                        window.localStorage.setItem("password", document.querySelector("#password").value);
+                                    }
+    
+                                    if (window.localStorage.getItem("remember") === "false"){
+                                        window.localStorage.setItem("username", document.querySelector("#username").value);
+                                        window.localStorage.setItem("password", document.querySelector("#password").value);
+                                    }
+                                    
+                                    this.signIn(res.user.uid);
+    
+                                    if (window.localStorage.getItem("token") != "") {
+                                        this.$store.state.token = window.localStorage.getItem("token");
+                                        this.$store.state.isLoggedIn = true;
+                                        this.$store.state.uid = res.user.uid;
+                                    }
+                                    setTimeout(() => {
+                                        this.$store.commit("done");
+                                        this.$store.getters.isFirstTime === true
+                                            ? this.$router.push("/tutorial")
+                                            : this.$router.push("/home");
+                                    }, 1000);
+                                }).catch((error) => {
+                                    document.querySelector("[data-error='password']").classList.remove("d-none");
+                                    document.querySelector("[data-error='password']").innerText = "Contraseña o Usuario incorrectos por favor verifique.";
+                                    console.log(error);
+                                    this.$store.commit("error");
+                                });
+                            }).catch(err => {
+                                var _er = err.msg;
                                 setTimeout(() => {
-                                    this.$store.commit("done");
-                                    this.$store.getters.isFirstTime === true
-                                        ? this.$router.push("/tutorial")
-                                        : this.$router.push("/home");
-                                }, 1000);
-                            }).catch((error) => {
-                                document.querySelector("[data-error='error']").classList.remove("d-none");
-                                document.querySelector("[data-error='error']").innerText = "Contraseña o Usuario incorrectos por favor verifique.";
-                                console.log(error);
-                                this.$store.commit("error");
+                                    if (_er === true) {
+                                        document.querySelector("[data-error='username']").innerText = "El número de telefono que introdujo no existe.";
+                                        document.querySelector("[data-error='username']").classList.remove("d-none");
+        
+                                        setTimeout(() => {
+                                            document.querySelector("[data-error='username']").classList.add("d-none");
+                                        }, 3500);
+        
+                                        return false;
+                                    }
+                                }, 950);
                             });
+                        }
+                    } else {
+                        this.$store.commit("loading");
+                        setTimeout(() => {
+                            this.$store.commit("notLoading");
+                        }, 3000);
+
+                        firebase.auth().signInWithEmailAndPassword(this.formUsername.value, this.formPassword.value).then((res) => {
+                            if (document.querySelector("#remember")) {
+                                if (document.querySelector("#remember").checked === true) {
+                                    window.localStorage.setItem("remember", "true");
+                                } else {
+                                    window.localStorage.setItem("remember", "false");
+                                }
+                            }
+
+                            if (window.localStorage.getItem("remember") === "true"){
+                                window.localStorage.setItem("username", document.querySelector("#username").value);
+                                window.localStorage.setItem("password", document.querySelector("#password").value);
+                            }
+
+                            if (window.localStorage.getItem("remember") === "false"){
+                                window.localStorage.setItem("username", document.querySelector("#username").value);
+                                window.localStorage.setItem("password", document.querySelector("#password").value);
+                            }
+                            
+                            this.signIn(res.user.uid);
+
+                            if (window.localStorage.getItem("token") != "") {
+                                this.$store.state.token = window.localStorage.getItem("token");
+                                this.$store.state.isLoggedIn = true;
+                                this.$store.state.uid = res.user.uid;
+                            }
+                            setTimeout(() => {
+                                this.$store.commit("done");
+                                this.$store.getters.isFirstTime === true
+                                    ? this.$router.push("/tutorial")
+                                    : this.$router.push("/home");
+                            }, 1000);
+                        }).catch((error) => {
+                            document.querySelector("[data-error='password']").classList.remove("d-none");
+                            document.querySelector("[data-error='password']").innerText = "Contraseña o Usuario incorrectos por favor verifique.";
+                            console.log(error);
+                        });
                     }
                 }
             },
+            async singinPhone(op){
+                var t = this;
+                this.$store.commit("loading");
+                setTimeout(() => {
+                    this.$store.commit("notLoading");
+                }, 3000);
+                await api
+                    .post("auth/Bynumber" , {name: "", phone: op ==1 ? t.user.email : t.recuperar.email})
+                    .then(resp => {
+                        if (resp.data.uid != "") {
+                            if(op ==1)
+                                t.waitcode = resp.data.uid;
+                            else if(op ==2)
+                                t.recuperar.waitcode = resp.data.uid;
+
+                            return false;
+                        }
+                        if (resp.data.uid === "") {
+                            t.errd = "El teléfono no existe, o verifique e intente de nuevo.";
+                            setTimeout(function() {
+                                t.errd = "";
+                            }, 5000);
+                            return false;
+                        }
+
+                    })
+                    .catch(error => {
+                        t.errd = error;
+                        t.errd = "El teléfono no existe, o verifique e intente de nuevo.";
+
+                        setTimeout(function() {
+                            t.errd = "";
+                        }, 5000);
+                    });
+            },
             async Verifycode() {
+                this.$store.commit("loading");
+                setTimeout(() => {
+                    this.$store.commit("notLoading");
+                }, 3000);
                 await axios.post("https://myraus.com:9283/api/sms/VerificarCodigo" , {codigo: this.codigo}).then(resp => {
-                    if(resp.data.result){
+                    if(resp.result === true){
                         Jquery('#modalphone').modal('hide');
                         this.$store.state.uid = this.waitcode;
                         this.errt = resp.data.message;
@@ -337,7 +511,6 @@
                             this.errt = "";
                         }, 5000);
                     } else {
-                        this.$store.commit('notLoading');
                         this.errd = resp.data.message;
 
                         setTimeout(function() {
@@ -355,7 +528,10 @@
                 });
             },
             async VerifycodeRecuperar() {
-                this.$store.commit('loading');
+                this.$store.commit("loading");
+                setTimeout(() => {
+                    this.$store.commit("notLoading");
+                }, 3000);
                 await axios.post("https://myraus.com:9283/api/sms/VerificarCodigo" , {codigo: this.recuperar.codigo}).then(resp => {
                     this.$store.commit('notLoading')
                     if(resp.data.result) {
@@ -378,15 +554,17 @@
                     setTimeout(function() {
                         this.errd = "";
                     }, 5000);
-                    this.$store.commit('notLoading');
                 });
             },
             async Sendmail() {
-                this.$store.commit('loading')
+                this.$store.commit("loading");
+                setTimeout(() => {
+                    this.$store.commit("notLoading");
+                }, 3000);
                 var url = config.rutaWeb("/#/recovery/");
 
-                await axios.post("/auth/ByEmail" , {email: this.recuperar.email, url: url}).then(resp => {
-                    this.$store.dispatch('desactiveloading')
+                await api.post("auth/ByEmail", {email: this.recuperar.email, url: url}).then(resp => {
+                    console.log(resp.data);
                     if(resp.data.uid){
                         this.errt = "Se le ha enviado un correo con instrucciones para restaurar su contraseña.";
 
@@ -407,7 +585,6 @@
                     setTimeout(function() {
                         this.errd = "";
                     }, 5000);
-                    this.$store.commit('notLoading');
                 });
             },
             async changePass() {
@@ -421,10 +598,13 @@
                         return;
                     }
 
-                    this.$store.commit('loading')
+                    this.$store.commit("loading");
+                    setTimeout(() => {
+                        this.$store.commit("notLoading");
+                    }, 3000);
                     this.forget.uid = this.recuperar.waitcode;
                     this.forget.new_password = this.forget.passwordtwo;
-                    await axios.post("/auth/resetPasswordLog" , this.forget).then(resp => {
+                    await api.post("auth/resetPasswordLog" , this.forget).then(resp => {
                         this.$store.commit('notLoading');
                         if(resp.data.uid){
                             this.errt = "Contraseña reestablecida con éxito.";
@@ -445,7 +625,6 @@
                         setTimeout(function() {
                             this.errd = "";
                         }, 5000);
-                        this.$store.commit('notLoading');
                     });
                 }
             }
@@ -627,4 +806,32 @@
             // text-shadow: 1px 1px 1px rgba(0, 0, 0, .45);
         }
     }   
+</style>
+
+<style scoped lang="css">
+    #recuperar.modal.__show {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        display: block !important;
+        z-index: 900;
+    }
+
+    #recuperar.modal.__show .iconBackModalMap {
+        top: 0 !important;
+        left: 0 !important;
+    }
+
+    #modalphone.modal.__show {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        display: block !important;
+        z-index: 900;
+    }
+
+    #modalphone.modal.__show .iconBackModalMap {
+        top: 0 !important;
+        left: 0 !important;
+    }
 </style>

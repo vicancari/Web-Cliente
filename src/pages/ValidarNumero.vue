@@ -16,7 +16,7 @@
                     <div class="form-group botonera">
                         <button type="button" id="btnRegistar" disabled class="btn btnRegister" @click="verificarCodigo">Siguiente</button>
                         <button type="button" style="display: none;" id="btn-modal" v-b-modal.my-modal></button>
-                        <router-link style="display: none;" id="nextLink" to="/">next</router-link>
+                        <router-link style="display: none;" id="nextLink" to="/tutorial">next</router-link>
                     </div>
                 </div>
             </form>
@@ -33,11 +33,14 @@
 </template>
 
 <script>
+    // import vue from "vue";
     import config from "../config.js";
     // import funciones from "../funciones.js";
     import checkimg from "../assets/img/icons/check.svg";
     import image from "../assets/img/logo.png";
-    var $ = require("jquery");
+    import axios from "axios";
+    import api from "../api.js";
+    var Jquery = require("jquery");
 
     export default {
         name: 'validarNumero',
@@ -58,6 +61,25 @@
             }
         },
         methods: {
+            signIn(id) {
+                Jquery.ajax({
+                    type: "POST",
+                    url: config.rutaApi("auth/signIn/"),
+                    data: {
+                        uid: id
+                    },
+                    dataType: "json",
+                    beforeSend: function () {
+                        console.log("Iniciando sesion....");
+                    },
+                    success: function(data) {
+                        window.localStorage.setItem("token", data.token);
+                    },
+                    error: function(data) {
+                        console.log(data);
+                    }
+                });
+            },
             verificarCodigo() {
                 this.formCodigoPin = document.querySelector("#codigo-pin");
 
@@ -85,23 +107,73 @@
 
                 if (this.formCodigoPin.value != "" && this.formCodigoPin.value.length === 4) {
                     console.log(this.formCodigoPin.value);
-                    $.post('https://myraus.com:9283/api/sms/VerificarCodigo', {codigo: `${this.formCodigoPin.value}`}, function(resp) {
-                        console.log(resp);
-                        if (resp.result === true) {
+                    axios.post('https://myraus.com:9283/api/sms/VerificarCodigo', {codigo: `${this.formCodigoPin.value}`}).then(res => {
+                        console.log(res);
+                        if (res.result === true) {
                             this.btnModal = document.querySelector(`#btn-modal`);
                             this.btnModal.click();
-                            setTimeout(() => {
-                                if (document.querySelector("#nextLink")) {
-                                    document.querySelector("#nextLink").click();
+                            var myNumber = window.localStorage.getItem("phoneNumber");
+                            console.log(myNumber);
+                            api.get(`auth/signInPhone/${myNumber}`).then(res => {
+                                if (document.querySelector("#remember")) {
+                                    if (document.querySelector("#remember").checked === true) {
+                                        window.localStorage.setItem("remember", "true");
+                                    } else {
+                                        window.localStorage.setItem("remember", "false");
+                                    }
                                 }
-                            }, 1000);
+
+                                if (window.localStorage.getItem("remember") === "true"){
+                                    window.localStorage.setItem("username", document.querySelector("#username").value);
+                                    window.localStorage.setItem("password", document.querySelector("#password").value);
+                                }
+
+                                if (window.localStorage.getItem("remember") === "false"){
+                                    window.localStorage.setItem("username", document.querySelector("#username").value);
+                                    window.localStorage.setItem("password", document.querySelector("#password").value);
+                                }
+                                
+                                this.signIn(res.uid);
+
+                                if (window.localStorage.getItem("token") != "") {
+                                    this.$store.state.token = window.localStorage.getItem("token");
+                                    this.$store.state.isLoggedIn = true;
+                                    this.$store.state.uid = res.uid;
+                                }
+                                setTimeout(() => {
+                                    if (document.querySelector("#nextLink")) {
+                                        document.querySelector("#nextLink").click();
+                                    }
+                                }, 1000);
+                            }).catch(err => {
+                                var _er = err.msg;
+                                setTimeout(() => {
+                                    if (_er === true) {
+                                        console.log(err);
+                                        return false;
+                                    }
+                                }, 950);
+                            });
+                        } else {
+                            document.querySelector(`[data-error="codigo-pin"]`).innerHTML = res.data.message;
+                            document.querySelector(`[data-error="codigo-pin"]`).classList.remove("d-none");
+
+                            setTimeout(() => {
+                                document.querySelector(`[data-error="codigo-pin"]`).innerHTML = "";
+                                document.querySelector(`[data-error="codigo-pin"]`).classList.add("d-none");
+                            }, 3500);
+
+                            return false;
                         }
+                    }).catch(err => {
+                        console.log(err);
                     });
                 }
             }
         },
         mounted() {
             this.$store.state.status = "";
+            console.log(window.localStorage.getItem("phoneNumber"));
         },
     }
 </script>
@@ -280,5 +352,192 @@
     }
     #GmapMark .modal.show .modal-dialog .modal-content {
         height: 70vh !important;
+    }
+</style>
+
+<!-- Styles Toast -->
+<style scoped lang="scss">
+    $toast-colors: () !default;
+    $toast-colors: map-merge(
+        (
+        "success": #47d78a,
+        "info": #1c85d5,
+        "warning": #febc22,
+        "error": #f7471c,
+        "default": #343a40
+        ),
+        $toast-colors
+    );
+
+    // Animations are taken from animate.css
+    // https://daneden.github.io/animate.css
+
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+        }
+        to {
+            opacity: 0;
+        }
+    }
+
+    .fadeOut {
+        animation-name: fadeOut;
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translate3d(0, -100%, 0);
+        }
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+
+    .fadeInDown {
+        animation-name: fadeInDown;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translate3d(0, 100%, 0);
+        }
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+
+    .fadeInUp {
+        animation-name: fadeInUp;
+    }
+
+    /**
+    * Vue Transitions
+    */
+
+    .fade-enter-active,
+    .fade-leave-active {
+        transition: opacity 150ms ease-out;
+    }
+
+    .fade-enter,
+    .fade-leave-to {
+        opacity: 0;
+    }
+
+    .notices {
+        position: fixed;
+        display: flex;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 2em;
+        overflow: hidden;
+        z-index: 1052;
+        pointer-events: none;
+
+        .toast {
+            position: fixed;
+            display: inline-flex;
+            align-items: center;
+            animation-duration: 150ms;
+            margin: 0.5em 0;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);
+            border-radius: 0.25em;
+            pointer-events: auto;
+            opacity: 0.92;
+            color: #fff;
+            min-height: 3em;
+            cursor: pointer;
+
+            .toast-text {
+                margin: 0;
+                padding: 0.5em 1em;
+                word-break: break-all;
+            }
+
+            .toast-icon {
+                display: none;
+            }
+        }
+
+        // Colors
+        @each $color, $value in $toast-colors {
+            .toast-#{$color} {
+                background-color: $value;
+            }
+        }
+
+        // Individual toast position
+        .toast {
+            &.is-top, &.is-bottom {
+                left: 50%;
+                transform: translate(-50%, 0);
+            }
+
+            &.is-top-right, &.is-bottom-right {
+                right: 0;
+            }
+
+            &.is-top-left, &.is-bottom-left {
+                left: 0;
+            }
+        }
+
+        // Notice container positions
+        &.is-top {
+            top: 0;
+        }
+
+        &.is-bottom {
+            bottom: 0;
+        }
+
+        &.is-custom-parent {
+            position: fixed;
+            z-index: 100;
+        }
+
+        @media screen and (max-width: 768px) {
+            padding: 0;
+            position: fixed !important;
+        }
+    }
+
+    .notices {
+        .toast {
+            opacity: 1;
+            min-height: 4em;
+
+            .toast-text {
+                padding: 1.5em 1em;
+            }
+
+            .toast-icon {
+                display: block;
+                width: 27px;
+                min-width: 27px;
+                height: 27px;
+                margin-left: 1em;
+                background: url(../assets/img/icons/info.svg) no-repeat;
+            }
+
+            &.toast-success .toast-icon {
+                background: url(../assets/img/icons/success.svg) no-repeat;
+            }
+
+            &.toast-error .toast-icon {
+                background: url(../assets/img/icons/error.svg) no-repeat;
+            }
+
+            &.toast-warning .toast-icon {
+                background: url(../assets/img/icons/warning.svg) no-repeat;
+            }
+        }
     }
 </style>
