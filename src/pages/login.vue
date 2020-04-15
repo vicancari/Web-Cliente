@@ -40,39 +40,6 @@
                 </div>
             </form>
 
-            <div class="modal" id="modalphone" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-                <div class="modal-dialog modal-dialog-centered" role="document">
-                    <div class="modal-content sizeModal3 py-1" style="max-width: 100% !important;">
-                        <a>
-                            <img class="iconBackModalMap" src="../assets/img/icons/flechavolver.svg" width="30px" alt="">
-                        </a>
-                        <div class="modal-body text-lightblue paddingModalBody-fide">
-                            <h4 class="text-center mt-2">Teléfono</h4>
-                            <div class="row text-center mt-4 rowbutton">
-                                <div class="col-12">
-                                    <div class="inputBox">
-                                        <input type="text" placeholder="(+000000)" v-model="$v.user.email.$model" @keyup="OpenMod" :readonly="waitcode">
-                                        <label></label>
-                                    </div>
-                                    <div class="inputBox" v-if="waitcode">
-                                        <input type="text" v-model="codigo" @input="codigo = $event.target.value.toUpperCase()" placeholder="Ingresa el código enviado aquí" maxlength="4">
-                                        <label></label>
-                                    </div>
-                                    <div class="text-center" v-if="!waitcode">
-                                        <button @click="singinPhone(1)" class="btn btn-darkblue btnResponsive" >Verificar teléfono</button>
-                                    </div>
-                                    <div class="text-center" v-if="waitcode">
-                                        <button @click="Verifycode" class="btn btn-darkblue btnResponsive" >Verificar código</button>
-                                    </div>
-                                    <p v-if="errd" class="pError">{{errd}}</p>
-                                    <p v-if="errt" class="" style="color:blue;">{{errt}}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <div class="modal" id="recuperar" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false">
                 <div class="modal-dialog modal-dialog-centered" role="document">
                     <div class="modal-content sizeModal3 py-1" style="max-width: 100% !important;">
@@ -466,26 +433,24 @@
                 this.$store.commit("loading");
                 setTimeout(() => {
                     this.$store.commit("notLoading");
-                }, 3000);
+                }, 1500);
                 await api
                     .post("auth/Bynumber" , {name: "", phone: op ==1 ? t.user.email : t.recuperar.email})
                     .then(resp => {
-                        if (resp.data.uid != "") {
+                        if (resp.uid) {
                             if(op ==1)
-                                t.waitcode = resp.data.uid;
+                                t.waitcode = resp.uid;
                             else if(op ==2)
-                                t.recuperar.waitcode = resp.data.uid;
+                                t.recuperar.waitcode = resp.uid;
 
                             return false;
-                        }
-                        if (resp.data.uid === "") {
+                        } else {
                             t.errd = "El teléfono no existe, o verifique e intente de nuevo.";
                             setTimeout(function() {
                                 t.errd = "";
-                            }, 5000);
+                            }, 1500);
                             return false;
                         }
-
                     })
                     .catch(error => {
                         t.errd = error;
@@ -493,45 +458,14 @@
 
                         setTimeout(function() {
                             t.errd = "";
-                        }, 5000);
+                        }, 1500);
                     });
-            },
-            async Verifycode() {
-                this.$store.commit("loading");
-                setTimeout(() => {
-                    this.$store.commit("notLoading");
-                }, 3000);
-                await axios.post("https://myraus.com:9283/api/sms/VerificarCodigo" , {codigo: this.codigo}).then(resp => {
-                    if(resp.result === true){
-                        Jquery('#modalphone').modal('hide');
-                        this.$store.state.uid = this.waitcode;
-                        this.errt = resp.data.message;
-
-                        setTimeout(function() {
-                            this.errt = "";
-                        }, 5000);
-                    } else {
-                        this.errd = resp.data.message;
-
-                        setTimeout(function() {
-                            this.errd = "";
-                        }, 5000);
-                    }
-                }).catch(error => {
-                    console.log(error);
-                    this.errd = "Hubo un error validando el código intente nuevamente.";
-
-                    setTimeout(function() {
-                        this.errd = "";
-                    }, 5000);
-                    this.$store.commit("notLoading");
-                });
             },
             async VerifycodeRecuperar() {
                 this.$store.commit("loading");
                 setTimeout(() => {
                     this.$store.commit("notLoading");
-                }, 3000);
+                }, 1500);
                 await axios.post("https://myraus.com:9283/api/sms/VerificarCodigo" , {codigo: this.recuperar.codigo}).then(resp => {
                     this.$store.commit('notLoading')
                     if(resp.data.result) {
@@ -540,12 +474,12 @@
 
                         setTimeout(function() {
                             this.errt = "";
-                        }, 3000);
+                        }, 1500);
                     } else {
                         this.errd = resp.data.message;
                         setTimeout(function() {
                             this.errd = "";
-                        }, 5000);
+                        }, 1500);
                     }
                 }).catch(error => {
                     console.log(error);
@@ -560,31 +494,36 @@
                 this.$store.commit("loading");
                 setTimeout(() => {
                     this.$store.commit("notLoading");
-                }, 3000);
-                var url = config.rutaWeb("/#/recovery/");
+                }, 1500);
+                var url = "";
+
+                if (config.ModeRUN === 1) {
+                    url = config.rutaWeb("#/recovery/");
+                } else {
+                    url = config.rutaWeb("/#/recovery/");
+                }
 
                 await api.post("auth/ByEmail", {email: this.recuperar.email, url: url}).then(resp => {
-                    console.log(resp.data);
-                    if(resp.data.uid){
+                    if (resp.uid) {
                         this.errt = "Se le ha enviado un correo con instrucciones para restaurar su contraseña.";
 
                         setTimeout(function() {
                             this.errt = "";
-                            this.OpenModr(2);
-                        }, 5000);
+                            document.querySelector('#recuperar').classList.remove('__show');
+                        }, 1500);
                     } else {
                         this.errd = "No existe ningun usuario con este correo, o verifique e intente de nuevo.";
 
                         setTimeout(function() {
                             this.errd = "";
-                        }, 5000);
+                        }, 1500);
                     }
                 }).catch(error => {
                     this.errd = "No existe ningun usuario con este correo, o verifique e intente de nuevo.";
                     console.log(error);
                     setTimeout(function() {
                         this.errd = "";
-                    }, 5000);
+                    }, 1500);
                 });
             },
             async changePass() {
@@ -594,29 +533,30 @@
                         this.errd = "Las contraseñas no coinciden";
                         setTimeout(function() {
                             this.errd = "";
-                        }, 5000);
+                        }, 1500);
                         return;
                     }
 
+                    this.forget.uid = this.recuperar.waitcode;
+                    this.forget.new_password = this.forget.passwordtwo;
+                    
                     this.$store.commit("loading");
                     setTimeout(() => {
                         this.$store.commit("notLoading");
-                    }, 3000);
-                    this.forget.uid = this.recuperar.waitcode;
-                    this.forget.new_password = this.forget.passwordtwo;
+                    }, 1500);
                     await api.post("auth/resetPasswordLog" , this.forget).then(resp => {
                         this.$store.commit('notLoading');
-                        if(resp.data.uid){
+                        if(resp.uid){
                             this.errt = "Contraseña reestablecida con éxito.";
                             setTimeout(function() {
                                 this.errt = "";
-                                this.OpenModr(2);
-                            }, 5000);
+                                document.querySelector('#recuperar').classList.remove('__show');
+                            }, 1500);
                         } else {
                             this.errd = "Intente de nuevo, ocurrió un error.";
                             setTimeout(function() {
                                 this.errd = "";
-                            }, 5000);
+                            }, 1500);
                         }
                     }).catch(error => {
                         console.log(error);
@@ -624,7 +564,7 @@
 
                         setTimeout(function() {
                             this.errd = "";
-                        }, 5000);
+                        }, 1500);
                     });
                 }
             }
@@ -833,5 +773,11 @@
     #modalphone.modal.__show .iconBackModalMap {
         top: 0 !important;
         left: 0 !important;
+    }
+
+    .btn.btn-darkblue {
+        display: block !important;
+        width: 200px !important;
+        margin: .5rem auto !important;
     }
 </style>

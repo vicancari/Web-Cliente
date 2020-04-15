@@ -13,7 +13,7 @@
         <div class="bodySection">
             <div class="box">
                 <h5 class="titlePromotions">Promociones</h5>
-                <carousel v-if="this.listPromocion.length != 0" class="carouselEdit"
+                <carousel class="carouselEdit"
                     :autoplay="false" 
                     :nav="false" 
                     :items="3"
@@ -27,6 +27,9 @@
                     }"
                     >
                     <b-card
+                        v-for="promo in this.listPromocion"
+                        :key="promo.uid"
+                        :id="promo.uid"
                         img-src="https://picsum.photos/600/300/?image=25"
                         img-alt="Image"
                         img-top
@@ -58,21 +61,19 @@
                         </span>
                     </template>
                 </carousel>
-                <div v-else class="box-mensaje">
-                    <p style="margin: 1.5rem 0; padding: 1rem; background: rgb(245, 83, 83); color: #fff; font-weight: bold !important; border-radius: 5px; box-shadow: 1px 1px 5px 0 rgba(0,0,0,.25);">Todavia no hay promociones...</p>
-                </div>
                 <div class="row navSection">
-                    <div class="col-5">
+                    <div class="col-4">
                         <button class="btn btnProductos" @click="showSectionHome(1)" v-bind:class="{ 'active': activeSection == 1, '': activeSection == 2 }">
                             <span></span>
                             <span></span>
                             Productos
                         </button>
                     </div>
-                    <div class="col-2">
+                    <div class="col-4">
                         <img class="img-fluid" :src="imgPin" alt="">
+                        <p id="myUbicacion"></p>
                     </div>
-                    <div class="col-5">
+                    <div class="col-4">
                         <button class="btn btnRestaurantes" @click="showSectionHome(2)" v-bind:class="{ 'active': activeSection == 2, '': activeSection == 1 }">
                             <span></span>
                             Restaurantes
@@ -81,7 +82,7 @@
                 </div>
                 <div class="row alignHorizontal" v-if="activeSection == 2">
                     <div style="width: 100%; margin: 0;" class="row">
-                        <div v-for="rest in this.listRestaurantes" :key="rest.uid" :id="rest.uid" class="col-md-6 col-12 mb-4">
+                        <div v-for="rest in this.listRestaurantes" :key="rest.uid" :id="rest.uid" :aria-sort="rest.km" class="col-md-6 col-12 mb-4">
                             <b-card
                                 :img-src="rest.photo"
                                 :img-alt="rest.name"
@@ -92,6 +93,7 @@
                                 <div class="body">
                                     <div class="text">
                                         <h5 class="title">{{ rest.name }}</h5>
+                                        <p class="distancia">Distancia: {{ rest.km }} km.</p>
                                         <button class="btn">Ir <img :src="chevRight" alt=""></button>
                                         <div class="star-content">
                                             <div class="row">
@@ -130,12 +132,9 @@
                             </b-card>
                         </div>
                     </div>
-                    <div id="restaurantes" class="box-mensaje d-none">
-                        <p style="width: 100%; text-align: center; margin: 1.5rem 0; padding: 1rem; background: rgb(245, 83, 83); color: #fff; font-weight: bold !important; border-radius: 5px; box-shadow: 1px 1px 5px 0 rgba(0,0,0,.25);">Todavia no hay restaurantes cercanos a ti...</p>
-                    </div>
                 </div>
                 <div class="row alignHorizontal" v-if="activeSection == 1">
-                    <div v-if="this.listProductos.length != 0" style="width: 100%; margin: 0;" class="row">
+                    <div style="width: 100%; margin: 0;" class="row">
                         <div class="col-12 col-sm-6 col-md-4 col-lg-3 p-0 mb-4">
                             <b-card
                                 img-src="https://picsum.photos/600/300/?image=25"
@@ -159,9 +158,6 @@
                                 </div>
                             </b-card>
                         </div>
-                    </div>
-                    <div v-else class="box-mensaje">
-                        <p style="width: 100%; text-align: center; margin: 1.5rem 0; padding: 1rem; background: rgb(245, 83, 83); color: #fff; font-weight: bold !important; border-radius: 5px; box-shadow: 1px 1px 5px 0 rgba(0,0,0,.25);">Todavia no hay productos...</p>
                     </div>
                 </div>
             </div>
@@ -214,16 +210,21 @@
                 activeSection: 2,
                 listRestaurantes: {},
                 listRestauranteslength: 0,
-                listPromocion: {
-                    length: 0,
-                    data: []
-                },
-                listProductos: {
-                    length: 0,
-                    data: []
-                },
+                myUbicaion: "",
+                listPromocion: {},
+                listProductos: {},
                 google: "",
+                myLat: "",
+                myLng: ""
             }
+        },
+        async created() {
+            var ubicacion = await this.geo();
+            this.ubiLat = ubicacion.lat;
+            this.ubiLng = ubicacion.lon;
+
+            this.getStreetAddressFrom(ubicacion.lat, ubicacion.lon);
+            this.getRestaurantes(ubicacion.lat, ubicacion.lon);
         },
         methods: {
             onSlideStart() {
@@ -239,6 +240,88 @@
                 }else if ( id == 2){
                     this.activeSection= 2
                 }
+            },
+            getKilometros(lat1,lon1,lat2,lon2){
+                var rad = function(x) {
+                    return x*Math.PI/180;
+                }
+                var R = 6378.137; //Radio de la tierra en km
+                var dLat = rad( lat2 - lat1 );
+                var dLong = rad( lon2 - lon1 );
+                var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(dLong/2) * Math.sin(dLong/2);
+                var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                var d = R * c;
+                return d.toFixed(3); //Retorna tres decimales
+            },
+            async geo() {
+                return new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(
+                        async function(pos) {
+                            resolve({
+                                lat: pos.coords.latitude,
+                                lon: pos.coords.longitude
+                            });
+                        },
+                        function(error) {
+                            console.log(error);
+                            reject();
+                        }
+                    );
+                });
+            },
+            async getStreetAddressFrom(lat, long) {
+                var geocoder = new this.google.maps.Geocoder();
+
+                geocoder.geocode({"latLng": new this.google.maps.LatLng(lat, long)}, function(results, status) {
+                    if (status === "OK") {
+                        if (document.querySelector("#myUbicacion")) {
+                            document.querySelector("#myUbicacion").innerText = results[0].formatted_address;
+                        }
+                    }
+                });
+            },
+            async getRestaurantes(myLat, myLng) {
+                await api.get(`restaurantes/list/`).then(res => {
+                    // -> restaurantes cerca de mi.
+                    // var geocoder = new this.google.maps.Geocoder();
+                    // var directionsServiceTmp = new this.google.maps.DirectionsService;
+
+                    var _list = [];
+                    res.forEach(el => {
+                        if (this.getKilometros(myLat, myLng, el.lat, el.lng) <= 20.000) {
+                            _list.push({
+                                uid: el.place_id,
+                                name: el.name,
+                                photo: el.photo,
+                                lat: el.lat,
+                                lng: el.lng,
+                                km: this.getKilometros(myLat, myLng, el.lat, el.lng)
+                            });
+                        }
+                    });
+
+                    _list.sort(function(a, b){ 
+                        if (a.km < b.km) {
+                            return -1;
+                        }
+                    });
+
+                    this.listRestaurantes = _list;
+                }).catch(err => {
+                    console.log(err);
+                });
+            },
+            async getPromociones() {
+                await api.get("promotions/").then(res => {
+                    for (var i = 0; i < res.length; i++) {
+                        this.listPromocion.push(res[i]);
+                    }
+                }).catch(err => {
+                    console.log(err);
+                });
+            },
+            async getProductos() {
+                this.listProductos = await api.get(`products/`);
             }
         },
         async beforeMount() {
@@ -261,52 +344,7 @@
                     if (this.$store.getters.token != "" || this.$store.getters.token != null) {
                         if (this.$store.getters.uid != "") {
                             this.$store.state.user = await api.post("cliente/info/", {uid: this.$store.getters.uid});
-
-                            if (this.$store.getters.user.country != "") {
-                                await api.get(`restaurantes/list/`).then(res => {
-                                    // -> restaurantes cerca de mi.
-                                    var myCountry = this.$store.getters.user.country;
-                                    var geoCode = new this.google.maps.Geocoder();
-                                    var cant = 0;
-                                    var _list = [];
-                                    var notData = false;
-    
-                                    res.forEach(el => {
-                                        geoCode.geocode({"latLng": new this.google.maps.LatLng(el.lat, el.lng)}, function(results, status) {
-                                            if (status === "OK") {
-                                                results[0].address_components.forEach(_getType => {
-                                                    if (_getType.types[0] === "country") {
-                                                        var _country = _getType.long_name;
-                                                        if (_country === myCountry) {
-                                                            _list.push({
-                                                                uid: el.place_id,
-                                                                name: el.name,
-                                                                photo: el.photo,
-                                                                lat: el.lat,
-                                                                lng: el.lng
-                                                            });
-                                                            cant = cant + 1;
-                                                            if (cant > 0) {
-                                                                notData = true;
-                                                            }
-                                                        }
-                                                        if (notData === false) {
-                                                            document.querySelector("#restaurantes").classList.remove("d-none");
-                                                        }
-                                                    }
-                                                });
-                                            }
-                                        });
-                                    });
-
-                                    this.listRestaurantes = _list;
-                                }).catch(err => {
-                                    console.log(err);
-                                });
-                            }
-
-                            this.listProductos.data = await api.get(`products/`);
-                            this.listPromocion.data = await api.get("promotions/");
+                            
                             var _MB = this.$store.getters.user.accounts;
                             var _books = _MB.books.value;
                             var _eats = _MB.eats.value;
@@ -318,8 +356,6 @@
                             var total = _books + _eats + _fuel + _gyms + _kids + _propia + _trips;
             
                             this.$store.state.myBalance = total;
-
-                            console.log(this.$store.getters.user);
                             this.$store.commit("done");
                         } else {
                             window.localStorage.clear();
@@ -342,10 +378,8 @@
                 }
             }
         },
-        mounted() {
+        async mounted() {
             this.$store.commit("loading");
-            // console.log(this.$store.getters);
-            // console.log(this.$store.getters.isLoggedIn);
         }
     }
 </script>
@@ -549,5 +583,15 @@
 
     .box-mensaje {
         width: 100%;
+    }
+
+    p.distancia {
+        font-size: .85rem;
+    }
+
+    @media (max-width: 992px) {
+        .bodySection .alignHorizontal .card-horizontal .card-body .body .text .title {
+            font-size: 15px !important;
+        }
     }
 </style>

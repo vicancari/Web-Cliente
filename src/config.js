@@ -5,6 +5,7 @@ let config = {
     dominioWeb_dev: "http://localhost:8080",
     dominioApi_prod: "https://myraus.com:9999/api",
     dominioWeb_prod: "https://myraus.com/personas/",
+    ModeRUN: MODE_ENV,
     idiomas: [
         {
             value: "aa",

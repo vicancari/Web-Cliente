@@ -1,46 +1,45 @@
 <template>
-	<div class="bg-login">
-		<div class="box inputsFloating">
-			<div class="position d-block justify-content-center align-items-center">
-				<div class="text-center">
-					<img class="imgLogo" src="../assets/img/logo.png" alt="logo"> 
-				</div>
-				<p class="container textP mt-2">
-					Hola!, bienvenido a <br>
-					Raus Cliente, <br>
-					Restaurar contraseña
-				</p>
-				<div class="px-0 px-sm-4">
-					<div class="inputBox">
-						<input placeholder="Nueva contraseña" :type="!showd?'password':'text'" v-model="$v.forget.password.$model" :class="$v.forget.password.$error?'has-error':''" required>
-						<label></label>
-					</div>
-					<div class="inputBox">
-						<input placeholder="Conirmar contraseña" :type="!showt?'password':'text'" v-model="$v.forget.passwordtwo.$model" :class="$v.forget.passwordtwo.$error?'has-error':''" required>
-						<label></label>
-					</div>
-					<div class="text-center">
-						<button @click="changePass" class="btn btn-darkblue btnResponsive">Crear nueva contraseña</button>
-					</div>
+	<div class="box-login">
+        <div class="container">
+            <div class="boxText">
+                <img class="logo" :src="image" alt="" />
+            </div>
+			<p class="textP mt-2">Hola!, bienvenido a<br>Raus Cliente,<br>Restaurar contraseña</p>
+            <form id="form-register">
+                <div class="form1">
+                    <div class="form-group">
+                        <input placeholder="Nueva contraseña" :type="!showd?'password':'text'" v-model="$v.forget.password.$model" class="form-control" :class="$v.forget.password.$error?'has-error':''" required>
+                        <p data-error="codigo-pin" class="msgError d-none">*msgError</p>
+                    </div>
+                    <div class="form-group">
+                        <input placeholder="Confirmar contraseña" :type="!showt?'password':'text'" v-model="$v.forget.passwordtwo.$model" class="form-control" :class="$v.forget.passwordtwo.$error?'has-error':''" required>
+                        <p data-error="codigo-pin" class="msgError d-none">*msgError</p>
+                    </div>
+                    <div class="form-group botonera">
+                        <button type="button" @click="changePass" class="btn btn-darkblue btnResponsive">Crear nueva contraseña</button>
+						<router-link style="display: none;" id="nextLink" to="/"></router-link>
+                    </div>
+					<br>
 					<p v-if="errd" class="pError">{{errd}}</p>
 					<p v-if="errt" class="" style="color:blue;">{{errt}}</p>
 					<p class="pError mb-2" v-if="$v.forget.password.$error || $v.forget.passwordtwo.$error">La contraseña debe contener mínimo 8 y máximo 15 caracteres, al menos un dígito, una letra mayúscula, una letra minuscula y un caracter especial.</p>
-				</div>
-			</div>
-		</div>
-	</div>
+                </div>
+            </form>
+        </div>
+    </div>
 </template>
 
 <script>
 	import config from "../config.js";
 	import api from '../api.js';
 	import { required } from 'vuelidate/lib/validators';
-	var Jquery = require("jquery");
+	import image from "../assets/img/logo.png";
 
 	export default {
 		name: 'recovery',
 		data () {
 			return {
+				image: config.rutaWeb(image),
 				recuperar: {
 					email: '',
 					waitcode: false,
@@ -98,25 +97,6 @@
 			}
 		},
 		methods: {
-			signIn(id) {
-                Jquery.ajax({
-                    type: "POST",
-                    url: config.rutaApi("auth/signIn/"),
-                    data: {
-                        uid: id
-                    },
-                    dataType: "json",
-                    beforeSend: function () {
-                        console.log("Iniciando sesion....");
-                    },
-                    success: function(data) {
-                        window.localStorage.setItem("token", data.token);
-                    },
-                    error: function(data) {
-                        console.log(data);
-                    }
-                });
-            },
 			async changePass() {
 				this.$v.forget.$touch()
 				if (!this.$v.forget.$invalid) { 
@@ -125,63 +105,39 @@
 						t.errd = "Las contraseñas no coinciden";
 						setTimeout(function() {
 							t.errd = "";				
-						}, 5000);
-						return;
+						}, 3500);
+						return false;
 					}
 					
 					t.forget.uid = t.recuperar.waitcode;
 					t.forget.new_password = t.forget.passwordtwo;
 					t.forget.token = t.$route.params.token;
 					
+					this.$store.commit("loading");
+					setTimeout(() => {
+						this.$store.commit("notLoading");
+					}, 1000);
 					await api.post("auth/recoveryPass" , t.forget).then(resp => {
-						if (resp.data.uid) {
+						if (resp.uid) {
 							t.errt = "Contraseña reestablecida con éxito.";
-							sessionStorage.uidRestaurante = resp.data.uid
 							setTimeout(function() {
 								t.errt = "";
-								if (document.querySelector("#remember")) {
-                                    if (document.querySelector("#remember").checked === true) {
-                                        window.localStorage.setItem("remember", "true");
-                                    } else {
-                                        window.localStorage.setItem("remember", "false");
-                                    }
-                                }
-
-                                if (window.localStorage.getItem("remember") === "true"){
-                                    window.localStorage.setItem("username", document.querySelector("#username").value);
-                                    window.localStorage.setItem("password", document.querySelector("#password").value);
-                                }
-
-                                if (window.localStorage.getItem("remember") === "false"){
-                                    window.localStorage.setItem("username", document.querySelector("#username").value);
-                                    window.localStorage.setItem("password", document.querySelector("#password").value);
-                                }
-                                
-                                this.signIn(resp.data.uid);
-
-                                if (window.localStorage.getItem("token") != "") {
-                                    this.$store.state.token = window.localStorage.getItem("token");
-                                    this.$store.state.isLoggedIn = true;
-                                    this.$store.state.uid = resp.data.uid;
-                                }
-                                setTimeout(() => {
-									this.$store.getters.isFirstTime === true
-										? this.$router.push("/tutorial")
-										: this.$router.push("/home");
-								}, 1000);
-							}, 5000);
+                                if (document.querySelector("#nextLink")) {
+									document.querySelector("#nextLink").click();
+								}
+							}, 1500);
 						} else {
 							t.errd = "Intente de nuevo, ocurrió un error.";
 							setTimeout(function() {
 								t.errd = "";
-							}, 5000);
+							}, 1500);
 						}
 					}).catch(error => {
 						t.errd = error;
 						t.errd = "Intente de nuevo."; 
 						setTimeout(function() {
 								t.errd = "";
-						}, 5000);
+						}, 1000);
 					});
 				}
 			}
@@ -189,8 +145,184 @@
 	}
 </script>
 
+<style scoped lang="scss">
+    .box-login{
+        background-image: url('../assets/img/fondo.jpeg');
+        min-height: 100vh;
+        height: 100%;
+        background-size: cover;
+        object-fit: cover;
+        background-position: center center;
+        position: relative;
+        .container{
+            height: 100%;
+            min-height: 100vh;
+            background-color: rgba(255, 255, 255, .7);
+            max-width: 580px;
+            width: 100%;
+            padding: 30px 0;
+            .boxText{
+                margin-bottom: 50px;
+                .logo{
+                    width: 190px;
+                    margin: 0px auto;
+                }
+                h5{
+                    font-size: 28px;
+                    max-width: 50%;
+                    margin: 20px auto;
+                    line-height: 1.4;
+                    color: var(--blue);
+                    @media (max-width: 767px){
+                        font-size: 26px;
+                        max-width: 80%;
+                    }
+                }
+            }
+        }
+
+        /* floatin-label */
+        form{
+            max-width: 70%;
+            margin: auto auto 1.5rem;
+             @media (max-width: 767px){
+                max-width: 380px;
+            }
+             @media (max-width: 480px){
+                max-width: 90%;
+            }
+            .form-group {
+                position: relative;
+                margin-bottom: 30px;
+                .btnShow, .mapMarket{
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    
+                }
+                .mapMarket{
+                    top: 5px;
+                    color: #77afde !important;
+                    i{
+                        font-size: 22px;
+                    }
+                }
+                input.date{
+                    padding-left: 45px;
+                }
+                .form-control{
+                    background-color: transparent;
+                    opacity: 1;
+                    border: none;
+                    border-bottom: 1px solid #c1c1c1;
+                    border-radius: 0;
+                    box-shadow: none;
+                    text-align : center;
+                    border-color: var(--blue);
+                    &:focus{
+                        border-color: var(--blue);
+                    }
+                    label{
+                        color: var(--primary);
+                    }
+                }
+
+                .form-control-placeholder {
+                    position: absolute;
+                    top: 5px;
+                    padding: 0;
+                    transition: all 200ms;
+                    opacity: 1;
+                    transform: translateX(-50%);
+                    left: 50%;
+                }
+
+                .form-control:focus + .form-control-placeholder,
+                .form-control:valid + .form-control-placeholder {
+                    font-size: 75%;
+                    transform: translate3d(-50%, -100%, 0);
+                    opacity: 1;
+                    padding: 0;
+                    left: 50%;
+                }
+            }
+            .form-group.a{
+                margin-bottom: 50px;
+            }
+
+            .btnNew{
+                margin-top: 5px !important;
+                float: right;
+                @media (max-width: 767px){
+                    font-size: 14px;
+                    padding: 0;
+                }
+                @media (max-width: 320px){
+                  font-size: 12px;
+                    padding: 0;
+                }
+            }
+
+            .md-checkbox{
+                label{
+                    @media (max-width: 767px){
+                        font-size: 14px;
+                    }
+                    @media (max-width: 320px){
+                        font-size: 12px;
+                    }  
+                }
+            }
+
+            /* botonera */
+            .botonera{
+                display: flex;
+                flex-direction: column;
+                a, button {
+                    border-radius: 0;
+                    color: #fff;
+                    font-size: 14px;
+                    width: 120px;
+                    margin: auto;
+                    padding: 4px;
+                }
+                .btnEntrar{
+                    background-color: var(--blue);
+
+                }
+                .btnRegister{
+                    background-color: var(--yellow);
+                    margin-top: 40px;
+
+                }
+            }
+        }
+
+        .msgError{
+            color: red;
+            background: #fff;
+            font-size: 12px;
+            text-align: center;
+            padding: .75rem;
+            border-radius: 5px;
+            font-weight: bold !important;
+            letter-spacing: 0.065rem;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, .45);
+        }
+    }
+</style>
+
+<style lang="css">
+    #GmapMark .modal.show .modal-dialog {
+        max-width: 100vw !important;
+    }
+    #GmapMark .modal.show .modal-dialog .modal-content {
+        height: 70vh !important;
+    }
+</style>
+
 <style>
-.red{
-	color:#c70000;
-}
+	.red{
+		color:#c70000;
+	}
 </style>
