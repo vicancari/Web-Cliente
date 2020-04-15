@@ -16,24 +16,28 @@
                         <h5 class="text-truncate m-0">{{name}}</h5>
                         <button class="btn btn-outline-secondary" type="button" @click="change('name')"><img class="img-fluid" :src="lapiz" alt=""></button>
                     </div>
-                     <div class="form-group">
+                    <div class="form-group">
+                        <h5 class="text-truncate m-0">{{lastname}}</h5>
+                        <button class="btn btn-outline-secondary" type="button" @click="change('lastname')"><img class="img-fluid" :src="lapiz" alt=""></button>
+                    </div>
+                    <div class="form-group">
                         <h5 class="text-truncate m-0">{{email}}</h5>
                         <button class="btn btn-outline-secondary" type="button"  @click="change('email')"><img class="img-fluid" :src="lapiz" alt=""></button>
                     </div>
-                     <div class="form-group">
+                    <div class="form-group">
                         <h5 class="text-truncate m-0">{{telephone}}</h5>
                         <button class="btn btn-outline-secondary" type="button"  @click="change('telephone')"><img class="img-fluid" :src="lapiz" alt=""></button>
                     </div>
-                     <div class="form-group">
+                    <div class="form-group">
                         <h5 class="text-truncate m-0">{{date}}</h5>
                         <button class="btn btn-outline-secondary" type="button"  @click="change('date')"><img class="img-fluid" :src="lapiz" alt=""></button>
                     </div>
-                     <div class="form-group">
+                    <div class="form-group">
                         <h5 class="text-truncate m-0">{{addres}}</h5>
-                        <button class="btn btn-outline-secondary" type="button"  @click="change('addres')"><img class="img-fluid" :src="pin" alt=""></button>
+                        <button class="btn btn-outline-secondary" type="button"  @click="change('address')"><img class="img-fluid" :src="pin" alt=""></button>
                     </div>
-                     <div class="form-group">
-                        <h5 class="text-truncate m-0">{{password}}</h5>
+                    <div class="form-group">
+                        <h5 class="text-truncate m-0">Cambiar contraseña</h5>
                         <button class="btn btn-outline-secondary" type="button"  @click="change('password')"><img class="img-fluid" :src="lapiz" alt=""></button>
                     </div>
                 </div>
@@ -50,6 +54,12 @@
                     <input type="text" id="name" class="form-control" v-model="name">
                     <p class="msgError d-none">*msgError</p>
                 </div>
+                <!-- lastname -->
+                <div class="form-group a"  v-if="showInput == 'lastname'">
+                    <label class="form-control-placeholder" for="lastname">Ingrese apellido</label>
+                    <input type="text" id="lastname" class="form-control" v-model="lastname">
+                    <p class="msgError d-none">*msgError</p>
+                </div>
                 <!-- email -->
                  <div class="form-group a"  v-if="showInput == 'email'">
                     <label class="form-control-placeholder" for="email">Ingrese email</label>
@@ -58,43 +68,35 @@
                 </div>
                 <!-- telephone -->
                 <div class="form-group a"  v-if="showInput == 'telephone'">
-                    <label class="form-control-placeholder" for="telephone">Ingrese Teléfono</label>
-                    <input type="number" id="telephone" v-model="telephone" class="form-control">
+                    <label class="form-control-placeholder" for="phone">Ingrese Teléfono</label>
+                    <input type="number" id="phone" v-model="telephone" class="form-control">
                     <p class="msgError d-none">*msgError</p>
                 </div>
                 <!-- date -->
                  <div class="form-group a"  v-if="showInput == 'date'">
-                    <label class="form-control-placeholder" for="date">Ingrese fecha de nacimiento</label>
-                    <input type="date" id="date" v-model="date" class="form-control">
+                    <label class="form-control-placeholder" for="birthday">Ingrese fecha de nacimiento</label>
+                    <input type="date" id="birthday" v-model="date" class="form-control">
                     <p class="msgError d-none">*msgError</p>
                 </div>
                 <!-- addres -->
-                <div class="form-group a"  v-if="showInput == 'addres'">
-                    <label class="form-control-placeholder" for="addres">Ingrese dirección</label>
-                    <input type="text" id="addres" v-model="date" class="form-control">
+                <div class="form-group a"  v-if="showInput == 'address'">
+                    <label class="form-control-placeholder" for="address">Ingrese dirección</label>
+                    <input type="text" id="address" v-model="date" class="form-control">
                     <p class="msgError d-none">*msgError</p>
                 </div>
                 <!-- password -->
                 <div class="boxPassword" v-if="showInput == 'password'">
                     <div class="form-group a" >
-                        <label class="form-control-placeholder" for="addres">Ingrese contraseña actual</label>
-                        <input :type="type" id="addres" v-model="password" class="form-control">
-                        <a class="btn btnShow" @click="showPassword">
-                            <i :class="icon" ></i>
-                        </a>
-                    </div>
-                    <p class="msgError d-none">*msgError</p>
-                    <div class="form-group a" >
-                        <label class="form-control-placeholder" for="addres">Nueva contraseña</label>
-                        <input :type="type2" id="addres" v-model="oldPassword" class="form-control">
+                        <label class="form-control-placeholder" for="n_pass">Nueva contraseña</label>
+                        <input :type="type2" id="n_pass" v-model="oldPassword" class="form-control">
                         <a class="btn btnShow" @click="showPassword2">
                             <i :class="icon2" ></i>
                         </a>
                     </div>
                     <p class="msgError d-none">*msgError</p>
                     <div class="form-group a" >
-                        <label class="form-control-placeholder" for="addres">Repetir Contraseña</label>
-                        <input :type="type3" id="addres" v-model="confPassword" class="form-control">
+                        <label class="form-control-placeholder" for="cn_pass">Repetir Contraseña</label>
+                        <input :type="type3" id="cn_pass" v-model="confPassword" class="form-control">
                         <a class="btn btnShow" @click="showPassword3">
                             <i :class="icon3" ></i>
                         </a>
@@ -137,11 +139,12 @@ export default {
              icon3: "fas fa-eye",
             type3: "password",
             showHide3: true,
-            name: 'example',
-            email: 'email',
-            telephone: '+573217180243',
-            date: '11/07/1991',
-            addres: 'Carrer de Aribau 35',
+            name: this.$store.getters.user.name,
+            lastname: this.$store.getters.user.lastname,
+            email: this.$store.getters.user.email,
+            telephone: this.$store.getters.user.phone,
+            date: this.$store.getters.user.birthday,
+            addres: this.$store.getters.user.address,
             password: 1234123,
             oldPassword: '',
             confPassword: '',

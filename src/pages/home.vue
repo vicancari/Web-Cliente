@@ -16,35 +16,28 @@
                 <carousel class="carouselEdit"
                     :autoplay="false" 
                     :nav="false" 
-                    :items="3"
+                    :items="4"
                     :dots="false"
-                    :responsive = "{
-                        0:{items:1},
-                        576:{items:2},
-                        768:{items:3},
-                        1200:{items:4},
-                        1500:{items:5}
-                    }"
-                    >
+                >
                     <b-card
                         v-for="promo in this.listPromocion"
-                        :key="promo.uid"
-                        :id="promo.uid"
-                        img-src="https://picsum.photos/600/300/?image=25"
-                        img-alt="Image"
+                        :key="promo.id"
+                        :id="promo.id"
+                        :img-src="promo.img"
+                        :img-alt="promo.title"
                         img-top
                         tag="article"
                         class="mb-2 cardStyle"
-                        >
+                    >
                         <div class="body">
                             <div class="text">
-                                <h5>Pizza napolitana 4 quesos</h5>
-                                <p>Es una pirzza Lorem ipsum dolor sit amet consectetur adipisicing elit. Saepe quidem consequatur quis ratione dis</p>
+                                <h5>{{ promo.title }}</h5>
+                                <p>{{ promo.desc }}</p>
                             </div>
                             <div class="price">
-                                <div class="number" v-b-tooltip.hover title="10.000,00 €">
-                                    <p>10</p>
-                                    <span>,50€</span>
+                                <div class="number" v-b-tooltip.hover :title="promo.price+',00 €'">
+                                    <p>{{ promo.price }}</p>
+                                    <span>,00€</span>
                                 </div>
                                 <button class="btn"><img class="img-fluid img-shared" :src="shared" alt=""></button>
                             </div>
@@ -135,23 +128,28 @@
                 </div>
                 <div class="row alignHorizontal" v-if="activeSection == 1">
                     <div style="width: 100%; margin: 0;" class="row">
-                        <div class="col-12 col-sm-6 col-md-4 col-lg-3 p-0 mb-4">
+                        <div
+                            v-for="prod in this.listProductos"
+                            :key="prod.id"
+                            :id="prod.id"
+                            class="col-12 col-sm-6 col-md-4 col-lg-3 p-0 mb-4"
+                        >
                             <b-card
-                                img-src="https://picsum.photos/600/300/?image=25"
-                                img-alt="Image"
+                                :img-src="prod.img"
+                                :img-alt="prod.title"
                                 img-top
-                                tag="article"
+                                :tag="prod.category"
                                 class="mb-2 cardStyle"
-                                >
+                            >
                                 <div class="body">
                                     <div class="text">
-                                        <h5>Pizza napolitana 4 quesos</h5>
-                                        <p>Es una pirzza Lorem ipsum dolor sit amet consectetur adipisicing elit. Saepe quidem consequatur quis ratione dis</p>
+                                        <h5>{{ prod.title }}</h5>
+                                        <p>{{ prod.desc }}</p>
                                     </div>
                                     <div class="price">
-                                        <div class="number" v-b-tooltip.hover title="10.000,00 €">
-                                            <p>10</p>
-                                            <span>,50€</span>
+                                        <div class="number" v-b-tooltip.hover :title="prod.price+',00 €'">
+                                            <p>{{ prod.price }}</p>
+                                            <span>,00€</span>
                                         </div>
                                         <button class="btn"><img class="img-fluid img-shared" :src="shared" alt=""></button>
                                     </div>
@@ -184,6 +182,7 @@
     import star from '../assets/img/icons/star.png';
     import chevRight from '../assets/img/icons/chev-right.png';
     import api from '../api.js';
+    import * as firebase from "firebase";
 
     // var Jquery = require("jquery");
 
@@ -223,8 +222,15 @@
             this.ubiLat = ubicacion.lat;
             this.ubiLng = ubicacion.lon;
 
-            this.getStreetAddressFrom(ubicacion.lat, ubicacion.lon);
-            this.getRestaurantes(ubicacion.lat, ubicacion.lon);
+            if (this.$store.getters.isLoggedIn === true) {
+                this.getUser();
+                this.getStreetAddressFrom(ubicacion.lat, ubicacion.lon);
+                this.getRestaurantes(ubicacion.lat, ubicacion.lon);
+                this.getProductos();
+                this.getProductosPromocionados();
+
+                this.$store.commit("done");
+            }
         },
         methods: {
             onSlideStart() {
@@ -234,24 +240,56 @@
                 this.sliding = false;
             },
             showSectionHome(id){
-                console.log(id);
                 if (id == 1){
                     this.activeSection= 1
-                }else if ( id == 2){
+                } else if ( id == 2) {
                     this.activeSection= 2
                 }
             },
-            getKilometros(lat1,lon1,lat2,lon2){
+            getKilometros(_latOrigin, _lngOrigin, _latDestination, _lngDestination){
                 var rad = function(x) {
-                    return x*Math.PI/180;
+                    return x * Math.PI / 180;
                 }
-                var R = 6378.137; //Radio de la tierra en km
-                var dLat = rad( lat2 - lat1 );
-                var dLong = rad( lon2 - lon1 );
-                var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(dLong/2) * Math.sin(dLong/2);
-                var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+                // -> Radio de la tierra en km.
+                var R = 6378.137;
+
+                // -> Restamos la latitud del sitio con el origen.
+                var dLat = rad(_latDestination - _latOrigin);
+                // -> Restamos las longitud del sitio con el origen.
+                var dLong = rad(_lngDestination - _lngOrigin);
+
+                var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(rad(_latOrigin)) * Math.cos(rad(_latDestination)) * Math.sin(dLong / 2) * Math.sin(dLong / 2);
+                var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
                 var d = R * c;
-                return d.toFixed(3); //Retorna tres decimales
+
+                // -> Retornamo la cantidad en Km con tres decimales.
+                return d.toFixed(3);
+            },
+            async getUser () {
+                if (this.$store.getters.uid != "" || this.$store.getters.uid != null) {
+                    var _list = {};
+                    firebase.database().ref("clientes").child(this.$store.getters.uid).on("value", (res) => {
+                        _list = res.val();
+                        this.$store.state.user = _list;
+                        this.getBalance();
+                    });
+                }
+            },
+            async getBalance() {
+                var _MB = this.$store.getters.user.accounts;
+                console.log(_MB);
+
+                var _books = _MB.books.value;
+                var _eats = _MB.eats.value;
+                var _fuel = _MB.fuel.value;
+                var _gyms = _MB.gyms.value;
+                var _kids = _MB.kids.value;
+                var _propia = _MB.propia.value;
+                var _trips = _MB.trips.value;
+                var total = _books + _eats + _fuel + _gyms + _kids + _propia + _trips;
+
+                this.$store.state.myBalance = total;
             },
             async geo() {
                 return new Promise((resolve, reject) => {
@@ -270,9 +308,13 @@
                 });
             },
             async getStreetAddressFrom(lat, long) {
-                var geocoder = new this.google.maps.Geocoder();
+                const googleMapApi = await GoogleMapsApiLoader({
+                    apiKey: this.apiKey,
+                    libraries: ['places']
+                });
+                var geocoder = new googleMapApi.maps.Geocoder();
 
-                geocoder.geocode({"latLng": new this.google.maps.LatLng(lat, long)}, function(results, status) {
+                geocoder.geocode({"latLng": new googleMapApi.maps.LatLng(lat, long)}, function(results, status) {
                     if (status === "OK") {
                         if (document.querySelector("#myUbicacion")) {
                             document.querySelector("#myUbicacion").innerText = results[0].formatted_address;
@@ -311,26 +353,45 @@
                     console.log(err);
                 });
             },
-            async getPromociones() {
-                await api.get("promotions/").then(res => {
-                    for (var i = 0; i < res.length; i++) {
-                        this.listPromocion.push(res[i]);
-                    }
+            async getProductosPromocionados() {
+                await api.get("products/promotions/").then(res => {
+                    var _list = [];
+                    res.product.forEach(el => {
+                        _list.push({
+                            id: el._id,
+                            title: el.name,
+                            desc: el.description,
+                            price: el.price_with_iva,
+                            img: el.images[0].img
+                        });
+                    });
+
+                    this.listPromocion = _list;
                 }).catch(err => {
                     console.log(err);
                 });
             },
             async getProductos() {
-                this.listProductos = await api.get(`products/`);
+                await api.get(`products/`).then(res => {
+                    var _list = [];
+                    res.forEach(el => {
+                        _list.push({
+                            id: el._id,
+                            title: el.name,
+                            desc: el.description,
+                            price: el.price_with_iva,
+                            img: el.images[0].img,
+                            category: el.listProductos
+                        });
+                    });
+
+                    this.listProductos = _list;
+                }).catch(err => {
+                    console.log(err);
+                });
             }
         },
         async beforeMount() {
-            const googleMapApi = await GoogleMapsApiLoader({
-                apiKey: this.apiKey,
-                libraries: ['places']
-            });
-            this.google = googleMapApi;
-
             if (this.$store.getters.isLoggedIn === false) {
                 window.localStorage.clear();
                 this.$store.state.token = "";
@@ -339,43 +400,6 @@
                 this.$store.state.myBalance = 0;
                 this.$store.commit("notLoading");
                 this.$router.push("/");
-            } else {
-                if (this.$store.getters.isLoggedIn === true) {
-                    if (this.$store.getters.token != "" || this.$store.getters.token != null) {
-                        if (this.$store.getters.uid != "") {
-                            this.$store.state.user = await api.post("cliente/info/", {uid: this.$store.getters.uid});
-                            
-                            var _MB = this.$store.getters.user.accounts;
-                            var _books = _MB.books.value;
-                            var _eats = _MB.eats.value;
-                            var _fuel = _MB.fuel.value;
-                            var _gyms = _MB.gyms.value;
-                            var _kids = _MB.kids.value;
-                            var _propia = _MB.propia.value;
-                            var _trips = _MB.trips.value;
-                            var total = _books + _eats + _fuel + _gyms + _kids + _propia + _trips;
-            
-                            this.$store.state.myBalance = total;
-                            this.$store.commit("done");
-                        } else {
-                            window.localStorage.clear();
-                            this.$store.state.token = "";
-                            this.$store.state.uid = "";
-                            this.$store.state.user = {};
-                            this.$store.state.myBalance = 0;
-                            this.$store.commit("notLoading");
-                            this.$router.push("/");
-                        }
-                    } else {
-                        window.localStorage.clear();
-                        this.$store.state.token = "";
-                        this.$store.state.uid = "";
-                        this.$store.state.user = {};
-                        this.$store.state.myBalance = 0;
-                        this.$store.commit("notLoading");
-                        this.$router.push("/");
-                    }
-                }
             }
         },
         async mounted() {
