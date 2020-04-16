@@ -13,6 +13,7 @@ export default function(/* { ssrContext } */) {
             phoneNumber: "",
             status: "",
             myBalance: 0,
+            newRegister: {},
             user: {}
         },
         getters: {
@@ -22,6 +23,7 @@ export default function(/* { ssrContext } */) {
             isFirstTime: state => state.isFirstTime,
             phoneNumber: state => state.phoneNumber,
             status: state => state.status,
+            newRegister: state => state.newRegister,
             myBalance: state => state.myBalance,
             user: state => state.user
         },

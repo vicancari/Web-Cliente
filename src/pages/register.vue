@@ -510,11 +510,10 @@
                 this.dataForm.lat = document.querySelector("#lat").value;
                 this.dataForm.lng = document.querySelector("#lng").value;
                 this.dataForm.carea = document.querySelector("#input-carea").value;
-                console.log(this.dataForm);
 
                 if (document.querySelector("#telephone").value != "" && document.querySelector("#password").value != "" && document.querySelector("#confPassword").value != "") {
                     this.$store.commit("loading");
-                    var data = {
+                    var data = [{
                         email: this.dataForm.email,
                         phone: this.dataForm.carea + this.dataForm.phone,
                         password: this.dataForm.cPass,
@@ -529,29 +528,22 @@
                         lng: this.dataForm.lng,
                         name: this.dataForm.name,
                         zipcode: this.dataForm.zipcode
-                    };
-                    api.post('cliente/registro/', data).then(res => {
-                        if (res.next === "OK") {
-                            api.post('auth/Bynumber', {name: `${res.name.toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();})}`, phone: `${res.phone}`}).then(res => {
-                                console.log(res);
-                                if (res.disabled === false) {
-                                    this.btnModal = document.querySelector(`#btn-modal`);
-                                    this.btnModal.click();
-                                    setTimeout(() => {
-                                        window.localStorage.setItem("phoneNumber", data.phone);
-                                        if (document.querySelector("#nextLink")) {
-                                            document.querySelector("#nextLink").click();
-                                        }
-                                    }, 1000);
+                    }];
+                    api.post('auth/numberVerifique', {name: `${data[0].name.toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();})}`, phone: `${data[0].phone}`}).then(res => {
+                        if (res.status === true) {
+                            this.btnModal = document.querySelector(`#btn-modal`);
+                            this.btnModal.click();
+                            setTimeout(() => {
+                                window.localStorage.setItem("dataRegister", JSON.stringify(data));
+
+                                console.log(window.localStorage.getItem("dataRegister"));
+                                if (document.querySelector("#nextLink")) {
+                                    document.querySelector("#nextLink").click();
                                 }
-                            }).catch(err => {
-                                console.log(err);
-                            });
+                            }, 1000);
                         }
                     }).catch(err => {
-                        this.error = err;
                         console.log(err);
-                        document.querySelector("#aqui").click();
                     });
                 }
             },
@@ -812,6 +804,8 @@
             }
         },
         async mounted() {
+            this.$store.commit("notLoading");
+
             const googleMapApi = await GoogleMapsApiLoader({
                 apiKey: this.apiKey,
                 libraries: ['places']
@@ -1242,4 +1236,6 @@
     .box-login form .botonera.formRegister .btn.btnBack {
         margin-left: .5rem !important;
     }
+
+    .pac-container { z-index: 100000 !important; }
 </style>

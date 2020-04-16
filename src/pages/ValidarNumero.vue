@@ -4,18 +4,20 @@
             <div class="boxText">
                 <img class="logo" :src="image" alt="" />
             </div>
-            <form id="form-register">
+            <form id="form-register" @submit.prevent>
                 <div class="form1" v-if="section == 1">
                     <div class="form-group">
                         <p class="msg">Introduce el codigo pin que<br>te hemos enviado por sms.</p>
                     </div>
                     <div class="form-group">
-                        <input type="text" id="codigo-pin" maxlength="4" onkeyup="if(this.value.length==this.getAttribute('maxlength')) {document.querySelector('#btnRegistar').disabled = false; return false} else {document.querySelector('#btnRegistar').disabled = true;} return funciones.campoNumber(event);" class="form-control" required>
+                        <input type="text" id="codigo-pin" autocomplete="off" maxlength="4" onkeyup="if(this.value.length==this.getAttribute('maxlength')) {document.querySelector('#btnRegistar').disabled = false; return false} else {document.querySelector('#btnRegistar').disabled = true;} return funciones.campoNumber(event);" class="form-control" required>
+                        <button type="button" disabled id="otroCode" class="btn btn-darkblue" @click="getOtroCode">Enviar otro código... <span id="timerRegresive">120s</span></button>
                         <p data-error="codigo-pin" class="msgError d-none">*msgError</p>
                     </div>
                     <div class="form-group botonera">
                         <button type="button" id="btnRegistar" disabled class="btn btnRegister" @click="verificarCodigo">Siguiente</button>
                         <button type="button" style="display: none;" id="btn-modal" v-b-modal.my-modal></button>
+                        <button type="button" style="display: none;" id="stopLoader" @click="stopLoader"></button>
                         <router-link style="display: none;" id="nextLink" to="/tutorial">next</router-link>
                     </div>
                 </div>
@@ -80,6 +82,31 @@
                     }
                 });
             },
+            getOtroCode() {
+                if (this.$store.getters.newRegister[0].phone != "") {
+                    this.$store.commit("loading");
+                    api.post('auth/numberVerifique', {name: `${this.$store.getters.newRegister[0].name.toLowerCase().replace(/\b./g, function(a){return a.toUpperCase();})}`, phone: `${this.$store.getters.newRegister[0].phone}`}).then(res => {
+                        if (res.status === true) {
+                            document.querySelector("[data-error='codigo-pin']").innerText = "El nuevo código ya fue enviado, por favor verifique.";
+                            document.querySelector("[data-error='codigo-pin']").classList.remove("msgError");
+                            document.querySelector("[data-error='codigo-pin']").classList.add("mensaje-success");
+                            document.querySelector("[data-error='codigo-pin']").classList.remove("d-none");
+                            document.querySelector("#otroCode").disabled = true;
+
+                            setTimeout(() => {
+                                document.querySelector("[data-error='codigo-pin']").classList.add("d-none");
+                                document.querySelector("[data-error='codigo-pin']").classList.remove("mensaje-success");
+                                document.querySelector("[data-error='codigo-pin']").classList.add("msgError");
+                            }, 3500);
+
+                            return false;
+                        }
+                    }).catch(err => {
+                        console.log(err);
+                    });
+                }
+            },
+            stopLoader() { this.$store.commit("notLoading"); },
             verificarCodigo() {
                 this.formCodigoPin = document.querySelector("#codigo-pin");
 
@@ -106,74 +133,79 @@
                 }
 
                 if (this.formCodigoPin.value != "" && this.formCodigoPin.value.length === 4) {
-                    console.log(this.formCodigoPin.value);
+                    this.$store.commit("loading");
                     axios.post('https://myraus.com:9283/api/sms/VerificarCodigo', {codigo: `${this.formCodigoPin.value}`}).then(res => {
                         console.log(res);
-                        if (res.result === true) {
-                            this.btnModal = document.querySelector(`#btn-modal`);
-                            this.btnModal.click();
-                            var myNumber = window.localStorage.getItem("phoneNumber");
-                            console.log(myNumber);
-                            api.get(`auth/signInPhone/${myNumber}`).then(res => {
-                                if (document.querySelector("#remember")) {
-                                    if (document.querySelector("#remember").checked === true) {
-                                        window.localStorage.setItem("remember", "true");
-                                    } else {
-                                        window.localStorage.setItem("remember", "false");
+                        if (res.data.result === true) {
+                            this.loadTime(true);
+                            api.post('cliente/registro/', this.$store.getters.newRegister[0]).then(res => {
+                                if (res.next === "OK") {
+                                    this.signIn(res.uid);
+                                    if (window.localStorage.getItem("token") != "") {
+                                        this.$store.state.token = window.localStorage.getItem("token");
+                                        this.$store.state.isLoggedIn = true;
+                                        this.$store.state.uid = res.uid;
+                                        document.querySelector("#stopLoader").click();
+                                        this.btnModal = document.querySelector(`#btn-modal`);
+                                        this.btnModal.click();
+
+                                        setTimeout(() => {
+                                            if (document.querySelector("#nextLink")) {
+                                                document.querySelector("#nextLink").click();
+                                            }
+                                        }, 500);
                                     }
                                 }
-
-                                if (window.localStorage.getItem("remember") === "true"){
-                                    window.localStorage.setItem("username", document.querySelector("#username").value);
-                                    window.localStorage.setItem("password", document.querySelector("#password").value);
-                                }
-
-                                if (window.localStorage.getItem("remember") === "false"){
-                                    window.localStorage.setItem("username", document.querySelector("#username").value);
-                                    window.localStorage.setItem("password", document.querySelector("#password").value);
-                                }
-                                
-                                this.signIn(res.uid);
-
-                                if (window.localStorage.getItem("token") != "") {
-                                    this.$store.state.token = window.localStorage.getItem("token");
-                                    this.$store.state.isLoggedIn = true;
-                                    this.$store.state.uid = res.uid;
-                                }
-                                setTimeout(() => {
-                                    if (document.querySelector("#nextLink")) {
-                                        document.querySelector("#nextLink").click();
-                                    }
-                                }, 1000);
                             }).catch(err => {
-                                var _er = err.msg;
-                                setTimeout(() => {
-                                    if (_er === true) {
-                                        console.log(err);
-                                        return false;
-                                    }
-                                }, 950);
+                                this.error = err;
+                                console.log(err);
+                                document.querySelector("#aqui").click();
                             });
-                        } else {
-                            document.querySelector(`[data-error="codigo-pin"]`).innerHTML = res.data.message;
-                            document.querySelector(`[data-error="codigo-pin"]`).classList.remove("d-none");
+
+                            return false;
+                        }
+
+                        if (res.data.result === false) {
+                            document.querySelector("[data-error='codigo-pin']").innerText = "El código se ha vencido.";
+                            document.querySelector("[data-error='codigo-pin']").classList.remove("d-none");
+                            document.querySelector("#stopLoader").click();
 
                             setTimeout(() => {
-                                document.querySelector(`[data-error="codigo-pin"]`).innerHTML = "";
-                                document.querySelector(`[data-error="codigo-pin"]`).classList.add("d-none");
+                                document.querySelector("[data-error='codigo-pin']").classList.add("d-none");
                             }, 3500);
 
                             return false;
                         }
-                    }).catch(err => {
-                        console.log(err);
                     });
+                }
+            },
+            loadTime(close) {
+                if (this.$router.currentRoute.name === "validarNumero") {
+                    var c = 120;
+
+                    var l = setInterval(() => {
+                        c = c - 1;
+                        document.querySelector("#timerRegresive").innerText = c+"s";
+                        if (c === 0) {
+                            document.querySelector("#otroCode").disabled = false;
+                            document.querySelector("#timerRegresive").innerText = "";
+                            clearInterval(l);
+                        }
+                    }, 1000);
+
+                    if (close === true) {
+                        clearInterval(l);
+                    }
                 }
             }
         },
         mounted() {
+            this.loadTime();
+
             this.$store.state.status = "";
-            console.log(window.localStorage.getItem("phoneNumber"));
+            this.$store.state.newRegister = JSON.parse(window.localStorage.getItem("dataRegister"));
+
+            console.log(this.$store.getters.newRegister);
         },
     }
 </script>
@@ -334,14 +366,26 @@
 
         .msgError{
             color: red;
-            background: #fff;
+            // background: #fff;
             font-size: 12px;
             text-align: center;
             padding: .75rem;
-            border-radius: 5px;
-            font-weight: bold !important;
-            letter-spacing: 0.065rem;
-            text-shadow: 1px 1px 1px rgba(0, 0, 0, .45);
+            // border-radius: 5px;
+            // font-weight: bold !important;
+            // letter-spacing: 0.065rem;
+            // text-shadow: 1px 1px 1px rgba(0, 0, 0, .45);
+        }
+
+        .mensaje-success {
+            color: blue;
+            // background: #fff;
+            font-size: 12px;
+            text-align: center;
+            padding: .75rem;
+            // border-radius: 5px;
+            // font-weight: bold !important;
+            // letter-spacing: 0.065rem;
+            // text-shadow: 1px 1px 1px rgba(0, 0, 0, .45);
         }
     }
 </style>

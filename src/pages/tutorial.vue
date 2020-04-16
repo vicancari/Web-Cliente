@@ -21,7 +21,7 @@
                 </div>
                 <div class="col-12 col-sm-6 col-md-6 p-0">
                     <div class="background">
-                        <button class="btn btn-next" @click="next" v-if="count < 3">
+                        <button class="btn btn-next" @click="next" v-if="count < 4">
                             <img :src="arrow" alt="" class="img-fluid">
                         </button>
                         <div class="thank" v-if="direction">
@@ -54,8 +54,8 @@
         methods: {
             next() {
                 this.count++;  
-                if (this.count >= 3) {
-                    this.count = 3;
+                if (this.count >= 4) {
+                    this.count = 4;
                     this.direction = true;
                     if (this.$store.getters.isLoggedIn === true || this.$store.getters.token != "" || this.$store.getters.token != null) {
                         this.$router.push("/home");
@@ -63,17 +63,13 @@
                         this.$store.state.isLoggedIn = false;
                         this.$store.state.token = "";
                         this.$store.state.uid = "";
-                        this.$store.state.isFirstTime = true;
                         this.$router.push("/");
                     }
                 }
             },
         },
         async mounted() {
-            if (this.$store.getters.isFirstTime === true) {
-                this.$store.state.isFirstTime = false;
-                return false;
-            }
+            console.log(this.$store.getters);
         }
     }
 </script>

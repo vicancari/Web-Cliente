@@ -15,8 +15,7 @@
                 <h5 class="titlePromotions">Promociones</h5>
                 <carousel class="carouselEdit"
                     :autoplay="false" 
-                    :nav="false" 
-                    :items="4"
+                    :nav="false"
                     :dots="false"
                 >
                     <b-card
@@ -205,7 +204,6 @@
                 chevRight: chevRight,
                 slide: 0,
                 sliding: null,
-                responsive : "{0:{items:1,nav:false},600:{items:3,nav:true}}",
                 activeSection: 2,
                 listRestaurantes: {},
                 listRestauranteslength: 0,
@@ -617,5 +615,9 @@
         .bodySection .alignHorizontal .card-horizontal .card-body .body .text .title {
             font-size: 15px !important;
         }
+    }
+
+    .carouselEdit .cardStyle {
+        width: 250px !important;
     }
 </style>

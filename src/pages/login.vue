@@ -356,9 +356,7 @@
                                     }
                                     setTimeout(() => {
                                         this.$store.commit("done");
-                                        this.$store.getters.isFirstTime === true
-                                            ? this.$router.push("/tutorial")
-                                            : this.$router.push("/home");
+                                        this.$router.push("/home");
                                     }, 1000);
                                 }).catch((error) => {
                                     document.querySelector("[data-error='password']").classList.remove("d-none");
@@ -416,9 +414,7 @@
                             }
                             setTimeout(() => {
                                 this.$store.commit("done");
-                                this.$store.getters.isFirstTime === true
-                                    ? this.$router.push("/tutorial")
-                                    : this.$router.push("/home");
+                                this.$router.push("/home");
                             }, 1000);
                         }).catch((error) => {
                             document.querySelector("[data-error='password']").classList.remove("d-none");
