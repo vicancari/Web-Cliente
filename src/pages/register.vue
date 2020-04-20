@@ -536,7 +536,7 @@
                             setTimeout(() => {
                                 window.localStorage.setItem("dataRegister", JSON.stringify(data));
 
-                                console.log(window.localStorage.getItem("dataRegister"));
+                                // console.log(window.localStorage.getItem("dataRegister"));
                                 if (document.querySelector("#nextLink")) {
                                     document.querySelector("#nextLink").click();
                                 }

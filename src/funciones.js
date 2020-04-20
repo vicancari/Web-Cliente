@@ -1,4 +1,6 @@
 // var $ = require("jquery");
+import * as firebase from "firebase";
+import api from "./api.js";
 
 export default {
     calcularDistancia(lat1, lon1, lat2, lon2) {
@@ -18238,4 +18240,33 @@ export default {
             }
         }
     },
+    updateAccountsCliente(id) {
+        if (id != "" || id != null || id != undefined) {
+            var _keys = [];
+            var _values = [];
+            var accounts = {};
+            firebase.database().ref("planes").on("value", (res) => {
+                _keys = Object.keys(res.val());
+                _values = Object.values(res.val());
+
+                for (var i = 0; i < _values.length; i++) {
+                    accounts[`${_values[i].nombre}`] = {
+                        categorias: _values[i].categorias,
+                        establecimineto: _values[i].establecimientos,
+                        id_plan: _keys[i],
+                        is_base: true,
+                        type: _values[i].type,
+                        value: 0
+                    }
+                }
+
+                accounts['propia'] = {
+                    type: 3,
+                    value: 0
+                }
+                
+                api.put('accounts/update/cliente/', {id: id, data: accounts});
+            });
+        }
+    }
 };

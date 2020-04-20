@@ -5,37 +5,21 @@
                <h5 class="titleRecargar"><img class="img-fluid" :src="agregar" alt="">Agregar saldo</h5>
                <div class="boxInput">
                    <span>€</span>
-                   <input type="number" class="form-control" placeholder="Monto">
+                   <input type="text" autocomplete="off" id="rSaldo" class="form-control" placeholder="0,00">
+                   <p data-error="rSaldo" class="msgError d-none">*msgError</p>
                </div>
                <div class="tarjetas">
                    <h5 class="title">Seleccionar tarjeta o cuenta</h5>
-                   <div class="datosTarjetas mb-1" v-on:click="active = 1 ">
-                       <div class="d-flex justify-content-between dates" v-bind:class="{ 'active': active == 1 }" >
-                           <h5 class="mb-0">Visa</h5>
-                           <h5 class="mb-0">*******3512</h5>
+                   <div v-for="targeta in this.listCreditCard" :key="'targeta_'+targeta.id" :id="'targeta_'+targeta.id" class="datosTarjetas mb-1">
+                        <div class="d-flex justify-content-between dates" @click="loadRecarga(targeta.id_delete)" v-bind:class="{ 'active': active == targeta.id }" >
+                           <h5 class="mb-0">{{ targeta.nombre }}</h5>
+                           <h5 class="mb-0">*******{{ targeta.numero.substr(targeta.numero.length - 4) }}</h5>
                         </div>    
-                        <button class="btn">
+                        <button :id="'delete_'+targeta.id" class="btn" @click="deleteCreditCard(targeta.id_delete)">
                             <img class="img-fluid" :src="close" alt="">
-                        </button >
-                   </div>
-                   <div class="datosTarjetas mb-1" v-on:click="active = 2">
-                       <div class="d-flex justify-content-between dates" v-bind:class="{ 'active': active == 2 }" >
-                           <h5 class="mb-0">Caixa</h5>
-                           <h5 class="mb-0">*******3512</h5>
-                        </div>    
-                        <button class="btn">
-                            <img class="img-fluid" :src="close" alt="">
-                        </button >
-                   </div>
-                   <div class="datosTarjetas mb-1" v-on:click="active = 3">
-                       <div class="d-flex justify-content-between dates" v-bind:class="{ 'active': active == 3 }" >
-                           <h5 class="mb-0">Master</h5>
-                           <h5 class="mb-0">*******3512</h5>
-                        </div>    
-                        <button class="btn">
-                            <img class="img-fluid" :src="close" alt="">
-                        </button >
-                   </div>
+                        </button>
+                    </div>
+                    <button id="showModalFinal" @click="$bvModal.hide('modal-recargar')" v-b-modal.modal-recargar-aviso style="display: none;"></button>
                </div>
                <button class="btn btnAgregar" v-on:click="formShow = !formShow">
                    <img :src="tarjeta" alt="">
@@ -46,38 +30,73 @@
                        <div class="row m-0">
                            <div class="col-12 p-0">
                                 <div class="form-group">
-                                    <input type="number" id="name" class="form-control" required placeholder="Tarjeta número / cuenta númer">
+                                    <input type="text" id="name" class="form-control" required placeholder="Tarjeta número / cuenta número" autocomplete="off">
+                                    <p class="msgError d-none">*msgError</p>
+                                </div>
+                           </div>
+                           <div class="col-3 p-0">
+                                <div class="form-group">
+                                    <select id="mes" class="form-control">
+                                        <option value="" disabled selected class="d-none">Mes exp</option>
+                                        <option value="Enero">Enero</option>
+                                        <option value="Febrero">Febrero</option>
+                                        <option value="Marzo">Marzo</option>
+                                        <option value="Abril">Abril</option>
+                                        <option value="Mayo">Mayo</option>
+                                        <option value="Junio">Junio</option>
+                                        <option value="Julio">Julio</option>
+                                        <option value="Agosto">Agosto</option>
+                                        <option value="Septiembre">Septiembre</option>
+                                        <option value="Octubre">Octubre</option>
+                                        <option value="Noviembre">Noviembre</option>
+                                        <option value="Diciembre">Diciembre</option>
+                                    </select>
+                                    <p class="msgError d-none">*msgError</p>
+                                </div>
+                           </div>
+                           <div class="col-3 p-0">
+                                <div class="form-group">
+                                    <select id="year" class="form-control">
+                                        <option value="" disabled selected class="d-none">Año exp</option>
+                                        <option v-for="y in this.listYear" :key="y.year" :value="y.year">{{ y.year }}</option>
+                                    </select>
                                     <p class="msgError d-none">*msgError</p>
                                 </div>
                            </div>
                            <div class="col-6 p-0">
                                 <div class="form-group">
-                                    <input type="text" id="date" class="form-control" required placeholder="Fecha exp" onfocus="(this.type='date')" onblur="(this.type='text')">
-                                    <p class="msgError d-none">*msgError</p>
-                                </div>
-                           </div>
-                           <div class="col-6 p-0">
-                                <div class="form-group">
-                                    <input type="number" id="cvc" class="form-control" required placeholder="CVC">
+                                    <input type="text" id="cvc" class="form-control" required placeholder="CVC" autocomplete="off">
                                     <p class="msgError d-none">*msgError</p>
                                 </div>
                            </div>
                            <div class="col-12 p-0">
                                 <div class="form-group">
-                                    <input type="text" id="nametarget" class="form-control" required placeholder="Nombre en tarjeta">
+                                    <input type="text" id="nametarget" class="form-control" required placeholder="Nombre en tarjeta" autocomplete="off">
                                     <p class="msgError d-none">*msgError</p>
                                 </div>
                            </div>
                            <div class="col-12">
                                <div class="d-flex justify-content-center footer-btn">
-                                    <button class="btn" @click="$bvModal.hide('modal-recargar'), $bvModal.show('menu-modal')  ">Volver</button>
-                                    <button class="btn">Agregar</button>
+                                    <button type="button" class="btn" @click="$bvModal.hide('modal-recargar'), $bvModal.show('menu-modal')">Volver</button>
+                                    <button type="button" @click="asignarUser" class="btn">Agregar</button>
                                </div>
                            </div>
                        </div>
                    </form>
                </div>
            </div>
+        </b-modal>
+        <b-modal :modal-class="myclass2" centered  id="modal-recargar-aviso" ref="modal-recargar-aviso"  hide-footer hide-header>  
+            <div class="d-block text-center">
+                <h3>Agregar</h3>
+                <p id="MontoShow" class="Monto">{{ this.saldo }},00€</p>
+                <h3>A tu saldo Raus</h3>
+                <div style="margin-top: 1rem;" class="d-flex justify-content-center footer-btn">
+                    <button type="button" @click="recargar" class="btn recargarFinal">Confirmar</button>
+                    <button type="button" class="btn recargarFinal" @click="cancelarTransaccion, $bvModal.hide('modal-recargar-aviso')">Cancelar</button>
+                </div>
+                <button type="button" @click="$bvModal.hide('modal-recargar-aviso')" id="recargaExitosa" style="display: none;"></button>
+            </div>
         </b-modal>
     </div>
 </template>
@@ -87,6 +106,8 @@
     import agregar from '../assets/img/icons/menu/agregarazul.svg';
     import close from '../assets/img/icons/close.svg';
     import tarjeta from '../assets/img/icons/iconotarjetag.svg';
+    import api from "../api.js";
+    import * as firebase from "firebase";
 
     export default {
         name: 'recargar',
@@ -94,14 +115,186 @@
         data: function () {
             return {
                 myclass: ['modal-recargar'],
+                myclass2: ['modal-recargar-aviso'],
                 agregar: config.rutaWeb(agregar),
                 tarjeta: config.rutaWeb(tarjeta),
                 close: config.rutaWeb(close),
                 active: '',
-                formShow: false
+                formShow: false,
+                saldo: "0",
+                listAccountsActual: {},
+                listYear: [],
+                listCreditCard: [],
+                newCreditCard: {
+                    cvc: "",
+                    fechaExp: "",
+                    id: "",
+                    nombre: "",
+                    numero: "",
+                    yearExp: ""
+                }
             }
         },
-        methods: {} 
+        methods: {
+            yearExpActual() {
+                var yearActual = new Date();
+                yearActual = yearActual.getFullYear();
+                var maxYear = 13;
+                var optionYear = [];
+
+                for (var i = 0; i < maxYear; i++) {
+                    optionYear.push({
+                        year: yearActual + 1
+                    });
+                    yearActual = yearActual + 1;
+                }
+
+                this.listYear = optionYear;
+            },
+            createId(length) {
+                var result = '';
+                var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                var charactersLength = characters.length;
+
+                for ( var i = 0; i < length; i++ ) {
+                    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+                }
+
+                return result;
+            },
+            stopLoader() { this.$store.commit("notLoading"); },
+            recargar() {
+                var _uid = this.$store.getters.uid;
+                var accountActual = this.$store.getters.user.accounts;
+                accountActual.propia.value = parseInt(accountActual.propia.value) + parseInt(this.saldo);
+
+                if (_uid != "" || _uid != null || _uid != undefined) {
+                    this.$store.commit("loading");
+                    api.put('update/saldo/propia/', {id: _uid, data: accountActual}).then(res => {
+                        console.log(res);
+                        document.querySelector("#recargaExitosa").click();
+                        this.stopLoader();
+                    }).catch(err => {
+                        console.log(err);
+                    });
+                }
+            },
+            loadRecarga(id) {
+                this.active = id;
+                var _modal = document.querySelector("#showModalFinal");
+                var _saldo = document.querySelector("#rSaldo");
+
+                if (_saldo.value === "") {
+                    document.querySelector("[data-error='rSaldo']").innerText = "Debes ingresar una cantidad.";
+                    document.querySelector("[data-error='rSaldo']").classList.remove("d-none");
+                    this.active = "";
+                    return false;
+                }
+
+                if (_saldo.value != "") {
+                    _modal.click();
+                    this.saldo = `${_saldo.value}`;
+                }
+            },
+            cancelarTransaccion() {
+                this.saldo = `0`;
+                this.active = "";
+            },
+            asignarUser() {
+                let dbFireBase = firebase.database();
+
+                var _uid = this.$store.getters.uid;
+
+                if (_uid != "" || _uid != null || _uid != undefined) {
+                    var name = document.querySelector("#name").value;
+                    var cvc = document.querySelector("#cvc").value;
+                    var nametarget = document.querySelector("#nametarget").value;
+                    var mes = document.querySelector("#mes").value;
+                    var year = document.querySelector("#year").value;
+
+                    if (name != "" && mes != "" && year != "" && cvc != "" && nametarget != "") {
+                        this.$store.commit("loading");
+                        this.newCreditCard.cvc = cvc;
+                        this.newCreditCard.fechaExp = mes;
+                        this.newCreditCard.id = this.createId(20);
+                        this.newCreditCard.nombre = nametarget;
+                        this.newCreditCard.numero = name;
+                        this.newCreditCard.yearExp = year;
+
+                        var db = dbFireBase.ref('creditcard/' + _uid);
+                        db.child(this.newCreditCard.id).set(this.newCreditCard);
+                        document.querySelector("#name").value = "";
+                        document.querySelector("#cvc").value = "";
+                        document.querySelector("#nametarget").value = "";
+                        document.querySelector("#mes").value = "";
+                        document.querySelector("#year").value = "";
+
+                        this.newCreditCard = {
+                            cvc: "",
+                            fechaExp: "",
+                            id: "",
+                            nombre: "",
+                            numero: "",
+                            yearExp: ""
+                        }
+                        this.stopLoader();
+                    }
+                }
+            },
+            deleteCreditCard(idTargeta) {
+                let dbFireBase = firebase.database();
+                var _uid = this.$store.getters.uid;
+
+                if (_uid != "" || _uid != null || _uid != undefined) {
+                    this.$store.commit("loading");
+                    var db = dbFireBase.ref('creditcard/' + _uid);
+                    db.child(idTargeta).remove();
+                    this.stopLoader();
+                }
+            },
+            getListCreditCard() {
+                this.$store.commit("loading");
+                firebase.database().ref("creditcard").child(this.$store.getters.uid).on("value", (res) => {
+                    // console.log(res.val());
+                    var _keys = [];
+                    var _values = [];
+                    var _listFinal = [];
+                    if (res.val() != null) {
+                        _keys = res.val() === null || res.val() === undefined ? [] : Object.keys(res.val());
+                        _values = res.val() === null || res.val() === undefined ? [] : Object.values(res.val());
+                        
+                        for (var i = 0; i < _values.length; i++) {
+                            _listFinal.push({
+                                id_delete: _keys[i],
+                                id: _values[i].id,
+                                nombre: _values[i].nombre,
+                                numero: _values[i].numero.toString(),
+                                fechaExp: _values[i].fechaExp,
+                                yearExp: _values[i].yearExp,
+                                cvc: _values[i].cvc
+                            });
+                        }
+
+                        _listFinal.sort(function(a, b){ 
+                            if (a.nombre < b.nombre) {
+                                return -1;
+                            }
+                        });
+
+                        this.listCreditCard = _listFinal;
+                        this.stopLoader();
+                    } else {
+                        this.listCreditCard = [];
+                        this.stopLoader();
+                        return false;
+                    }
+                });
+            },
+        },
+        mounted() {
+            this.yearExpActual();
+            this.getListCreditCard();
+        },
     }
 </script>
 
@@ -232,9 +425,9 @@
                     }
                 }
             }
-            .footer-btn{
+            .footer-btn {
                 margin: 15px auto;
-                .btn{
+                .btn {
                     width: 120px;
                     margin: auto 20px;
                     color: #fff;
@@ -251,4 +444,25 @@
         }
     }
     
+    .btn.recargarFinal {
+        width: 120px;
+        margin: auto 20px;
+        color: #fff;
+        border-radius: 0;
+        padding: 6px;
+
+        &:nth-child(2){
+            background-color: var(--blue-opacity);
+        }
+        &:nth-child(1){
+            background-color: var(--blue);
+        }
+    }
+
+    p.Monto {
+        margin: 0;
+        font-size: 2.5rem;
+        font-weight: bold !important;
+        color: #9d8755;
+    }
 </style>

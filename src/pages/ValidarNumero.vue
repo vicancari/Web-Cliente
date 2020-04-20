@@ -135,25 +135,55 @@
                 if (this.formCodigoPin.value != "" && this.formCodigoPin.value.length === 4) {
                     this.$store.commit("loading");
                     axios.post('https://myraus.com:9283/api/sms/VerificarCodigo', {codigo: `${this.formCodigoPin.value}`}).then(res => {
-                        console.log(res);
                         if (res.data.result === true) {
                             this.loadTime(true);
                             api.post('cliente/registro/', this.$store.getters.newRegister[0]).then(res => {
+                                var uid = res.key;
                                 if (res.next === "OK") {
-                                    this.signIn(res.uid);
-                                    if (window.localStorage.getItem("token") != "") {
-                                        this.$store.state.token = window.localStorage.getItem("token");
-                                        this.$store.state.isLoggedIn = true;
-                                        this.$store.state.uid = res.uid;
-                                        document.querySelector("#stopLoader").click();
-                                        this.btnModal = document.querySelector(`#btn-modal`);
-                                        this.btnModal.click();
+                                    if (uid != "" || uid != null || uid != undefined) {
+                                        var _keys = [];
+                                        var _values = [];
+                                        var accounts = {};
+                                        api.get('planes/').then(res => {
+                                            _keys = Object.keys(res);
+                                            _values = Object.values(res);
 
-                                        setTimeout(() => {
-                                            if (document.querySelector("#nextLink")) {
-                                                document.querySelector("#nextLink").click();
+                                            for (var i = 0; i < _values.length; i++) {
+                                                accounts[`${_values[i].nombre}`] = {
+                                                    categorias: _values[i].categorias,
+                                                    establecimineto: _values[i].establecimientos,
+                                                    id_plan: _keys[i],
+                                                    is_base: true,
+                                                    type: _values[i].type,
+                                                    value: 0
+                                                }
                                             }
-                                        }, 500);
+
+                                            accounts['propia'] = {
+                                                type: 3,
+                                                value: 0
+                                            }
+                                            
+                                            api.put('accounts/update/cliente/', {id: uid, data: accounts}).then(res => {
+                                                if (res.success === true) {
+                                                    this.signIn(uid);
+                                                    if (window.localStorage.getItem("token") != "") {
+                                                        this.$store.state.token = window.localStorage.getItem("token");
+                                                        this.$store.state.isLoggedIn = true;
+                                                        this.$store.state.uid = uid;
+                                                        document.querySelector("#stopLoader").click();
+                                                        this.btnModal = document.querySelector(`#btn-modal`);
+                                                        this.btnModal.click();
+    
+                                                        setTimeout(() => {
+                                                            if (document.querySelector("#nextLink")) {
+                                                                document.querySelector("#nextLink").click();
+                                                            }
+                                                        }, 500);
+                                                    }
+                                                }
+                                            });
+                                        });
                                     }
                                 }
                             }).catch(err => {

@@ -24,9 +24,9 @@
                     </div>
                     <p>Propio</p>
                 </button>
-                 <button class="btn btnMenu">
-                      <div class="price" v-b-tooltip.hover title="200.00000€">
-                        <span class="a" >8</span>
+                <button class="btn btnMenu">
+                    <div class="price" v-b-tooltip.hover title="200.00000€">
+                        <span class="a">8</span>
                         <span class="b">,00€</span>
                     </div>
                     <p> <img class="img-fluid" :src="hearthfavorite" alt="">Puntos</p>
@@ -41,7 +41,7 @@
                     <img class="imgMenu" :src="heartred" alt="">
                     <p>Favoritos</p>
                 </button>
-                <button class="btn btnMenu"  @click="$bvModal.hide('menu-modal')" v-b-modal.modal-recargar>
+                <button class="btn btnMenu" @click="$bvModal.hide('menu-modal')" v-b-modal.modal-recargar>
                     <img class="imgMenu" :src="recharge" alt="">
                     <p>Recargar</p>
                 </button>

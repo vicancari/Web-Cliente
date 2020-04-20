@@ -115,6 +115,6 @@
     display: -webkit-flex;
     display: -ms-flexbox;
     display: flex;
-    z-index: 1000;
+    z-index: 100001;
   }
 </style>

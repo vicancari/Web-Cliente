@@ -180,6 +180,8 @@
     import imgPin from '../assets/img/icons/pin.png';
     import star from '../assets/img/icons/star.png';
     import chevRight from '../assets/img/icons/chev-right.png';
+
+    // API + Firebase + funciones
     import api from '../api.js';
     import * as firebase from "firebase";
 
@@ -264,8 +266,8 @@
                 // -> Retornamo la cantidad en Km con tres decimales.
                 return d.toFixed(3);
             },
-            async getUser () {
-                if (this.$store.getters.uid != "" || this.$store.getters.uid != null) {
+            async getUser() {
+                if (this.$store.getters.uid != "" || this.$store.getters.uid != null || this.$store.getters.uid != undefined) {
                     var _list = {};
                     firebase.database().ref("clientes").child(this.$store.getters.uid).on("value", (res) => {
                         _list = res.val();
@@ -275,17 +277,12 @@
                 }
             },
             async getBalance() {
-                var _MB = this.$store.getters.user.accounts;
-                console.log(_MB);
-
-                var _books = _MB.books.value;
-                var _eats = _MB.eats.value;
-                var _fuel = _MB.fuel.value;
-                var _gyms = _MB.gyms.value;
-                var _kids = _MB.kids.value;
-                var _propia = _MB.propia.value;
-                var _trips = _MB.trips.value;
-                var total = _books + _eats + _fuel + _gyms + _kids + _propia + _trips;
+                var _MB = Object.values(this.$store.getters.user.accounts);
+                var total = 0;
+                
+                for (var i = 0; i < _MB.length; i++) {
+                    total = total + _MB[i].value;
+                }
 
                 this.$store.state.myBalance = total;
             },
@@ -619,5 +616,40 @@
 
     .carouselEdit .cardStyle {
         width: 250px !important;
+    }
+
+    .bodySection .alignHorizontal .card-horizontal {
+        height: 200px !important;
+        max-height: 200px !important;
+        overflow: hidden !important;
+    }
+
+    .bodySection .alignHorizontal .card-horizontal .card-body .body .text .title {
+        overflow: hidden !important;
+        white-space: nowrap !important;
+        text-overflow: ellipsis !important;
+        width: 100% !important;
+        display: block !important;
+        padding: .25rem 0 !important;
+    }
+
+    .bodySection .alignHorizontal .card-horizontal .card-img-top {
+        width: 50% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        object-position: center center !important;
+        border-radius: 0 !important;
+    }
+
+    @media only screen and (max-width: 992px) {
+        .bodySection .alignHorizontal .card-horizontal {
+            height: 190px !important;
+            max-height: 190px !important;
+        }
+
+        .bodySection .alignHorizontal .card-horizontal .card-img-top {
+            width: 42% !important;
+            height: 100% !important;
+        }
     }
 </style>
