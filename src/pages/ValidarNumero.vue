@@ -155,12 +155,14 @@
                                                     id_plan: _keys[i],
                                                     is_base: true,
                                                     type: _values[i].type,
+                                                    name: _values[i].nombre,
                                                     value: 0
                                                 }
                                             }
 
                                             accounts['propia'] = {
                                                 type: 3,
+                                                name: 'propia',
                                                 value: 0
                                             }
                                             

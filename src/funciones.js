@@ -18256,17 +18256,39 @@ export default {
                         id_plan: _keys[i],
                         is_base: true,
                         type: _values[i].type,
+                        name: _values[i].nombre,
                         value: 0
                     }
                 }
 
                 accounts['propia'] = {
                     type: 3,
+                    name: 'propia',
                     value: 0
                 }
                 
                 api.put('accounts/update/cliente/', {id: id, data: accounts});
             });
         }
+    },
+    getKilometros(_latOrigin, _lngOrigin, _latDestination, _lngDestination){
+        var rad = function(x) {
+            return x * Math.PI / 180;
+        }
+
+        // -> Radio de la tierra en km.
+        var R = 6378.137;
+
+        // -> Restamos la latitud del sitio con el origen.
+        var dLat = rad(_latDestination - _latOrigin);
+        // -> Restamos las longitud del sitio con el origen.
+        var dLong = rad(_lngDestination - _lngOrigin);
+
+        var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(rad(_latOrigin)) * Math.cos(rad(_latDestination)) * Math.sin(dLong / 2) * Math.sin(dLong / 2);
+        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        var d = R * c;
+
+        // -> Retornamo la cantidad en Km con tres decimales.
+        return d.toFixed(3);
     }
 };

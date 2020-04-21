@@ -26,12 +26,12 @@
                    Agregar tarjeta o cuenta
                </button>
                <div class="boxFormulario" v-if="formShow">
-                   <form action="">
+                   <form @submit.prevent>
                        <div class="row m-0">
                            <div class="col-12 p-0">
                                 <div class="form-group">
-                                    <input type="text" id="name" class="form-control" required placeholder="Tarjeta número / cuenta número" autocomplete="off">
-                                    <p class="msgError d-none">*msgError</p>
+                                    <input type="text" id="name" onkeydown="return funciones.campoNumber(event);" class="form-control" placeholder="Tarjeta número / cuenta número" autocomplete="off">
+                                    <p data-error="name" class="msgError d-none">*msgError</p>
                                 </div>
                            </div>
                            <div class="col-3 p-0">
@@ -51,7 +51,7 @@
                                         <option value="Noviembre">Noviembre</option>
                                         <option value="Diciembre">Diciembre</option>
                                     </select>
-                                    <p class="msgError d-none">*msgError</p>
+                                    <p data-error="mes" class="msgError d-none">*msgError</p>
                                 </div>
                            </div>
                            <div class="col-3 p-0">
@@ -60,19 +60,19 @@
                                         <option value="" disabled selected class="d-none">Año exp</option>
                                         <option v-for="y in this.listYear" :key="y.year" :value="y.year">{{ y.year }}</option>
                                     </select>
-                                    <p class="msgError d-none">*msgError</p>
+                                    <p data-error="year" class="msgError d-none">*msgError</p>
                                 </div>
                            </div>
                            <div class="col-6 p-0">
                                 <div class="form-group">
-                                    <input type="text" id="cvc" class="form-control" required placeholder="CVC" autocomplete="off">
-                                    <p class="msgError d-none">*msgError</p>
+                                    <input type="text" id="cvc" class="form-control" maxlength="3" onkeypress="if(this.value.length==this.getAttribute('maxlength')) return false;" onkeydown="return funciones.campoNumber(event);" placeholder="CVC" autocomplete="off">
+                                    <p data-error="cvc" class="msgError d-none">*msgError</p>
                                 </div>
                            </div>
                            <div class="col-12 p-0">
                                 <div class="form-group">
-                                    <input type="text" id="nametarget" class="form-control" required placeholder="Nombre en tarjeta" autocomplete="off">
-                                    <p class="msgError d-none">*msgError</p>
+                                    <input type="text" id="nametarget" class="form-control" placeholder="Nombre en tarjeta" autocomplete="off">
+                                    <p data-error="nametarget" class="msgError d-none">*msgError</p>
                                 </div>
                            </div>
                            <div class="col-12">
@@ -212,7 +212,73 @@
                     var mes = document.querySelector("#mes").value;
                     var year = document.querySelector("#year").value;
 
-                    if (name != "" && mes != "" && year != "" && cvc != "" && nametarget != "") {
+                    if (name === "") {
+                        document.querySelector("[data-error='name']").innerText = "El número de la targeta esta vacío, por favor verifique.";
+                        document.querySelector("[data-error='name']").classList.remove("d-none");
+
+                        setTimeout(() => {
+                            document.querySelector("[data-error='name']").classList.add("d-none");
+                        }, 3500);
+
+                        return false;
+                    }
+
+                    if (name.length <= 15) {
+                        document.querySelector("[data-error='name']").innerText = "El número de la targeta debe ser mayor que 15, por favor verifique.";
+                        document.querySelector("[data-error='name']").classList.remove("d-none");
+
+                        setTimeout(() => {
+                            document.querySelector("[data-error='name']").classList.add("d-none");
+                        }, 3500);
+
+                        return false;
+                    }
+
+                    if (mes === "") {
+                        document.querySelector("[data-error='mes']").innerText = "Por favor seleccione el mes de la targeta.";
+                        document.querySelector("[data-error='mes']").classList.remove("d-none");
+
+                        setTimeout(() => {
+                            document.querySelector("[data-error='mes']").classList.add("d-none");
+                        }, 3500);
+
+                        return false;
+                    }
+
+                    if (year === "") {
+                        document.querySelector("[data-error='year']").innerText = "Por favor seleccione el año de la targeta.";
+                        document.querySelector("[data-error='year']").classList.remove("d-none");
+
+                        setTimeout(() => {
+                            document.querySelector("[data-error='year']").classList.add("d-none");
+                        }, 3500);
+
+                        return false;
+                    }
+
+                    if (cvc === "") {
+                        document.querySelector("[data-error='cvc']").innerText = "El CVC esta vacío, por favor llenelo.";
+                        document.querySelector("[data-error='cvc']").classList.remove("d-none");
+
+                        setTimeout(() => {
+                            document.querySelector("[data-error='cvc']").classList.add("d-none");
+                        }, 3500);
+
+                        return false;
+                    }
+
+                    if (nametarget === "") {
+                        document.querySelector("[data-error='nametarget']").innerText = "El nombre de la targeta esta vacío, por favor llenelo.";
+                        document.querySelector("[data-error='nametarget']").classList.remove("d-none");
+
+                        setTimeout(() => {
+                            document.querySelector("[data-error='nametarget']").classList.add("d-none");
+                        }, 3500);
+
+                        return false;
+                    }
+
+                    if (name != "" && name.length > 15 && mes != "" && year != "" && cvc != "" && nametarget != "") {
                         this.$store.commit("loading");
                         this.newCreditCard.cvc = cvc;
                         this.newCreditCard.fechaExp = mes;

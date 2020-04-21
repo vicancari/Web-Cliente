@@ -13,6 +13,10 @@ export default function(/* { ssrContext } */) {
             phoneNumber: "",
             status: "",
             myBalance: 0,
+            coords: {
+                lat: "",
+                lng: "",
+            },
             newRegister: {},
             user: {}
         },
@@ -24,6 +28,7 @@ export default function(/* { ssrContext } */) {
             phoneNumber: state => state.phoneNumber,
             status: state => state.status,
             newRegister: state => state.newRegister,
+            coords: state => state.coords,
             myBalance: state => state.myBalance,
             user: state => state.user
         },

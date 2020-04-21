@@ -74,7 +74,7 @@
                 </div>
                 <div class="row alignHorizontal" v-if="activeSection == 2">
                     <div style="width: 100%; margin: 0;" class="row">
-                        <div v-for="rest in this.listRestaurantes" :key="rest.uid" :id="rest.uid" :aria-sort="rest.km" class="col-md-6 col-12 mb-4">
+                        <div v-for="rest in this.listRestaurantes" :key="rest.id" :id="rest.id" :aria-sort="rest.km" class="col-md-6 col-12 mb-4">
                             <b-card
                                 :img-src="rest.photo"
                                 :img-alt="rest.name"
@@ -84,7 +84,7 @@
                                 >
                                 <div class="body">
                                     <div class="text">
-                                        <h5 class="title">{{ rest.name }}</h5>
+                                        <h5 style="text-transform: uppercase !important;" class="title">{{ rest.name }}</h5>
                                         <p class="distancia">Distancia: {{ rest.km }} km.</p>
                                         <button class="btn">Ir <img :src="chevRight" alt=""></button>
                                         <div class="star-content">
@@ -184,6 +184,7 @@
     // API + Firebase + funciones
     import api from '../api.js';
     import * as firebase from "firebase";
+    import funciones from "../funciones.js";
 
     // var Jquery = require("jquery");
 
@@ -222,6 +223,13 @@
             this.ubiLat = ubicacion.lat;
             this.ubiLng = ubicacion.lon;
 
+            this.$store.state.coords = {
+                lat: ubicacion.lat,
+                lng: ubicacion.lon
+            }
+
+            console.log(this.$store.getters.coords);
+
             if (this.$store.getters.isLoggedIn === true) {
                 this.getUser();
                 this.getStreetAddressFrom(ubicacion.lat, ubicacion.lon);
@@ -245,26 +253,6 @@
                 } else if ( id == 2) {
                     this.activeSection= 2
                 }
-            },
-            getKilometros(_latOrigin, _lngOrigin, _latDestination, _lngDestination){
-                var rad = function(x) {
-                    return x * Math.PI / 180;
-                }
-
-                // -> Radio de la tierra en km.
-                var R = 6378.137;
-
-                // -> Restamos la latitud del sitio con el origen.
-                var dLat = rad(_latDestination - _latOrigin);
-                // -> Restamos las longitud del sitio con el origen.
-                var dLong = rad(_lngDestination - _lngOrigin);
-
-                var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(rad(_latOrigin)) * Math.cos(rad(_latDestination)) * Math.sin(dLong / 2) * Math.sin(dLong / 2);
-                var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-                var d = R * c;
-
-                // -> Retornamo la cantidad en Km con tres decimales.
-                return d.toFixed(3);
             },
             async getUser() {
                 if (this.$store.getters.uid != "" || this.$store.getters.uid != null || this.$store.getters.uid != undefined) {
@@ -319,23 +307,28 @@
             },
             async getRestaurantes(myLat, myLng) {
                 await api.get(`restaurantes/list/`).then(res => {
-                    // -> restaurantes cerca de mi.
-                    // var geocoder = new this.google.maps.Geocoder();
-                    // var directionsServiceTmp = new this.google.maps.DirectionsService;
+                    var _keys = Object.keys(res);
+                    var _values = Object.values(res);
 
                     var _list = [];
-                    res.forEach(el => {
-                        if (this.getKilometros(myLat, myLng, el.lat, el.lng) <= 20.000) {
+                    for (var i = 0; i < _values.length; i++) {
+                        if (funciones.getKilometros(myLat, myLng, _values[i].lat, _values[i].lng) <= 20.000) {
                             _list.push({
-                                uid: el.place_id,
-                                name: el.name,
-                                photo: el.photo,
-                                lat: el.lat,
-                                lng: el.lng,
-                                km: this.getKilometros(myLat, myLng, el.lat, el.lng)
+                                id: _keys[i],
+                                categorias: Object.values(_values[i].categories),
+                                direccion: _values[i].direction,
+                                name: _values[i].name,
+                                phone: _values[i].phone,
+                                photo: _values[i].photo,
+                                rating: _values[i].rating,
+                                reviews: Object.values(_values[i].reviews),
+                                slider: Object.values(_values[i].slider),
+                                lat: _values[i].lat,
+                                lng: _values[i].lng,
+                                km: funciones.getKilometros(myLat, myLng, _values[i].lat, _values[i].lng)
                             });
                         }
-                    });
+                    }
 
                     _list.sort(function(a, b){ 
                         if (a.km < b.km) {
