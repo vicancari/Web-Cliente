@@ -3,7 +3,7 @@
         <b-modal centered :modal-class="myclass" id="modal-send" ref="modal-send"  hide-footer hide-header @click="closeSearching">  
             <div class="boxCalculate" @click="closeSearching">
                 <div class="boxSeach" @click="closeSearching">
-                    <input type="text" id="searchRestaurante" v-on:keyup="search" class="form-control search" placeholder="Buscar" autocomplete="off">
+                    <input type="text" id="searchRestaurante" v-on:keyup="search" class="form-control search" placeholder="Buscar" v-on:focus="openSearching" autocomplete="off">
                     <p data-error="searchRestaurante" class="msgError d-none">*msgError</p>
                     <div @click="selectRestaurante" class="boxSeach__result">
                         <p v-for="res in this.restaurantes" :key="'result_'+res.id" :id="'result_'+res.id" :data-name="res.name" :data-categoria="res.categorias[0].name" :data-subcategoria="res.categorias[0].name_subcategory" class="result">{{ res.name }}</p>
@@ -53,7 +53,7 @@
                 </div>
                 <div class="footer">
                     <button class="btn btn-confirmar">Confirmar</button>
-                    <button class="btn btn-cancelar" @click="setAccounts">Cancelar</button>
+                    <button class="btn btn-cancelar">Cancelar</button>
                 </div>
             </div>
         </b-modal>
@@ -80,6 +80,13 @@
             }
         },
         methods: {
+            openSearching() {
+                if (document.querySelector("#searchRestaurante")) {
+                    if (document.querySelector("#searchRestaurante").parentNode.classList.contains("boxSeach")) {
+                        document.querySelector("#searchRestaurante").parentNode.classList.add("searching");
+                    }
+                }
+            },
             closeSearching() {
                 if (document.activeElement != document.querySelector("#searchRestaurante")) {
                     if (document.querySelector("#searchRestaurante").parentNode.classList.contains("boxSeach")) {
@@ -158,14 +165,14 @@
                 var _box = document.querySelector("#selectCuenta");
                 var _myAccounts = this.$store.getters.user.accounts;
                 var _cate = this.selectedRes.categoria.replace("#", "");
-                var _subcate = this.selectedRes.subcategoria.replace("#", "");
+                // var _subcate = this.selectedRes.subcategoria.replace("#", "");
                 
-                console.log(_box);
-                console.log(_cate);
-                console.log(_subcate);
+                // console.log(_box);
+                // console.log(_cate);
+                // console.log(_subcate);
                 
                 _myAccounts = Object.values(_myAccounts);
-                console.log(_myAccounts);
+                // console.log(_myAccounts);
 
                 for (var i = 0; i < _myAccounts.length; i++) {
                     if (_myAccounts[i].name.toLowerCase() != "propia") {
@@ -260,7 +267,6 @@
         mounted() {
             var coords = this.$store.getters.coords;
             this.getRestaurantes(coords.lat, coords.lng);
-            console.log(this);
         },
     }
 </script>

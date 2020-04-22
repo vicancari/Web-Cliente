@@ -180,6 +180,7 @@
     import imgPin from '../assets/img/icons/pin.png';
     import star from '../assets/img/icons/star.png';
     import chevRight from '../assets/img/icons/chev-right.png';
+    import imgDefault from '../assets/img/noimage.jpeg';
 
     // API + Firebase + funciones
     import api from '../api.js';
@@ -228,14 +229,12 @@
                 lng: ubicacion.lon
             }
 
-            console.log(this.$store.getters.coords);
-
             if (this.$store.getters.isLoggedIn === true) {
                 this.getUser();
                 this.getStreetAddressFrom(ubicacion.lat, ubicacion.lon);
+                this.getProductosPromocionados();
                 this.getRestaurantes(ubicacion.lat, ubicacion.lon);
                 this.getProductos();
-                this.getProductosPromocionados();
 
                 this.$store.commit("done");
             }
@@ -319,7 +318,7 @@
                                 direccion: _values[i].direction,
                                 name: _values[i].name,
                                 phone: _values[i].phone,
-                                photo: _values[i].photo,
+                                photo: _values[i].photo ? _values[i].photo : imgDefault,
                                 rating: _values[i].rating,
                                 reviews: Object.values(_values[i].reviews),
                                 slider: Object.values(_values[i].slider),
@@ -350,7 +349,7 @@
                             title: el.name,
                             desc: el.description,
                             price: el.price_with_iva,
-                            img: el.images[0].img
+                            img: el.images[0] ? el.images[0].img : imgDefault
                         });
                     });
 
@@ -368,7 +367,7 @@
                             title: el.name,
                             desc: el.description,
                             price: el.price_with_iva,
-                            img: el.images[0].img,
+                            img: el.images[0] ? el.images[0].img : imgDefault,
                             category: el.listProductos
                         });
                     });
@@ -397,8 +396,8 @@
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped lang="scss">
-     //search nav
+<style lang="scss">
+    //search nav
     .navSearch{
         display: flex;
         justify-content: center;
@@ -644,5 +643,9 @@
             width: 42% !important;
             height: 100% !important;
         }
+    }
+
+    .owl-carousel.owl-loaded {
+        display: flex !important;
     }
 </style>

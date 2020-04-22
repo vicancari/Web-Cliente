@@ -1,4 +1,4 @@
-var MODE_ENV = 1; // 1 produccion - 2 developer
+var MODE_ENV = 2; // 1 produccion - 2 developer
 
 let config = {
     dominioApi_dev: "http://localhost:9990/api",
