@@ -81,7 +81,7 @@
                                 img-top
                                 tag="article"
                                 class="card-horizontal"
-                                >
+                            >
                                 <div class="body">
                                     <div class="text">
                                         <h5 style="text-transform: uppercase !important;" class="title">{{ rest.name }}</h5>
@@ -216,7 +216,10 @@
                 listProductos: {},
                 google: "",
                 myLat: "",
-                myLng: ""
+                myLng: "",
+                listPropio: [],
+                listBeneficio: [],
+                listIncentivo: []
             }
         },
         async created() {
@@ -266,9 +269,42 @@
             async getBalance() {
                 var _MB = Object.values(this.$store.getters.user.accounts);
                 var total = 0;
+                this.$store.state.balanceBeneficio = 0;
+                this.$store.state.balanceIncentivos = 0;
+                this.$store.state.balancePropio = 0;
+                this.$store.state.listBeneficio = [];
+                this.$store.state.listIncentivo = [];
+                this.$store.state.listPropio = [];
                 
                 for (var i = 0; i < _MB.length; i++) {
                     total = total + _MB[i].value;
+
+                    if (_MB[i].type === 1) {
+                        this.$store.state.listBeneficio.push({
+                            name: _MB[i].name,
+                            saldo: _MB[i].value
+                        });
+
+                        this.$store.state.balanceBeneficio = parseInt(this.$store.getters.balanceBeneficio) + parseInt(_MB[i].value);
+                    }
+
+                    if (_MB[i].type === 2) {
+                        this.$store.state.listIncentivo.push({
+                            name: _MB[i].name,
+                            saldo: _MB[i].value
+                        });
+
+                        this.$store.state.balanceIncentivos = parseInt(this.$store.getters.balanceIncentivos) + parseInt(_MB[i].value);
+                    }
+
+                    if (_MB[i].type === 3) {
+                        this.$store.state.listPropio.push({
+                            name: _MB[i].name,
+                            saldo: _MB[i].value
+                        });
+
+                        this.$store.state.balancePropio = parseInt(this.$store.getters.balancePropio) + parseInt(_MB[i].value);
+                    }
                 }
 
                 this.$store.state.myBalance = total;
@@ -336,6 +372,13 @@
                     });
 
                     this.listRestaurantes = _list;
+
+                    setTimeout(() => {
+                        var img = document.querySelectorAll(".card-img-top");
+                        img.forEach(el => {
+                            el.onerror = imgDefault;
+                        });
+                    }, 950);
                 }).catch(err => {
                     console.log(err);
                 });
@@ -389,7 +432,7 @@
                 this.$router.push("/");
             }
         },
-        async mounted() {
+        mounted() {
             this.$store.commit("loading");
         }
     }

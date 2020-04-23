@@ -216,6 +216,9 @@
                 }
             }
         },
+        async created() {
+            await this.geo();
+        },
         methods: {
             showPassword(e) {
                 var _parent = e.target.parentNode.parentNode;
@@ -327,8 +330,8 @@
                                 this.$store.commit("notLoading");
                             }, 3000);
 
-                            api.get(`auth/signInPhone/${this.formUsername.value}`).then(res => {
-                                firebase.auth().signInWithEmailAndPassword(res.email, this.formPassword.value).then((res) => {
+                            api.get(`auth/signInPhone/${this.formUsername.value.trim()}`).then(res => {
+                                firebase.auth().signInWithEmailAndPassword(res.email, this.formPassword.value.trim()).then((res) => {
                                     if (document.querySelector("#remember")) {
                                         if (document.querySelector("#remember").checked === true) {
                                             window.localStorage.setItem("remember", "true");
@@ -386,7 +389,7 @@
                             this.$store.commit("notLoading");
                         }, 3000);
 
-                        firebase.auth().signInWithEmailAndPassword(this.formUsername.value, this.formPassword.value).then((res) => {
+                        firebase.auth().signInWithEmailAndPassword(this.formUsername.value.trim(), this.formPassword.value.trim()).then((res) => {
                             if (document.querySelector("#remember")) {
                                 if (document.querySelector("#remember").checked === true) {
                                     window.localStorage.setItem("remember", "true");
@@ -563,6 +566,22 @@
                         }, 1500);
                     });
                 }
+            },
+            async geo() {
+                return new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(
+                        async function(pos) {
+                            resolve({
+                                lat: pos.coords.latitude,
+                                lon: pos.coords.longitude
+                            });
+                        },
+                        function(error) {
+                            console.log(error);
+                            reject();
+                        }
+                    );
+                });
             }
         },
         async mounted() {

@@ -2,17 +2,9 @@
     <div>
         <b-modal centered :modal-class="myclass" id="modal-propio" ref="modal-propio"  hide-footer hide-header>  
             <ul>
-                <li>
-                    <p>Novo Sushi </p>
-                    <span>8</span>
-                </li>
-                 <li>
-                    <p>Santa Gloria  </p>
-                    <span>12</span>
-                </li>
-                 <li>
-                    <p>Cinesa</p>
-                    <span>6</span>
+                <li v-for="l in this.$store.getters.listPropio" :key="l.name">
+                    <p>{{ l.name }}</p>
+                    <span>{{ l.saldo }},00€</span>
                 </li>
             </ul>
         </b-modal>
@@ -27,8 +19,7 @@
             return {
                 myclass: ['modal-beneficios'],
             }
-        },
-        methods: {}
+        }
     }
 </script>
 

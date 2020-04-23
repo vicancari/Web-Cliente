@@ -3,7 +3,10 @@
         <b-modal centered :modal-class="myclass" id="modal-send" ref="modal-send"  hide-footer hide-header @click="closeSearching">  
             <div class="boxCalculate" @click="closeSearching">
                 <div class="boxSeach" @click="closeSearching">
-                    <input type="text" id="searchRestaurante" v-on:keyup="search" class="form-control search" placeholder="Buscar" v-on:focus="openSearching" autocomplete="off">
+                    <div class="input-search">
+                        <input type="text" id="searchRestaurante" v-on:keyup="search" class="form-control search" placeholder="Buscar" v-on:focus="openSearching" autocomplete="off">
+                        <img class="input-search__icon" src="../assets/img/icons/search.png" alt="search">
+                    </div>
                     <p data-error="searchRestaurante" class="msgError d-none">*msgError</p>
                     <div @click="selectRestaurante" class="boxSeach__result">
                         <p v-for="res in this.restaurantes" :key="'result_'+res.id" :id="'result_'+res.id" :data-name="res.name" :data-categoria="res.categorias[0].name" :data-subcategoria="res.categorias[0].name_subcategory" class="result">{{ res.name }}</p>
@@ -11,7 +14,8 @@
                 </div>
                 <div class="priceText" @click="closeSearching">
                     <span>€</span>
-                    <input type="text" id="saldoSend" class="form-control" placeholder="0,00" autocomplete="off">
+                    <input v-on:focus="disabledCampo" v-on:keyup="disabledCampo" v-on:keydown="disabledCampo" type="text" id="saldoSend" class="form-control" placeholder="0,00" autocomplete="off">
+                    <img @click="borrarNumber" id="borrarNumber" class="priceText__borrarNumber d-none" src="../assets/img/icons/borrar-teclado.svg" alt="borrar">
                     <p data-error="saldoSend" class="msgError d-none">*msgError</p>
                 </div>
                 <div @click="calculadora" class="d-flex">
@@ -34,26 +38,15 @@
          <b-modal centered :modal-class="payment" id="modal-payment" ref="modal-payment"  hide-footer hide-header>  
             <div class="boxPago">
                 <h5 class="title">Selecciona un tipo de pago</h5>
-                <div class="box checkedRadio">
-                    <div class="checkedRadio__group">
-                        <input type="radio" id="radio_propia" name="tipoPago" checked>
-                        <label for="radio_propia">Propia</label>
-                    </div>
-
-                    <div id="selectCuenta" class="selectCenter"></div>
-
-                    <div class="checkedRadio__group">
-                        <input type="radio" id="radio_mix" name="tipoPago">
-                        <label for="radio_mix">Mix</label>
-                    </div>
-                </div>
+                <div class="box checkedRadio" id="selectCuenta"></div>
                 <div class="boxPrice">
                     <p v-b-tooltip.hover :title="this.saldoSend+',00€'">{{ this.saldoSend }}<span>,00€</span></p>
                     <h5 class="name">{{ this.selectedRes.name }}</h5>
                 </div>
                 <div class="footer">
-                    <button class="btn btn-confirmar">Confirmar</button>
-                    <button class="btn btn-cancelar">Cancelar</button>
+                    <button class="btn btn-confirmar" @click="enviarSaldo">Confirmar</button>
+                    <button class="btn btn-cancelar" @click="$bvModal.hide('modal-payment')">Cancelar</button>
+                    <button type="button" @click="$bvModal.hide('modal-payment')" id="pagoExitoso" style="display: none;"></button>
                 </div>
             </div>
         </b-modal>
@@ -76,21 +69,29 @@
                 check: config.rutaWeb(check),
                 restaurantes: [],
                 selectedRes: {},
-                saldoSend: 0
+                pagoMix: [],
+                saldoSend: 0,
+                miSaldoTotal: 0,
+                pxT: 52
             }
         },
         methods: {
             openSearching() {
                 if (document.querySelector("#searchRestaurante")) {
-                    if (document.querySelector("#searchRestaurante").parentNode.classList.contains("boxSeach")) {
-                        document.querySelector("#searchRestaurante").parentNode.classList.add("searching");
+                    if (document.querySelector("#searchRestaurante").parentNode.parentNode.classList.contains("boxSeach")) {
+                        document.querySelector("#searchRestaurante").parentNode.parentNode.classList.add("searching");
                     }
                 }
             },
+            disabledCampo(e) {
+                e.target.focus = false;
+                e.preventDefault();
+                return false;
+            },
             closeSearching() {
                 if (document.activeElement != document.querySelector("#searchRestaurante")) {
-                    if (document.querySelector("#searchRestaurante").parentNode.classList.contains("boxSeach")) {
-                        document.querySelector("#searchRestaurante").parentNode.classList.remove("searching");
+                    if (document.querySelector("#searchRestaurante").parentNode.parentNode.classList.contains("boxSeach")) {
+                        document.querySelector("#searchRestaurante").parentNode.parentNode.classList.remove("searching");
                     }
                 }
             },
@@ -109,7 +110,7 @@
                 }
             },
             search(e) {
-                var _parent = e.target.parentNode;
+                var _parent = e.target.parentNode.parentNode;
                 var _input = e.target;
                 var _boxResult = _parent.children[2];
                 var _datas = _boxResult.children;
@@ -153,11 +154,74 @@
                     }
                 }
             },
+            borrarNumber(e) {
+                var _box = e.target.parentNode;
+                var _input = _box.children[1];
+
+                if (_input) {
+                    if (_input.value != "") {
+                        var fArray = _input.value.split(/(\d)/);
+                        var sArray = [];
+
+                        for (var i = 0; i < fArray.length; i++) {
+                            if (fArray[i] != "") {
+                                sArray.push(fArray[i]);
+                            }
+                        }
+
+                        sArray.pop();
+                        var unirText = "";
+
+                        for (var i2 = 0; i2 < sArray.length; i2++) {
+                            unirText = unirText + sArray[i2];
+                        }
+
+                        _input.value = unirText;
+
+                        if (_input.value.length > 8) {
+                            if (this.pxT < 52) {
+                                this.pxT = this.pxT + 6;
+                            }
+
+                            console.log(this.pxT);
+                            _input.setAttribute("style", `font-size: ${this.pxT}px !important; padding-left: 1.45rem !important; padding-right: 2.65rem !important;`);
+                        }
+
+                        if (_input.value === "") {
+                            this.pxT = this.pxT + 6;
+                            _input.setAttribute("style", `font-size: ${this.pxT}px !important; padding-left: 1.45rem !important; padding-right: 2.65rem !important;`);
+                            e.target.classList.add("d-none");
+                            _input.removeAttribute("style");
+                        }
+                    }
+
+                    if (_input.value === "") {
+                        e.target.classList.add("d-none");
+                        _input.removeAttribute("style");
+                    }
+                }
+            },
             calculadora(e) {
                 var _btnClick = e.target.getAttribute("data-btn");
-                if (document.querySelector("#saldoSend")) {
+                var _inputSaldo = document.querySelector("#saldoSend");
+                var _tBorrar = document.querySelector("#borrarNumber");
+
+                if (_inputSaldo) {
                     if (_btnClick === "1" || _btnClick === "2" || _btnClick === "3" || _btnClick === "4" || _btnClick === "5" || _btnClick === "6" || _btnClick === "7" || _btnClick === "8" || _btnClick === "9" || _btnClick === "," || _btnClick === "0") {
-                        document.querySelector("#saldoSend").value += _btnClick;
+                        _inputSaldo.value += _btnClick;
+
+                        if (_inputSaldo.value.length > 8) {
+                            this.pxT = this.pxT - 6;
+                            console.log(this.pxT);
+                            _inputSaldo.setAttribute("style", `font-size: ${this.pxT}px !important; padding-left: 1.45rem !important; padding-right: 2.65rem !important;`);
+                        }
+
+                        if (_inputSaldo.value != "") {
+                            if (_tBorrar.classList.contains("d-none")) {
+                                _tBorrar.classList.remove("d-none");
+                                _inputSaldo.setAttribute("style", "padding-left: 1.45rem !important; padding-right: 2.65rem !important;");
+                            }
+                        }
                     }
                 }
             },
@@ -167,31 +231,175 @@
                 var _cate = this.selectedRes.categoria.replace("#", "");
                 // var _subcate = this.selectedRes.subcategoria.replace("#", "");
                 
-                // console.log(_box);
-                // console.log(_cate);
-                // console.log(_subcate);
-                
                 _myAccounts = Object.values(_myAccounts);
-                // console.log(_myAccounts);
 
+                var otroHTML = {
+                    propia: `
+                        <div class="checkedRadio__group">
+                            <input type="radio" data-radio="propia" id="radio_propia" name="tipoPago" checked>
+                            <label for="radio_propia">Propia</label>
+                        </div>
+                    `,
+                    mix: `
+                        <div class="checkedRadio__group">
+                            <input type="radio" data-radio="mix" id="radio_mix" name="tipoPago">
+                            <label for="radio_mix">Mix</label>
+                        </div>
+                    `
+                }
+
+                var _mix = false;
+                var _mixChecked = false;
+
+                if (parseInt(this.saldoSend) <= parseInt(_myAccounts[_myAccounts.length - 1].value)) {
+                    _box.innerHTML += otroHTML.propia;
+                }
+                
                 for (var i = 0; i < _myAccounts.length; i++) {
                     if (_myAccounts[i].name.toLowerCase() != "propia") {
-                        if (_myAccounts[i].categorias) {
-                            if (_myAccounts[i].categorias[0].nombre.toLowerCase() === _cate.toLowerCase()) {
-                                var html2 = `
-                                    <div class="checkedRadio__group">
-                                        <input type="radio" id="radio_${_myAccounts[i].id_plan}" name="tipoPago">
-                                        <label for="radio_${_myAccounts[i].id_plan}">${_myAccounts[i].name}</label>
-                                    </div>
-                                `;
-    
-                                _box.innerHTML += html2;
+                        if (_myAccounts[i].categorias && _myAccounts[i].value > 0) {
+                            if (parseInt(this.saldoSend) <= parseInt(this.miSaldoTotal)) {
+                                if (parseInt(this.saldoSend) <= parseInt(_myAccounts[i].value)) {
+                                    for (var y = 0; y < _myAccounts[i].categorias.length; y++) {
+                                        if (_myAccounts[i].categorias[y].nombre.toLowerCase() === _cate.toLowerCase()) {
+                                            var html2 = `
+                                                <div class="checkedRadio__group">
+                                                    <input type="radio" data-radio="${_myAccounts[i].id_plan}" id="radio_${_myAccounts[i].id_plan}" name="tipoPago">
+                                                    <label for="radio_${_myAccounts[i].id_plan}">${_myAccounts[i].name}</label>
+                                                </div>
+                                            `;
+                
+                                            _box.innerHTML += html2;
+                                        }
+                                    }
+        
+                                    _mix = true;
+                                }
+                            } else {
+                                if (parseInt(_myAccounts[i].value) < parseInt(this.saldoSend)) {
+                                    for (var x = 0; x < _myAccounts[i].categorias.length; x++) {
+                                        if (_myAccounts[i].categorias[x].nombre.toLowerCase() === _cate.toLowerCase()) {
+                                            this.pagoMix.push({
+                                                id_plan: _myAccounts[i].id_plan,
+                                                name: _myAccounts[i].name
+                                            });
+                                        }
+                                    }
+
+                                    _mix = true;
+                                    _mixChecked = true;
+                                }
                             }
                         }
                     }
                 }
+
+                if (_mix === true) {
+                    _box.innerHTML += otroHTML.mix;
+
+                    if (_mixChecked === true) {
+                        document.querySelector("#radio_mix").checked = true;
+                    }
+                }
+            },
+            enviarSaldo() {
+                var _uid = this.$store.getters.uid;
+                if (_uid != "" || _uid != null || _uid != undefined) {
+                    this.$store.commit("loading");
+                    var _myAccounts = [];
+                    var accountActual = this.$store.getters.user.accounts;
+                    
+                    var _idRes = this.selectedRes.id;
+                    var _monto = this.saldoSend;
+                    var _allRadiosTypePago = document.querySelectorAll("[name='tipoPago']");
+                    // var _typePago = "";
+                    var _dataradio = "";
+                    _allRadiosTypePago.forEach(el => {
+                        if (el.checked === true) {
+                            // _typePago = el;
+                            _dataradio = el.getAttribute("data-radio");
+                        }
+                    });
+
+                    api.get(`restaurante/${_idRes}`).then(res => {
+                        var _balanceResActual = 0;
+                        _balanceResActual = parseInt(res.balance);
+                        var sendMonto = _balanceResActual + parseInt(_monto);
+
+                        if (_dataradio === "propia") {
+                            api.put('restaurante/send/saldo/', {idRes: _idRes, balance: sendMonto}).then(res => {
+                                if (res.msg === "OK") {
+                                    if (parseInt(_monto) <= parseInt(accountActual.propia.value)) {
+                                        accountActual.propia.value = parseInt(accountActual.propia.value) - parseInt(_monto);
+                                    }
+
+                                    api.put('update/saldo/propia/', {id: _uid, data: accountActual}).then(res => {
+                                        console.log(res);
+                                        console.log("se envio el dinero con exito.");
+
+                                        document.querySelector("#pagoExitoso").click();
+                                        this.stopLoader();
+                                    }).catch(err => {
+                                        console.log(err);
+                                    });
+                                } else {
+                                    console.log("Ocurrio un problema.");
+                                    api.put('restaurante/send/saldo/', {idRes: _idRes, balance: sendMonto - parseInt(_monto)});
+                                    return false;
+                                }
+                            }).catch(err => {
+                                console.log(err);
+                            });
+                        }
+
+                        if (_dataradio != "propia" && _dataradio != "mix") {
+                            _myAccounts = Object.values(accountActual);
+                            for (var i = 0; i < _myAccounts.length; i++) {
+                                if (_myAccounts[i].name.toLowerCase() != "propia") {
+                                    if (_myAccounts[i].id_plan === _dataradio) {
+                                        if (parseInt(_monto) <= parseInt(accountActual[`${_myAccounts[i].name}`].value)) {
+                                            accountActual[`${_myAccounts[i].name}`].value = parseInt(accountActual[`${_myAccounts[i].name}`].value) - parseInt(_monto);
+                                        } else {
+                                            console.log("El monto es insuficiente, le recomendamos pago mix.");
+                                        }
+
+                                        api.put('restaurante/send/saldo/', {idRes: _idRes, balance: sendMonto}).then(res => {
+                                            if (res.msg === "OK") {
+                                                if (parseInt(_monto) <= parseInt(accountActual.propia.value)) {
+                                                    accountActual.propia.value = parseInt(accountActual.propia.value) - parseInt(_monto);
+                                                }
+
+                                                api.put('update/saldo/propia/', {id: _uid, data: accountActual}).then(res => {
+                                                    console.log(res);
+                                                    console.log("se envio el dinero con exito.");
+
+                                                    document.querySelector("#pagoExitoso").click();
+                                                    this.stopLoader();
+                                                }).catch(err => {
+                                                    console.log(err);
+                                                });
+                                            } else {
+                                                console.log("Ocurrio un problema.");
+                                                api.put('restaurante/send/saldo/', {idRes: _idRes, balance: sendMonto - parseInt(_monto)});
+                                                return false;
+                                            }
+                                        }).catch(err => {
+                                            console.log(err);
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }).catch(err => {
+                        console.log(err);
+                    });
+                }
             },
             Pay() {
+                var _myAccounts = this.$store.getters.user.accounts;
+                _myAccounts = Object.values(_myAccounts);
+                var _cate = this.selectedRes.categoria.replace("#", "");
+
                 if (document.querySelector("#searchRestaurante").value === "") {
                     document.querySelector("[data-error='searchRestaurante']").innerText = "Debes buscar un restaurante.";
                     document.querySelector("[data-error='searchRestaurante']").classList.remove("d-none");
@@ -216,7 +424,35 @@
                     return false;
                 }
 
-                if (document.querySelector("#searchRestaurante").value != "" && document.querySelector("#saldoSend").value != "") {
+                console.log(_cate);
+                var _myBalanceTotal = 0;
+                for (var i = 0; i < _myAccounts.length; i++) {
+                    if (_myAccounts[i].name.toLowerCase() != "propia") {
+                        if (_myAccounts[i].categorias && _myAccounts[i].value > 0) {
+                            for (var y = 0; y < _myAccounts[i].categorias.length; y++) {
+                                if (_myAccounts[i].categorias[y].nombre.toLowerCase() === _cate.toLowerCase()) {
+                                    _myBalanceTotal = _myBalanceTotal + parseInt(_myAccounts[i].value);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                _myBalanceTotal = _myBalanceTotal + parseInt(this.$store.getters.user.accounts.propia.value);
+                if (parseInt(document.querySelector("#saldoSend").value.replace(",00", "")) > parseInt(_myBalanceTotal)) {
+                    document.querySelector("[data-error='saldoSend']").innerText = `El saldo es insuficiente. su monto actual es de: ${_myBalanceTotal},00€`;
+                    document.querySelector("[data-error='saldoSend']").classList.remove("d-none");
+
+                    setTimeout(() => {
+                        document.querySelector("[data-error='saldoSend']").innerText = "";
+                        document.querySelector("[data-error='saldoSend']").classList.add("d-none");
+                    }, 3500);
+
+                    return false;
+                }
+
+                if (document.querySelector("#searchRestaurante").value != "" && document.querySelector("#saldoSend").value != "" && parseInt(document.querySelector("#saldoSend").value.replace(",00", "")) <= parseInt(_myBalanceTotal)) {
+                    this.miSaldoTotal = _myBalanceTotal;
                     this.saldoSend = document.querySelector("#saldoSend").value.replace(",00", "");
 
                     this.$refs['modal-send'].hide();
@@ -259,10 +495,12 @@
                     });
 
                     this.restaurantes = _list;
+                    console.log(this.restaurantes);
                 }).catch(err => {
                     console.log(err);
                 });
             },
+            stopLoader() { this.$store.commit("notLoading"); },
         },
         mounted() {
             var coords = this.$store.getters.coords;
@@ -324,6 +562,7 @@
             text-transform: uppercase !important;
 
             transition: all .15s ease-in-out;
+            padding-right: 2.2rem;
 
             &:focus {
                 outline: none;
@@ -415,20 +654,37 @@
                 background: transparent;
                 border: none;
                 box-shadow: none;
-                color: #fff;
+                color: transparent !important;
+                text-shadow: 0 0 0 #fff !important;
                 text-align: center;
                 font-size: 52px;
-                padding: 0 16px;
-                 &:focus{
+                padding: 0;
+                padding-left: 1.5rem;
+                padding-right: 1.5rem;
+                height: 93px !important;
+
+                &:focus{
                     box-shadow: none;
                     border-color:#89addc;
+                    outline: none !important;
                 }
                 &::placeholder{
                     text-align: center;
                     color: #fff;
                     opacity: .7;
-                    font-size: 32px;
+                    font-size: 52px;
                 }
+            }
+            &__borrarNumber {
+                position: absolute;
+                top: 55%;
+                right: 1.05rem;
+                transform: translate(0, -50%);
+                display: block;
+                height: 55%;
+                object-fit: contain;
+                object-position: center center;
+                cursor: pointer;
             }
         }
 
@@ -484,9 +740,11 @@
             }
 
         }
-        .boxPrice{
+        .boxPrice {
+            margin: 2rem 0 2.5rem;
             text-align: center;
-            p{
+            
+            p {
                 margin: 0;
                 text-align: center;
                 color: #9d8755;
@@ -498,11 +756,12 @@
                     font-size: 32px;
                 }
             }
-            .name{
+            .name {
                 text-align: center;
                 color: var(--bluePrimary);
                 font-size: 20px;
                 font-weight: normal;
+                text-transform: uppercase;
             }
         }
         .footer{
@@ -520,6 +779,27 @@
             .btn-cancelar{
                 background-color: var(--blue-opacity)
             }
+        }
+    }
+
+    .modal-payment .modal-dialog {
+        max-width: 450px !important;
+    }
+
+    .input-search {
+        position: relative;
+        width: 100%;
+        height: max-content;
+
+        &__icon {
+            position: absolute;
+            top: 50%;
+            right: .75rem;
+            transform: translate(0, -50%);
+            display: block;
+            height: 65%;
+            object-fit: contain;
+            object-position: center center;
         }
     }
 </style>

@@ -2,17 +2,9 @@
     <div>
         <b-modal centered :modal-class="myclass" id="modal-beneficios" ref="modal-beneficios"  hide-footer hide-header>  
             <ul>
-                <li>
-                    <p>Raus Eat </p>
-                    <span>11,00€</span>
-                </li>
-                 <li>
-                    <p>Raus Fuel </p>
-                    <span>25,00€</span>
-                </li>
-                 <li>
-                    <p>Raus Kids </p>
-                    <span>150,00€</span>
+                <li v-for="l in this.$store.getters.listBeneficio" :key="l.name">
+                    <p>{{ l.name }}</p>
+                    <span>{{ l.saldo }},00€</span>
                 </li>
             </ul>
         </b-modal>
@@ -27,8 +19,7 @@
             return {
                 myclass: ['modal-beneficios'],
             }
-        },
-        methods: {}
+        }
     }
 </script>
 

@@ -4,22 +4,22 @@
             <button class="btn btnBack" @click="$bvModal.hide('menu-modal')"><img class="img-fluid" :src="back" alt=""></button>
             <div class="boxMenu">
                 <button class="btn btnMenu" @click="$bvModal.hide('menu-modal')"  v-b-modal.modal-beneficios>
-                    <div class="price" v-b-tooltip.hover title="0,00€">
-                        <span class="a">0</span>
+                    <div class="price" v-b-tooltip.hover>
+                        <span class="a">{{ this.$store.getters.balanceBeneficio }}</span>
                         <span class="b">,00€</span>
                     </div>
                     <p>Beneficios</p>
                 </button>
                 <button class="btn btnMenu" @click="$bvModal.hide('menu-modal')"  v-b-modal.modal-incentivos>
-                      <div class="price" v-b-tooltip.hover itle="0,00€">
-                        <span class="a">0</span>
+                      <div class="price" v-b-tooltip.hover>
+                        <span class="a">{{ this.$store.getters.balanceIncentivos }}</span>
                         <span class="b">,00€</span>
                     </div>
                     <p>Incentivos</p>
                 </button>
                 <button class="btn btnMenu" @click="$bvModal.hide('menu-modal')"  v-b-modal.modal-propio>
-                      <div class="price" v-b-tooltip.hover :title="this.$store.getters.user.accounts.propia.value+',00€'">
-                        <span class="a">{{ this.$store.getters.user.accounts.propia.value }}</span>
+                    <div class="price" v-b-tooltip.hover>
+                        <span class="a">{{ this.$store.getters.balancePropio }}</span>
                         <span class="b">,00€</span>
                     </div>
                     <p>Propio</p>
@@ -31,8 +31,8 @@
                     </div>
                     <p> <img class="img-fluid" :src="hearthfavorite" alt="">Puntos</p>
                 </button>
-                 <button class="btn btnMenu">
-                      <div class="price" v-b-tooltip.hover title="0,00€">
+                <button class="btn btnMenu">
+                    <div class="price" v-b-tooltip.hover title="0,00€">
                         <span class="a">0</span>
                         <span class="b">,00€</span>
                     </div>

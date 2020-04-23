@@ -2,17 +2,9 @@
     <div>
         <b-modal centered :modal-class="myclass" id="modal-incentivos" ref="modal-incentivos"  hide-footer hide-header>  
             <ul>
-                <li>
-                    <p>Raus Gym </p>
-                    <span>11,00€</span>
-                </li>
-                 <li>
-                    <p>Raus Books </p>
-                    <span>25,00€</span>
-                </li>
-                 <li>
-                    <p>Raus Trips </p>
-                    <span>150,00€</span>
+                <li v-for="l in this.$store.getters.listIncentivo" :key="l.name">
+                    <p>{{ l.name }}</p>
+                    <span>{{ l.saldo }},00€</span>
                 </li>
             </ul>
         </b-modal>
@@ -31,8 +23,7 @@ export default {
         return {
             myclass: ['modal-beneficios'],
         }
-    },
-    methods: {}
+    }
 }
 </script>
 
