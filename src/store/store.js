@@ -19,10 +19,13 @@ export default function(/* { ssrContext } */) {
             listIncentivo: [],
             balancePropio: 0,
             listPropio: [],
+            listCategorias: [],
+            filterCategory: {},
             coords: {
                 lat: "",
                 lng: "",
             },
+            listRestaurantes: [],
             newRegister: {},
             user: {}
         },
@@ -40,6 +43,9 @@ export default function(/* { ssrContext } */) {
             listIncentivo: state => state.listIncentivo,
             balancePropio: state => state.balancePropio,
             listPropio: state => state.listPropio,
+            listRestaurantes: state => state.listRestaurantes,
+            listCategorias: state => state.listCategorias,
+            filterCategory: state => state.filterCategory,
             coords: state => state.coords,
             myBalance: state => state.myBalance,
             user: state => state.user

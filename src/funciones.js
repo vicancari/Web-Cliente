@@ -18290,5 +18290,35 @@ export default {
 
         // -> Retornamo la cantidad en Km con tres decimales.
         return d.toFixed(3);
+    },
+    numberFormat(_number) {
+        var result = "";
+        var _newNumber;
+
+        if (_number[0] === "-") {
+            _newNumber = _number.replace(/\./g,"").substring(1);
+        } else {
+            _newNumber = _number.replace(/\./g,"");
+        }
+
+        if (_number.indexOf(",") >= 0) {
+            _newNumber = _newNumber.substring(0, _newNumber.indexOf(","));
+        }
+
+        var i = _newNumber.length - 1;
+        var j = 0;
+        for (i, j; i >= 0; i--, j++) {
+            result = _newNumber.charAt(i) + (j > 0 && j % 3 === 0 ? "." : "") + result;
+        }
+
+        if (_number.indexOf(",") >= 0) {
+            result += _number.substring(_number.indexOf(","));
+        }
+
+        if (_number[0] === "-") {
+            return `-${result}`;
+        } else {
+            return result;
+        }
     }
 };

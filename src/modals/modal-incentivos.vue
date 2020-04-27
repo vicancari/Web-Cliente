@@ -4,7 +4,7 @@
             <ul>
                 <li v-for="l in this.$store.getters.listIncentivo" :key="l.name">
                     <p>{{ l.name }}</p>
-                    <span>{{ l.saldo }},00€</span>
+                    <span>{{ l.saldo }}€</span>
                 </li>
             </ul>
         </b-modal>

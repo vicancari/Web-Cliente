@@ -19,7 +19,7 @@
                     <button class="btn"><img class="img-fluid" :src="notification" alt=""></button>
                     <button class="btn"><img class="img-fluid" :src="message" alt=""></button>
                     <button class="btn"><img class="img-fluid" :src="raus" alt=""></button>
-                    <button class="btn" v-b-modal.modal-explorar><img class="img-fluid" :src="timeline" alt=""></button>
+                    <button class="btn" v-b-modal.modal-explorar @click="reloadActiveCategory"><img class="img-fluid" :src="timeline" alt=""></button>
                 </div>
             </div>
         </div>
@@ -94,7 +94,23 @@
             Configuracion,
             Explorar
         },
-        methods: {}
+        methods: {
+            reloadActiveCategory() {
+                setTimeout(() => {
+                    var _keys = Object.keys(this.$store.getters.filterCategory);
+                    var _values = Object.values(this.$store.getters.filterCategory);
+    
+                    for (var i = 0; i < _values.length; i++) {
+                        if (_keys[i] != "filter") {
+                            if (_values[i].active === true) {
+                                document.querySelector(`[data-cate="#${_keys[i]}"]`).classList.add("_active");
+                                console.log(document.querySelector(`[data-cate="#${_keys[i]}"]`));
+                            }
+                        }
+                    }
+                }, 500);
+            },
+        }
     }
 </script>
 

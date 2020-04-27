@@ -14,7 +14,7 @@
                 </div>
                 <div class="priceText" @click="closeSearching">
                     <span>€</span>
-                    <input v-on:focus="disabledCampo" v-on:keyup="disabledCampo" v-on:keydown="disabledCampo" type="text" id="saldoSend" class="form-control" placeholder="0,00" autocomplete="off">
+                    <input v-on:focus="disabledCampo" v-money="money" v-model.lazy="price" v-on:keyup="disabledCampo" v-on:keydown="disabledCampo" type="text" id="saldoSend" class="form-control" placeholder="0,00" autocomplete="off">
                     <img @click="borrarNumber" id="borrarNumber" class="priceText__borrarNumber d-none" src="../assets/img/icons/borrar-teclado.svg" alt="borrar">
                     <p data-error="saldoSend" class="msgError d-none">*msgError</p>
                 </div>
@@ -40,7 +40,7 @@
                 <h5 class="title">Selecciona un tipo de pago</h5>
                 <div class="box checkedRadio" id="selectCuenta"></div>
                 <div class="boxPrice">
-                    <p v-b-tooltip.hover :title="this.saldoSend+',00€'">{{ this.saldoSend }}<span>,00€</span></p>
+                    <p v-b-tooltip.hover :title="this.saldoSend+'€'">{{ this.saldoSend }}<span>€</span></p>
                     <h5 class="name">{{ this.selectedRes.name }}</h5>
                 </div>
                 <div class="footer">
@@ -54,25 +54,34 @@
 </template>
 
 <script>
+    import {VMoney} from 'v-money';
     import config from "../config.js";
     import check from '../assets/img/icons/check-blanco.svg';
     import api from "../api.js";
-    import funciones from "../funciones.js";
+    // import funciones from "../funciones.js";
 
     export default {
         name: 'send',
         components: {},
+        directives: {money: VMoney},
         data: function () {
             return {
                 myclass: ['modal-send'],
                 payment: ['modal-payment'],
                 check: config.rutaWeb(check),
-                restaurantes: [],
+                restaurantes: this.$store.getters.listRestaurantes,
                 selectedRes: {},
                 pagoMix: [],
                 saldoSend: 0,
                 miSaldoTotal: 0,
-                pxT: 52
+                pxT: 52,
+                price: 0.00,
+                money: {
+                    decimal: ',',
+                    thousands: '.',
+                    precision: 2,
+                    masked: true
+                }
             }
         },
         methods: {
@@ -159,7 +168,7 @@
                 var _input = _box.children[1];
 
                 if (_input) {
-                    if (_input.value != "") {
+                    if (this.price != "0,0") {
                         var fArray = _input.value.split(/(\d)/);
                         var sArray = [];
 
@@ -176,18 +185,19 @@
                             unirText = unirText + sArray[i2];
                         }
 
-                        _input.value = unirText;
+                        this.price = unirText;
+
+                        // _input.value = unirText;
 
                         if (_input.value.length > 8) {
                             if (this.pxT < 52) {
                                 this.pxT = this.pxT + 6;
                             }
 
-                            console.log(this.pxT);
                             _input.setAttribute("style", `font-size: ${this.pxT}px !important; padding-left: 1.45rem !important; padding-right: 2.65rem !important;`);
                         }
 
-                        if (_input.value === "") {
+                        if (this.price === "0,0") {
                             this.pxT = this.pxT + 6;
                             _input.setAttribute("style", `font-size: ${this.pxT}px !important; padding-left: 1.45rem !important; padding-right: 2.65rem !important;`);
                             e.target.classList.add("d-none");
@@ -195,7 +205,7 @@
                         }
                     }
 
-                    if (_input.value === "") {
+                    if (this.price === "0,0") {
                         e.target.classList.add("d-none");
                         _input.removeAttribute("style");
                     }
@@ -208,15 +218,15 @@
 
                 if (_inputSaldo) {
                     if (_btnClick === "1" || _btnClick === "2" || _btnClick === "3" || _btnClick === "4" || _btnClick === "5" || _btnClick === "6" || _btnClick === "7" || _btnClick === "8" || _btnClick === "9" || _btnClick === "," || _btnClick === "0") {
-                        _inputSaldo.value += _btnClick;
+                        this.price += parseInt(_btnClick);
+                        // _inputSaldo.value += _btnClick;
 
                         if (_inputSaldo.value.length > 8) {
                             this.pxT = this.pxT - 6;
-                            console.log(this.pxT);
                             _inputSaldo.setAttribute("style", `font-size: ${this.pxT}px !important; padding-left: 1.45rem !important; padding-right: 2.65rem !important;`);
                         }
 
-                        if (_inputSaldo.value != "") {
+                        if (this.price != "0,0") {
                             if (_tBorrar.classList.contains("d-none")) {
                                 _tBorrar.classList.remove("d-none");
                                 _inputSaldo.setAttribute("style", "padding-left: 1.45rem !important; padding-right: 2.65rem !important;");
@@ -230,6 +240,8 @@
                 var _myAccounts = this.$store.getters.user.accounts;
                 var _cate = this.selectedRes.categoria.replace("#", "");
                 // var _subcate = this.selectedRes.subcategoria.replace("#", "");
+                var _m = this.saldoSend.replace(".", "");
+                var _miSaldoSend = _m.replace(",", ".");
                 
                 _myAccounts = Object.values(_myAccounts);
 
@@ -251,15 +263,15 @@
                 var _mix = false;
                 var _mixChecked = false;
 
-                if (parseInt(this.saldoSend) <= parseInt(_myAccounts[_myAccounts.length - 1].value)) {
+                if (parseFloat(_miSaldoSend) <= parseFloat(_myAccounts[_myAccounts.length - 1].value)) {
                     _box.innerHTML += otroHTML.propia;
                 }
                 
                 for (var i = 0; i < _myAccounts.length; i++) {
                     if (_myAccounts[i].name.toLowerCase() != "propia") {
                         if (_myAccounts[i].categorias && _myAccounts[i].value > 0) {
-                            if (parseInt(this.saldoSend) <= parseInt(this.miSaldoTotal)) {
-                                if (parseInt(this.saldoSend) <= parseInt(_myAccounts[i].value)) {
+                            if (parseFloat(_miSaldoSend) <= parseFloat(this.miSaldoTotal)) {
+                                if (parseFloat(_miSaldoSend) <= parseFloat(_myAccounts[i].value)) {
                                     for (var y = 0; y < _myAccounts[i].categorias.length; y++) {
                                         if (_myAccounts[i].categorias[y].nombre.toLowerCase() === _cate.toLowerCase()) {
                                             var html2 = `
@@ -276,7 +288,7 @@
                                     _mix = true;
                                 }
                             } else {
-                                if (parseInt(_myAccounts[i].value) < parseInt(this.saldoSend)) {
+                                if (parseFloat(_myAccounts[i].value) < parseFloat(_miSaldoSend)) {
                                     for (var x = 0; x < _myAccounts[i].categorias.length; x++) {
                                         if (_myAccounts[i].categorias[x].nombre.toLowerCase() === _cate.toLowerCase()) {
                                             this.pagoMix.push({
@@ -310,7 +322,8 @@
                     var accountActual = this.$store.getters.user.accounts;
                     
                     var _idRes = this.selectedRes.id;
-                    var _monto = this.saldoSend;
+                    var _m = this.saldoSend.replace(".", "");
+                    var _monto = _m.replace(",", ".");
                     var _allRadiosTypePago = document.querySelectorAll("[name='tipoPago']");
                     // var _typePago = "";
                     var _dataradio = "";
@@ -323,14 +336,14 @@
 
                     api.get(`restaurante/${_idRes}`).then(res => {
                         var _balanceResActual = 0;
-                        _balanceResActual = parseInt(res.balance);
-                        var sendMonto = _balanceResActual + parseInt(_monto);
+                        _balanceResActual = parseFloat(res.balance);
+                        var sendMonto = _balanceResActual + parseFloat(_monto);
 
                         if (_dataradio === "propia") {
                             api.put('restaurante/send/saldo/', {idRes: _idRes, balance: sendMonto}).then(res => {
                                 if (res.msg === "OK") {
-                                    if (parseInt(_monto) <= parseInt(accountActual.propia.value)) {
-                                        accountActual.propia.value = parseInt(accountActual.propia.value) - parseInt(_monto);
+                                    if (parseFloat(_monto) <= parseFloat(accountActual.propia.value)) {
+                                        accountActual.propia.value = parseFloat(accountActual.propia.value) - parseFloat(_monto);
                                     }
 
                                     api.put('update/saldo/propia/', {id: _uid, data: accountActual}).then(res => {
@@ -344,7 +357,7 @@
                                     });
                                 } else {
                                     console.log("Ocurrio un problema.");
-                                    api.put('restaurante/send/saldo/', {idRes: _idRes, balance: sendMonto - parseInt(_monto)});
+                                    api.put('restaurante/send/saldo/', {idRes: _idRes, balance: sendMonto - parseFloat(_monto)});
                                     return false;
                                 }
                             }).catch(err => {
@@ -357,16 +370,16 @@
                             for (var i = 0; i < _myAccounts.length; i++) {
                                 if (_myAccounts[i].name.toLowerCase() != "propia") {
                                     if (_myAccounts[i].id_plan === _dataradio) {
-                                        if (parseInt(_monto) <= parseInt(accountActual[`${_myAccounts[i].name}`].value)) {
-                                            accountActual[`${_myAccounts[i].name}`].value = parseInt(accountActual[`${_myAccounts[i].name}`].value) - parseInt(_monto);
+                                        if (parseFloat(_monto) <= parseFloat(accountActual[`${_myAccounts[i].name}`].value)) {
+                                            accountActual[`${_myAccounts[i].name}`].value = parseFloat(accountActual[`${_myAccounts[i].name}`].value) - parseFloat(_monto);
                                         } else {
                                             console.log("El monto es insuficiente, le recomendamos pago mix.");
                                         }
 
                                         api.put('restaurante/send/saldo/', {idRes: _idRes, balance: sendMonto}).then(res => {
                                             if (res.msg === "OK") {
-                                                if (parseInt(_monto) <= parseInt(accountActual.propia.value)) {
-                                                    accountActual.propia.value = parseInt(accountActual.propia.value) - parseInt(_monto);
+                                                if (parseFloat(_monto) <= parseFloat(accountActual.propia.value)) {
+                                                    accountActual.propia.value = parseFloat(accountActual.propia.value) - parseFloat(_monto);
                                                 }
 
                                                 api.put('update/saldo/propia/', {id: _uid, data: accountActual}).then(res => {
@@ -380,7 +393,7 @@
                                                 });
                                             } else {
                                                 console.log("Ocurrio un problema.");
-                                                api.put('restaurante/send/saldo/', {idRes: _idRes, balance: sendMonto - parseInt(_monto)});
+                                                api.put('restaurante/send/saldo/', {idRes: _idRes, balance: sendMonto - parseFloat(_monto)});
                                                 return false;
                                             }
                                         }).catch(err => {
@@ -424,23 +437,22 @@
                     return false;
                 }
 
-                console.log(_cate);
                 var _myBalanceTotal = 0;
                 for (var i = 0; i < _myAccounts.length; i++) {
                     if (_myAccounts[i].name.toLowerCase() != "propia") {
                         if (_myAccounts[i].categorias && _myAccounts[i].value > 0) {
                             for (var y = 0; y < _myAccounts[i].categorias.length; y++) {
                                 if (_myAccounts[i].categorias[y].nombre.toLowerCase() === _cate.toLowerCase()) {
-                                    _myBalanceTotal = _myBalanceTotal + parseInt(_myAccounts[i].value);
+                                    _myBalanceTotal = _myBalanceTotal + parseFloat(_myAccounts[i].value);
                                 }
                             }
                         }
                     }
                 }
 
-                _myBalanceTotal = _myBalanceTotal + parseInt(this.$store.getters.user.accounts.propia.value);
-                if (parseInt(document.querySelector("#saldoSend").value.replace(",00", "")) > parseInt(_myBalanceTotal)) {
-                    document.querySelector("[data-error='saldoSend']").innerText = `El saldo es insuficiente. su monto actual es de: ${_myBalanceTotal},00€`;
+                _myBalanceTotal = _myBalanceTotal + parseFloat(this.$store.getters.user.accounts.propia.value);
+                if (parseFloat(document.querySelector("#saldoSend").value.replace(",", ".")) > parseFloat(_myBalanceTotal)) {
+                    document.querySelector("[data-error='saldoSend']").innerText = `El saldo es insuficiente. su monto actual es de: ${_myBalanceTotal.toFixed(2)}€`;
                     document.querySelector("[data-error='saldoSend']").classList.remove("d-none");
 
                     setTimeout(() => {
@@ -451,9 +463,9 @@
                     return false;
                 }
 
-                if (document.querySelector("#searchRestaurante").value != "" && document.querySelector("#saldoSend").value != "" && parseInt(document.querySelector("#saldoSend").value.replace(",00", "")) <= parseInt(_myBalanceTotal)) {
+                if (document.querySelector("#searchRestaurante").value != "" && document.querySelector("#saldoSend").value != "" && parseFloat(document.querySelector("#saldoSend").value.replace(",", ".")) <= parseFloat(_myBalanceTotal)) {
                     this.miSaldoTotal = _myBalanceTotal;
-                    this.saldoSend = document.querySelector("#saldoSend").value.replace(",00", "");
+                    this.saldoSend = document.querySelector("#saldoSend").value;
 
                     this.$refs['modal-send'].hide();
                     this.$refs['modal-payment'].show();
@@ -463,48 +475,14 @@
                     }, 950);
                 }
             },
-            async getRestaurantes(myLat, myLng) {
-                await api.get(`restaurantes/list/`).then(res => {
-                    var _keys = Object.keys(res);
-                    var _values = Object.values(res);
-
-                    var _list = [];
-                    for (var i = 0; i < _values.length; i++) {
-                        if (funciones.getKilometros(myLat, myLng, _values[i].lat, _values[i].lng) <= 20.000) {
-                            _list.push({
-                                id: _keys[i],
-                                categorias: Object.values(_values[i].categories),
-                                direccion: _values[i].direction,
-                                name: _values[i].name,
-                                phone: _values[i].phone,
-                                photo: _values[i].photo,
-                                rating: _values[i].rating,
-                                reviews: Object.values(_values[i].reviews),
-                                slider: Object.values(_values[i].slider),
-                                lat: _values[i].lat,
-                                lng: _values[i].lng,
-                                km: funciones.getKilometros(myLat, myLng, _values[i].lat, _values[i].lng)
-                            });
-                        }
-                    }
-
-                    _list.sort(function(a, b){ 
-                        if (a.name < b.name) {
-                            return -1;
-                        }
-                    });
-
-                    this.restaurantes = _list;
-                    console.log(this.restaurantes);
-                }).catch(err => {
-                    console.log(err);
-                });
-            },
             stopLoader() { this.$store.commit("notLoading"); },
         },
-        mounted() {
-            var coords = this.$store.getters.coords;
-            this.getRestaurantes(coords.lat, coords.lng);
+        beforeMount() {
+            this.restaurantes.sort(function(a, b){ 
+                if (a.name < b.name) {
+                    return -1;
+                }
+            });
         },
     }
 </script>

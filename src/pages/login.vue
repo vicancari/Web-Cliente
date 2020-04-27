@@ -286,6 +286,7 @@
                 }
             },
             OpenMod(e) { this.event = e },
+            stopLoader() { this.$store.commit("notLoading"); },
             async login() {
                 this.formUsername = document.querySelector("#username");
                 this.formPassword = document.querySelector("#password");
@@ -331,46 +332,60 @@
                             }, 3000);
 
                             api.get(`auth/signInPhone/${this.formUsername.value.trim()}`).then(res => {
-                                firebase.auth().signInWithEmailAndPassword(res.email, this.formPassword.value.trim()).then((res) => {
-                                    if (document.querySelector("#remember")) {
-                                        if (document.querySelector("#remember").checked === true) {
-                                            window.localStorage.setItem("remember", "true");
-                                        } else {
-                                            window.localStorage.setItem("remember", "false");
-                                        }
-                                    }
+                                // console.log(res);
+                                if (res.msg) {
+                                    document.querySelector("[data-error='username']").innerText = "El número de telefono que introdujo no existe.";
+                                    document.querySelector("[data-error='username']").classList.remove("d-none");
     
-                                    if (window.localStorage.getItem("remember") === "true"){
-                                        window.localStorage.setItem("username", document.querySelector("#username").value);
-                                        window.localStorage.setItem("password", document.querySelector("#password").value);
-                                    }
-    
-                                    if (window.localStorage.getItem("remember") === "false"){
-                                        window.localStorage.setItem("username", document.querySelector("#username").value);
-                                        window.localStorage.setItem("password", document.querySelector("#password").value);
-                                    }
-                                    
-                                    this.signIn(res.user.uid);
-    
-                                    if (window.localStorage.getItem("token") != "") {
-                                        this.$store.state.token = window.localStorage.getItem("token");
-                                        this.$store.state.isLoggedIn = true;
-                                        this.$store.state.uid = res.user.uid;
-                                    }
                                     setTimeout(() => {
-                                        this.$store.commit("done");
-                                        this.$router.push("/home");
-                                    }, 1000);
-                                }).catch((error) => {
-                                    document.querySelector("[data-error='password']").classList.remove("d-none");
-                                    document.querySelector("[data-error='password']").innerText = "Contraseña o Usuario incorrectos por favor verifique.";
-                                    console.log(error);
-                                    this.$store.commit("error");
-                                });
+                                        document.querySelector("[data-error='username']").classList.add("d-none");
+                                    }, 3500);
+                                    this.stopLoader();
+                                    return false;
+                                } else {
+                                    firebase.auth().signInWithEmailAndPassword(res.email, this.formPassword.value.trim()).then((res) => {
+                                        if (document.querySelector("#remember")) {
+                                            if (document.querySelector("#remember").checked === true) {
+                                                window.localStorage.setItem("remember", "true");
+                                            } else {
+                                                window.localStorage.setItem("remember", "false");
+                                            }
+                                        }
+        
+                                        if (window.localStorage.getItem("remember") === "true"){
+                                            window.localStorage.setItem("username", document.querySelector("#username").value);
+                                            window.localStorage.setItem("password", document.querySelector("#password").value);
+                                        }
+        
+                                        if (window.localStorage.getItem("remember") === "false"){
+                                            window.localStorage.setItem("username", document.querySelector("#username").value);
+                                            window.localStorage.setItem("password", document.querySelector("#password").value);
+                                        }
+                                        
+                                        this.signIn(res.user.uid);
+        
+                                        if (window.localStorage.getItem("token") != "") {
+                                            this.$store.state.token = window.localStorage.getItem("token");
+                                            this.$store.state.isLoggedIn = true;
+                                            this.$store.state.uid = res.user.uid;
+                                        }
+                                        setTimeout(() => {
+                                            this.stopLoader();
+                                            this.$store.commit("done");
+                                            this.$router.push("/home");
+                                        }, 1000);
+                                    }).catch((error) => {
+                                        this.stopLoader();
+                                        document.querySelector("[data-error='password']").classList.remove("d-none");
+                                        document.querySelector("[data-error='password']").innerText = "Contraseña o Usuario incorrectos por favor verifique.";
+                                        this.err = error;
+                                    });
+                                }
                             }).catch(err => {
                                 var _er = err.msg;
                                 setTimeout(() => {
                                     if (_er === true) {
+                                        this.stopLoader();
                                         document.querySelector("[data-error='username']").innerText = "El número de telefono que introdujo no existe.";
                                         document.querySelector("[data-error='username']").classList.remove("d-none");
         
@@ -416,13 +431,15 @@
                                 this.$store.state.uid = res.user.uid;
                             }
                             setTimeout(() => {
+                                this.stopLoader();
                                 this.$store.commit("done");
                                 this.$router.push("/home");
                             }, 1000);
                         }).catch((error) => {
+                            this.stopLoader();
                             document.querySelector("[data-error='password']").classList.remove("d-none");
                             document.querySelector("[data-error='password']").innerText = "Contraseña o Usuario incorrectos por favor verifique.";
-                            console.log(error);
+                            this.err = error;
                         });
                     }
                 }

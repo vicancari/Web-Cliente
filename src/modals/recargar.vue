@@ -5,7 +5,7 @@
                <h5 class="titleRecargar"><img class="img-fluid" :src="agregar" alt="">Agregar saldo</h5>
                <div class="boxInput">
                    <span>€</span>
-                   <input type="text" autocomplete="off" id="rSaldo" class="form-control" placeholder="0,00">
+                   <input type="text" autocomplete="off" v-money="money" id="rSaldo" class="form-control" placeholder="0,00">
                    <p data-error="rSaldo" class="msgError d-none">*msgError</p>
                </div>
                <div class="tarjetas">
@@ -20,12 +20,12 @@
                         </button>
                     </div>
                     <button id="showModalFinal" @click="$bvModal.hide('modal-recargar')" v-b-modal.modal-recargar-aviso style="display: none;"></button>
-               </div>
-               <button class="btn btnAgregar" v-on:click="formShow = !formShow">
-                   <img :src="tarjeta" alt="">
-                   Agregar tarjeta o cuenta
-               </button>
-               <div class="boxFormulario" v-if="formShow">
+                </div>
+                <button class="btn btnAgregar" v-on:click="formShow = !formShow">
+                    <img :src="tarjeta" alt="">
+                    Agregar tarjeta o cuenta
+                </button>
+                <div class="boxFormulario" v-if="formShow">
                    <form @submit.prevent>
                        <div class="row m-0">
                            <div class="col-12 p-0">
@@ -89,7 +89,7 @@
         <b-modal :modal-class="myclass2" centered  id="modal-recargar-aviso" ref="modal-recargar-aviso"  hide-footer hide-header>  
             <div class="d-block text-center">
                 <h3>Agregar</h3>
-                <p id="MontoShow" class="Monto">{{ this.saldo }},00€</p>
+                <p id="MontoShow" class="Monto">{{ this.saldo }}€</p>
                 <h3>A tu saldo Raus</h3>
                 <div style="margin-top: 1rem;" class="d-flex justify-content-center footer-btn">
                     <button type="button" @click="recargar" class="btn recargarFinal">Confirmar</button>
@@ -101,6 +101,7 @@
     </div>
 </template>
 <script>
+    import {VMoney} from 'v-money';
     import config from "../config.js";
     /* Images */
     import agregar from '../assets/img/icons/menu/agregarazul.svg';
@@ -112,6 +113,7 @@
     export default {
         name: 'recargar',
         components: {},
+        directives: {money: VMoney},
         data: function () {
             return {
                 myclass: ['modal-recargar'],
@@ -132,6 +134,12 @@
                     nombre: "",
                     numero: "",
                     yearExp: ""
+                },
+                money: {
+                    decimal: ',',
+                    thousands: '.',
+                    precision: 2,
+                    masked: false
                 }
             }
         },
@@ -166,7 +174,9 @@
             recargar() {
                 var _uid = this.$store.getters.uid;
                 var accountActual = this.$store.getters.user.accounts;
-                accountActual.propia.value = parseInt(accountActual.propia.value) + parseInt(this.saldo);
+                var _m = this.saldo.replace(".", "");
+                var miSaldo = _m.replace(",", ".");
+                accountActual.propia.value = parseFloat(accountActual.propia.value) + parseFloat(miSaldo);
 
                 if (_uid != "" || _uid != null || _uid != undefined) {
                     this.$store.commit("loading");

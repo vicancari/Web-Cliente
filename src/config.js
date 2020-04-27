@@ -1,4 +1,4 @@
-var MODE_ENV = 1; // 1 produccion - 2 developer
+var MODE_ENV = 2; // 1 produccion - 2 developer
 
 let config = {
     dominioApi_dev: "http://localhost:9990/api",
@@ -7,7 +7,7 @@ let config = {
     dominioWeb_prod: "https://myraus.com/personas/",
     ModeRUN: MODE_ENV,
     rutaApi(direccion) {
-        return MODE_ENV === 1
+        return MODE_ENV === 2
             ? this.dominioApi_prod + "/" + direccion
             : this.dominioApi_dev + "/" + direccion;
     },

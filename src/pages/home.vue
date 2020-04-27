@@ -27,6 +27,7 @@
                         img-top
                         tag="article"
                         class="mb-2 cardStyle"
+                        :data-category="promo.categoria"
                     >
                         <div class="body">
                             <div class="text">
@@ -66,15 +67,16 @@
                         <p id="myUbicacion"></p>
                     </div>
                     <div class="col-4">
+                        <!-- Comercios antes era restaurantes -->
                         <button class="btn btnRestaurantes" @click="showSectionHome(2)" v-bind:class="{ 'active': activeSection == 2, '': activeSection == 1 }">
                             <span></span>
-                            Restaurantes
+                            Comercios
                         </button>   
                     </div>
                 </div>
                 <div class="row alignHorizontal" v-if="activeSection == 2">
                     <div style="width: 100%; margin: 0;" class="row">
-                        <div v-for="rest in this.listRestaurantes" :key="rest.id" :id="rest.id" :aria-sort="rest.km" class="col-md-6 col-12 mb-4">
+                        <div v-for="rest in this.$store.getters.listRestaurantes" :key="rest.id" :id="rest.id" :aria-sort="rest.km" :data-category="rest.categorias[0].name" class="col-md-6 col-12 mb-4">
                             <b-card
                                 :img-src="rest.photo"
                                 :img-alt="rest.name"
@@ -87,7 +89,7 @@
                                         <h5 style="text-transform: uppercase !important;" class="title">{{ rest.name }}</h5>
                                         <p class="distancia">Distancia: {{ rest.km }} km.</p>
                                         <button class="btn">Ir <img :src="chevRight" alt=""></button>
-                                        <div class="star-content">
+                                        <div v-if="rest.categorias[0].name === '#Comer'" class="star-content">
                                             <div class="row">
                                                 <div class="col-3">
                                                     <div class="box">
@@ -119,6 +121,7 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <div v-else style="width: 100%; height: 56px;"></div>
                                     </div>
                                 </div>
                             </b-card>
@@ -132,6 +135,7 @@
                             :key="prod.id"
                             :id="prod.id"
                             class="col-12 col-sm-6 col-md-4 col-lg-3 p-0 mb-4"
+                            :data-category="prod.categoria"
                         >
                             <b-card
                                 :img-src="prod.img"
@@ -184,6 +188,7 @@
 
     // API + Firebase + funciones
     import api from '../api.js';
+    import axios from "axios";
     import * as firebase from "firebase";
     import funciones from "../funciones.js";
 
@@ -209,7 +214,6 @@
                 slide: 0,
                 sliding: null,
                 activeSection: 2,
-                listRestaurantes: {},
                 listRestauranteslength: 0,
                 myUbicaion: "",
                 listPromocion: {},
@@ -235,10 +239,7 @@
             if (this.$store.getters.isLoggedIn === true) {
                 this.getUser();
                 this.getStreetAddressFrom(ubicacion.lat, ubicacion.lon);
-                this.getProductosPromocionados();
                 this.getRestaurantes(ubicacion.lat, ubicacion.lon);
-                this.getProductos();
-
                 this.$store.commit("done");
             }
         },
@@ -249,11 +250,42 @@
             onSlideEnd() {
                 this.sliding = false;
             },
-            showSectionHome(id){
-                if (id == 1){
-                    this.activeSection= 1
-                } else if ( id == 2) {
-                    this.activeSection= 2
+            showSectionHome(id) {
+                this.activeSection = id;
+                this.$store.commit("loading");
+                
+                if (this.$store.getters.filterCategory.filter.active === true) {
+                    setTimeout(() => {
+                        var _keys = Object.keys(this.$store.getters.filterCategory);
+                        var _values = Object.values(this.$store.getters.filterCategory);
+    
+                        var _selectAll = document.querySelectorAll(`[data-category]`);
+                        _selectAll.forEach(item => {
+                            item.classList.add("d-none");
+                        });
+    
+                        for (var i = 0; i < _values.length; i++) {
+                            if (_values[i].active === true) {
+                                if (_keys[i] != "filter") {
+                                    this.$store.getters.listCategorias.forEach(el => {
+                                        if (_keys[i].toLowerCase() === el.name.toLowerCase()) {
+                                            var _selectAllFilter = document.querySelectorAll(`[data-category="#${el.name}"]`);
+        
+                                            _selectAllFilter.forEach(item => {
+                                                item.classList.remove("d-none");
+                                            });
+                                        }
+                                    });
+                                }
+                            }
+                        }
+
+                        this.$store.commit("notLoading");
+                    }, 500);
+                }
+
+                if (this.$store.getters.filterCategory.filter.active === false) {
+                    this.$store.commit("notLoading");
                 }
             },
             async getUser() {
@@ -277,37 +309,48 @@
                 this.$store.state.listPropio = [];
                 
                 for (var i = 0; i < _MB.length; i++) {
-                    total = total + _MB[i].value;
+                    total = total + parseFloat(_MB[i].value);
 
                     if (_MB[i].type === 1) {
-                        this.$store.state.listBeneficio.push({
-                            name: _MB[i].name,
-                            saldo: _MB[i].value
-                        });
+                        if (parseFloat(_MB[i].value) > 0) {
+                            this.$store.state.listBeneficio.push({
+                                name: _MB[i].name,
+                                saldo: funciones.numberFormat(parseFloat(_MB[i].value).toFixed(2).replace(".", ","))
+                            });
+                            
+                            this.$store.state.balanceBeneficio = parseFloat(this.$store.getters.balanceBeneficio) + parseFloat(_MB[i].value);
+                            this.$store.state.balanceBeneficio = funciones.numberFormat(parseFloat(this.$store.getters.balanceBeneficio).toFixed(2).replace(".", ","));
+                        }
 
-                        this.$store.state.balanceBeneficio = parseInt(this.$store.getters.balanceBeneficio) + parseInt(_MB[i].value);
                     }
 
                     if (_MB[i].type === 2) {
-                        this.$store.state.listIncentivo.push({
-                            name: _MB[i].name,
-                            saldo: _MB[i].value
-                        });
+                        if (parseFloat(_MB[i].value) > 0) {
+                            this.$store.state.listIncentivo.push({
+                                name: _MB[i].name,
+                                saldo: funciones.numberFormat(parseFloat(_MB[i].value).toFixed(2).replace(".", ","))
+                            });
 
-                        this.$store.state.balanceIncentivos = parseInt(this.$store.getters.balanceIncentivos) + parseInt(_MB[i].value);
+                            this.$store.state.balanceIncentivos = parseFloat(this.$store.getters.balanceIncentivos) + parseFloat(_MB[i].value);
+                            this.$store.state.balanceIncentivos = funciones.numberFormat(parseFloat(this.$store.getters.balanceIncentivos).toFixed(2).replace(".", ","));
+                        }
                     }
 
                     if (_MB[i].type === 3) {
-                        this.$store.state.listPropio.push({
-                            name: _MB[i].name,
-                            saldo: _MB[i].value
-                        });
+                        if (parseFloat(_MB[i].value) > 0) {
+                            this.$store.state.listPropio.push({
+                                name: _MB[i].name,
+                                saldo: funciones.numberFormat(parseFloat(_MB[i].value).toFixed(2).replace(".", ","))
+                            });
 
-                        this.$store.state.balancePropio = parseInt(this.$store.getters.balancePropio) + parseInt(_MB[i].value);
+                            this.$store.state.balancePropio = parseFloat(this.$store.getters.balancePropio) + parseFloat(_MB[i].value);
+                            this.$store.state.balancePropio = funciones.numberFormat(parseFloat(this.$store.getters.balancePropio).toFixed(2).replace(".", ","));
+                        }
                     }
                 }
 
-                this.$store.state.myBalance = total;
+                this.$store.state.myBalance = funciones.numberFormat(parseFloat(total).toFixed(2).replace(".", ","));
+                console.log(this.$store.state.myBalance);
             },
             async geo() {
                 return new Promise((resolve, reject) => {
@@ -347,6 +390,7 @@
 
                     var _list = [];
                     for (var i = 0; i < _values.length; i++) {
+                        //  <= 20.000
                         if (funciones.getKilometros(myLat, myLng, _values[i].lat, _values[i].lng) <= 20.000) {
                             _list.push({
                                 id: _keys[i],
@@ -356,8 +400,6 @@
                                 phone: _values[i].phone,
                                 photo: _values[i].photo ? _values[i].photo : imgDefault,
                                 rating: _values[i].rating,
-                                reviews: Object.values(_values[i].reviews),
-                                slider: Object.values(_values[i].slider),
                                 lat: _values[i].lat,
                                 lng: _values[i].lng,
                                 km: funciones.getKilometros(myLat, myLng, _values[i].lat, _values[i].lng)
@@ -371,7 +413,10 @@
                         }
                     });
 
-                    this.listRestaurantes = _list;
+                    this.$store.state.listRestaurantes = _list;
+                    this.getCategorias();
+                    this.getProductos(this.$store.getters.listRestaurantes);
+                    this.getProductosPromocionados(this.$store.getters.listRestaurantes);
 
                     setTimeout(() => {
                         var img = document.querySelectorAll(".card-img-top");
@@ -383,17 +428,22 @@
                     console.log(err);
                 });
             },
-            async getProductosPromocionados() {
+            async getProductosPromocionados(comercios) {
                 await api.get("products/promotions/").then(res => {
                     var _list = [];
                     res.product.forEach(el => {
-                        _list.push({
-                            id: el._id,
-                            title: el.name,
-                            desc: el.description,
-                            price: el.price_with_iva,
-                            img: el.images[0] ? el.images[0].img : imgDefault
-                        });
+                        for (var i = 0; i < comercios.length; i++) {
+                            if (el.id_restaurant === comercios[i].id) {
+                                _list.push({
+                                    id: el._id,
+                                    title: el.name,
+                                    desc: el.description,
+                                    price: el.price_with_iva,
+                                    categoria: comercios[i].categorias[0].name,
+                                    img: el.images[0] ? el.images[0].img : imgDefault
+                                });
+                            }
+                        }
                     });
 
                     this.listPromocion = _list;
@@ -401,21 +451,52 @@
                     console.log(err);
                 });
             },
-            async getProductos() {
+            async getProductos(comercios) {
                 await api.get(`products/`).then(res => {
                     var _list = [];
+
                     res.forEach(el => {
-                        _list.push({
-                            id: el._id,
-                            title: el.name,
-                            desc: el.description,
-                            price: el.price_with_iva,
-                            img: el.images[0] ? el.images[0].img : imgDefault,
-                            category: el.listProductos
-                        });
+                        for (var i = 0; i < comercios.length; i++) {
+                            if (el.id_restaurant === comercios[i].id) {
+                                _list.push({
+                                    id: el._id,
+                                    title: el.name,
+                                    desc: el.description,
+                                    price: el.price_with_iva,
+                                    categoria: comercios[i].categorias[0].name,
+                                    img: el.images[0] ? el.images[0].img : imgDefault,
+                                    category: el.listProductos
+                                });
+                            }
+                        }
                     });
 
                     this.listProductos = _list;
+                }).catch(err => {
+                    console.log(err);
+                });
+            },
+            async getCategorias() {
+                await axios.get("https://myraus.com:8282/api/categories-subcategories").then(res => {
+                    var _list = [];
+                    res.data.categories.forEach(el => {
+                        _list.push({
+                            name: el.nombre,
+                            desp: el.descripcion,
+                            establecimiento: el.establecimiento
+                        });
+
+                        this.$store.state.filterCategory[`${el.nombre}`] = {
+                            active: false
+                        }
+
+                        this.$store.state.filterCategory[`filter`] = {
+                            active: false
+                        }
+                    });
+                    
+                    this.$store.state.listCategorias = _list;
+                    console.log(this.$store.getters.filterCategory);
                 }).catch(err => {
                     console.log(err);
                 });
@@ -424,10 +505,24 @@
         async beforeMount() {
             if (this.$store.getters.isLoggedIn === false) {
                 window.localStorage.clear();
+                this.$store.state.isLoggedIn = false;
                 this.$store.state.token = "";
                 this.$store.state.uid = "";
-                this.$store.state.user = {};
+                this.$store.state.isFirstTime = true;
+                this.$store.state.phoneNumber = "";
+                this.$store.state.status = "";
                 this.$store.state.myBalance = 0;
+                this.$store.state.balanceBeneficio = 0;
+                this.$store.state.listBeneficio = [];
+                this.$store.state.balanceIncentivos = 0;
+                this.$store.state.listIncentivo = [];
+                this.$store.state.balancePropio = 0;
+                this.$store.state.listPropio = [];
+                this.$store.state.listCategorias = [];
+                this.$store.state.coords = {lat: "", lng: ""};
+                this.$store.state.listRestaurantes = [];
+                this.$store.state.newRegister = {};
+                this.$store.state.user = {};
                 this.$store.commit("notLoading");
                 this.$router.push("/");
             }
@@ -676,6 +771,10 @@
         border-radius: 0 !important;
     }
 
+    .bodySection .alignHorizontal .card-horizontal .card-body {
+        width: calc(100% - 50%);
+    }
+
     @media only screen and (max-width: 992px) {
         .bodySection .alignHorizontal .card-horizontal {
             height: 190px !important;
@@ -686,9 +785,25 @@
             width: 42% !important;
             height: 100% !important;
         }
+
+        .bodySection .alignHorizontal .card-horizontal .card-body {
+            width: calc(100% - 42%);
+        }
     }
 
     .owl-carousel.owl-loaded {
         display: flex !important;
+    }
+
+    .btn.btnBack.backModal {
+        background: transparent !important;
+        border: none !important;
+        width: max-content !important;
+        height: max-content !important;
+        padding: 0 !important;
+    }
+
+    .btn.btnBack.backModal img {
+        width: 70px !important;
     }
 </style>
