@@ -299,6 +299,7 @@
                 }
             },
             async getBalance() {
+                var _keys = Object.keys(this.$store.getters.user.accounts);
                 var _MB = Object.values(this.$store.getters.user.accounts);
                 var total = 0;
                 this.$store.state.balanceBeneficio = 0;
@@ -314,7 +315,7 @@
                     if (_MB[i].type === 1) {
                         if (parseFloat(_MB[i].value) > 0) {
                             this.$store.state.listBeneficio.push({
-                                name: _MB[i].name,
+                                name: _keys[i],
                                 saldo: funciones.numberFormat(parseFloat(_MB[i].value).toFixed(2).replace(".", ","))
                             });
                             
@@ -327,7 +328,7 @@
                     if (_MB[i].type === 2) {
                         if (parseFloat(_MB[i].value) > 0) {
                             this.$store.state.listIncentivo.push({
-                                name: _MB[i].name,
+                                name: _keys[i],
                                 saldo: funciones.numberFormat(parseFloat(_MB[i].value).toFixed(2).replace(".", ","))
                             });
 
@@ -339,7 +340,7 @@
                     if (_MB[i].type === 3) {
                         if (parseFloat(_MB[i].value) > 0) {
                             this.$store.state.listPropio.push({
-                                name: _MB[i].name,
+                                name: _keys[i],
                                 saldo: funciones.numberFormat(parseFloat(_MB[i].value).toFixed(2).replace(".", ","))
                             });
 
@@ -407,12 +408,21 @@
                         }
                     }
 
+                    var _listOrderAlfabetico = _list;
+
                     _list.sort(function(a, b){ 
                         if (a.km < b.km) {
                             return -1;
                         }
                     });
 
+                    _listOrderAlfabetico.sort(function(a, b){ 
+                        if (a.name < b.name) {
+                            return -1;
+                        }
+                    });
+
+                    this.$store.state.listRestauranteSearchs = _listOrderAlfabetico;
                     this.$store.state.listRestaurantes = _list;
                     this.getCategorias();
                     this.getProductos(this.$store.getters.listRestaurantes);
@@ -504,31 +514,14 @@
         },
         async beforeMount() {
             if (this.$store.getters.isLoggedIn === false) {
-                window.localStorage.clear();
-                this.$store.state.isLoggedIn = false;
-                this.$store.state.token = "";
-                this.$store.state.uid = "";
-                this.$store.state.isFirstTime = true;
-                this.$store.state.phoneNumber = "";
-                this.$store.state.status = "";
-                this.$store.state.myBalance = 0;
-                this.$store.state.balanceBeneficio = 0;
-                this.$store.state.listBeneficio = [];
-                this.$store.state.balanceIncentivos = 0;
-                this.$store.state.listIncentivo = [];
-                this.$store.state.balancePropio = 0;
-                this.$store.state.listPropio = [];
-                this.$store.state.listCategorias = [];
-                this.$store.state.coords = {lat: "", lng: ""};
-                this.$store.state.listRestaurantes = [];
-                this.$store.state.newRegister = {};
-                this.$store.state.user = {};
+                this.$store.commit("logout");
                 this.$store.commit("notLoading");
                 this.$router.push("/");
             }
         },
         mounted() {
             this.$store.commit("loading");
+            console.log(this.$store.getters);
         }
     }
 </script>

@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div v-if="this.$store.getters.balanceBeneficio != 0">
         <b-modal centered :modal-class="myclass" id="modal-beneficios" ref="modal-beneficios"  hide-footer hide-header>  
             <ul>
                 <li v-for="l in this.$store.getters.listBeneficio" :key="l.name">

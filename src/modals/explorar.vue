@@ -190,6 +190,7 @@
             border-radius: 0;
             word-break: break-word;
             padding: 5px;
+            font-size: .85rem;
 
             @media (max-width: 576px){
                 height: 25vw;

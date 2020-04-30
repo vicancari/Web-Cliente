@@ -3,24 +3,45 @@
         <b-modal :modal-class="myclass" id="menu-modal" ref="menu-modal"  hide-footer hide-header>  
             <button class="btn btnBack backModal" @click="$bvModal.hide('menu-modal')"><img class="img-fluid" :src="back" alt=""></button>
             <div class="boxMenu">
-                <button class="btn btnMenu" @click="$bvModal.hide('menu-modal')"  v-b-modal.modal-beneficios>
+                <button v-if="this.$store.getters.balanceBeneficio != 0" class="btn btnMenu" @click="$bvModal.hide('menu-modal')" v-b-modal.modal-beneficios>
                     <div class="price" v-b-tooltip.hover :title="this.$store.getters.balanceBeneficio+'€'">
-                        <span class="a">{{ this.$store.getters.balanceBeneficio.split(",")[0] }}</span>
-                        <span class="b">,{{ this.$store.getters.balanceBeneficio.split(",")[1] }}€</span>
+                        <span class="a">{{ this.$store.getters.balanceBeneficio == 0 ? this.$store.getters.balanceBeneficio : this.$store.getters.balanceBeneficio.split(",")[0] }}</span>
+                        <span class="b">,{{ this.$store.getters.balanceBeneficio == 0 ? '00' : this.$store.getters.balanceBeneficio.split(",")[1] }}€</span>
                     </div>
                     <p>Beneficios</p>
                 </button>
-                <button class="btn btnMenu" @click="$bvModal.hide('menu-modal')"  v-b-modal.modal-incentivos>
+                <button v-else class="btn btnMenu">
+                    <div class="price">
+                        <span class="a">{{ this.$store.getters.balanceBeneficio == 0 ? this.$store.getters.balanceBeneficio : this.$store.getters.balanceBeneficio.split(",")[0] }}</span>
+                        <span class="b">,{{ this.$store.getters.balanceBeneficio == 0 ? '00' : this.$store.getters.balanceBeneficio.split(",")[1] }}€</span>
+                    </div>
+                    <p>Beneficios</p>
+                </button>
+                <button v-if="this.$store.getters.balanceIncentivos != 0" class="btn btnMenu" @click="$bvModal.hide('menu-modal')"  v-b-modal.modal-incentivos>
                       <div class="price" v-b-tooltip.hover :title="this.$store.getters.balanceIncentivos+'€'">
-                        <span class="a">{{ this.$store.getters.balanceIncentivos.split(",")[0] }}</span>
-                        <span class="b">,{{ this.$store.getters.balanceIncentivos.split(",")[1] }}€</span>
+                        <span class="a">{{ this.$store.getters.balanceIncentivos == 0 ? this.$store.getters.balanceIncentivos : this.$store.getters.balanceIncentivos.split(",")[0] }}</span>
+                        <span class="b">,{{ this.$store.getters.balanceIncentivos == 0 ? '00' : this.$store.getters.balanceIncentivos.split(",")[1] }}€</span>
                     </div>
                     <p>Incentivos</p>
                 </button>
-                <button class="btn btnMenu">
+                <button v-else class="btn btnMenu">
+                      <div class="price">
+                        <span class="a">{{ this.$store.getters.balanceIncentivos == 0 ? this.$store.getters.balanceIncentivos : this.$store.getters.balanceIncentivos.split(",")[0] }}</span>
+                        <span class="b">,{{ this.$store.getters.balanceIncentivos == 0 ? '00' : this.$store.getters.balanceIncentivos.split(",")[1] }}€</span>
+                    </div>
+                    <p>Incentivos</p>
+                </button>
+                <button v-if="this.$store.getters.balancePropio != 0" class="btn btnMenu">
                     <div class="price" v-b-tooltip.hover :title="this.$store.getters.balancePropio+'€'">
-                        <span class="a">{{ this.$store.getters.balancePropio.split(",")[0] }}</span>
-                        <span class="b">,{{ this.$store.getters.balancePropio.split(",")[1] }}€</span>
+                        <span class="a">{{ this.$store.getters.balancePropio == 0 ? this.$store.getters.balancePropio : this.$store.getters.balancePropio.split(",")[0] }}</span>
+                        <span class="b">,{{ this.$store.getters.balancePropio == 0 ? '00' : this.$store.getters.balancePropio.split(",")[1] }}€</span>
+                    </div>
+                    <p>Propio</p>
+                </button>
+                <button v-else class="btn btnMenu">
+                    <div class="price">
+                        <span class="a">{{ this.$store.getters.balancePropio == 0 ? this.$store.getters.balancePropio : this.$store.getters.balancePropio.split(",")[0] }}</span>
+                        <span class="b">,{{ this.$store.getters.balancePropio == 0 ? '00' : this.$store.getters.balancePropio.split(",")[1] }}€</span>
                     </div>
                     <p>Propio</p>
                 </button>
@@ -106,24 +127,8 @@
         methods: {
             logout() {
                 if (this.$store.getters.isLoggedIn === true) {
-                    this.$store.state.isLoggedIn = false;
-                    this.$store.state.token = "";
-                    this.$store.state.uid = "";
-                    this.$store.state.isFirstTime = true;
-                    this.$store.state.phoneNumber = "";
-                    this.$store.state.status = "";
-                    this.$store.state.myBalance = 0;
-                    this.$store.state.balanceBeneficio = 0;
-                    this.$store.state.listBeneficio = [];
-                    this.$store.state.balanceIncentivos = 0;
-                    this.$store.state.listIncentivo = [];
-                    this.$store.state.balancePropio = 0;
-                    this.$store.state.listPropio = [];
-                    this.$store.state.listCategorias = [];
-                    this.$store.state.coords = {lat: "", lng: ""};
-                    this.$store.state.listRestaurantes = [];
-                    this.$store.state.newRegister = {};
-                    this.$store.state.user = {};
+                    this.$store.commit("logout");
+                    this.$store.commit("notLoading");
                     this.$router.push("/");
                 }
             }

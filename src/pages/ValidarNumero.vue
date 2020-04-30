@@ -11,7 +11,7 @@
                     </div>
                     <div class="form-group">
                         <input type="text" id="codigo-pin" autocomplete="off" maxlength="4" onkeyup="if(this.value.length==this.getAttribute('maxlength')) {document.querySelector('#btnRegistar').disabled = false; return false} else {document.querySelector('#btnRegistar').disabled = true;} return funciones.campoNumber(event);" class="form-control" required>
-                        <button type="button" disabled id="otroCode" class="btn btn-darkblue" @click="getOtroCode">Enviar otro código... <span id="timerRegresive">120s</span></button>
+                        <button type="button" disabled id="otroCode" class="btn btn-darkblue" @click="getOtroCode">Enviar otro código... <span id="timerRegresive">{{ this.countDown }}</span></button>
                         <p data-error="codigo-pin" class="msgError d-none">*msgError</p>
                     </div>
                     <div class="form-group botonera">
@@ -59,6 +59,7 @@
                 icon2: "fas fa-eye",
                 section: 1,
                 myclass: ['alert'],
+                countDown: "120s",
                 formCodigoPin: ""
             }
         },
@@ -92,6 +93,9 @@
                             document.querySelector("[data-error='codigo-pin']").classList.add("mensaje-success");
                             document.querySelector("[data-error='codigo-pin']").classList.remove("d-none");
                             document.querySelector("#otroCode").disabled = true;
+
+                            this.stopLoader();
+                            this.loadTime(false);
 
                             setTimeout(() => {
                                 document.querySelector("[data-error='codigo-pin']").classList.add("d-none");
@@ -160,9 +164,9 @@
                                                 }
                                             }
 
-                                            accounts['propia'] = {
+                                            accounts['propio'] = {
                                                 type: 3,
-                                                name: 'propia',
+                                                name: 'propio',
                                                 value: 0
                                             }
                                             
@@ -217,10 +221,13 @@
 
                     var l = setInterval(() => {
                         c = c - 1;
-                        document.querySelector("#timerRegresive").innerText = c+"s";
+                        this.countDown = c+"s";
+
                         if (c === 0) {
-                            document.querySelector("#otroCode").disabled = false;
-                            document.querySelector("#timerRegresive").innerText = "";
+                            if (document.querySelector("#otroCode")) {
+                                document.querySelector("#otroCode").disabled = false;
+                            }
+                            this.countDown = "";
                             clearInterval(l);
                         }
                     }, 1000);

@@ -26,6 +26,7 @@ export default function(/* { ssrContext } */) {
                 lng: "",
             },
             listRestaurantes: [],
+            listRestauranteSearchs: [],
             newRegister: {},
             user: {}
         },
@@ -44,6 +45,7 @@ export default function(/* { ssrContext } */) {
             balancePropio: state => state.balancePropio,
             listPropio: state => state.listPropio,
             listRestaurantes: state => state.listRestaurantes,
+            listRestauranteSearchs: state => state.listRestauranteSearchs,
             listCategorias: state => state.listCategorias,
             filterCategory: state => state.filterCategory,
             coords: state => state.coords,
@@ -64,16 +66,27 @@ export default function(/* { ssrContext } */) {
                 state.status = "done";
             },
             logout(state) {
-                state.isLoogedIn = false;
+                window.localStorage.clear();
+                state.isLoggedIn = false;
                 state.token = "";
-                state.isFirstTime === false ? false : true;
-                state["user"] = {};
-            },
-            logout_in_isFirstTime(state) {
-                state.isLoogedIn = false;
-                state.token = "";
+                state.uid = "";
                 state.isFirstTime = true;
-                state["user"] = {};
+                state.phoneNumber = "";
+                state.status = "";
+                state.myBalance = 0;
+                state.balanceBeneficio = 0;
+                state.listBeneficio = [];
+                state.balanceIncentivos = 0;
+                state.listIncentivo = [];
+                state.balancePropio = 0;
+                state.listPropio = [];
+                state.listCategorias = [];
+                state.coords = {lat: "", lng: ""};
+                state.listRestaurantes = [];
+                state.listRestauranteSearchs = [];
+                state.newRegister = {};
+                state.filterCategory = {};
+                state.user = {};
             }
         },
         plugins: [createPersistedState()]

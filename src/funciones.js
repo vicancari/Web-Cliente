@@ -18261,9 +18261,9 @@ export default {
                     }
                 }
 
-                accounts['propia'] = {
+                accounts['propio'] = {
                     type: 3,
-                    name: 'propia',
+                    name: 'propio',
                     value: 0
                 }
                 

@@ -9,7 +9,7 @@
                     </div>
                     <p data-error="searchRestaurante" class="msgError d-none">*msgError</p>
                     <div @click="selectRestaurante" class="boxSeach__result">
-                        <p v-for="res in this.restaurantes" :key="'result_'+res.id" :id="'result_'+res.id" :data-name="res.name" :data-categoria="res.categorias[0].name" :data-subcategoria="res.categorias[0].name_subcategory" class="result">{{ res.name }}</p>
+                        <p v-for="res in this.$store.getters.listRestauranteSearchs" :key="'result_'+res.id" :id="'result_'+res.id" :data-name="res.name" :data-categoria="res.categorias[0].name" :data-subcategoria="res.categorias[0].name_subcategory" class="result">{{ res.name }}</p>
                     </div>
                 </div>
                 <div class="priceText" @click="closeSearching">
@@ -69,7 +69,7 @@
                 myclass: ['modal-send'],
                 payment: ['modal-payment'],
                 check: config.rutaWeb(check),
-                restaurantes: this.$store.getters.listRestaurantes,
+                restaurantes: this.$store.getters.listRestauranteSearchs,
                 selectedRes: {},
                 pagoMix: [],
                 saldoSend: 0,
@@ -243,13 +243,14 @@
                 var _m = this.saldoSend.replace(".", "");
                 var _miSaldoSend = _m.replace(",", ".");
                 
+                var _myAccountsKeys = Object.keys(_myAccounts);
                 _myAccounts = Object.values(_myAccounts);
 
                 var otroHTML = {
                     propia: `
                         <div class="checkedRadio__group">
-                            <input type="radio" data-radio="propia" id="radio_propia" name="tipoPago" checked>
-                            <label for="radio_propia">Propia</label>
+                            <input type="radio" data-radio="propio" id="radio_propio" name="tipoPago" checked>
+                            <label for="radio_propio">Propio</label>
                         </div>
                     `,
                     mix: `
@@ -268,7 +269,7 @@
                 }
                 
                 for (var i = 0; i < _myAccounts.length; i++) {
-                    if (_myAccounts[i].name.toLowerCase() != "propia") {
+                    if (_myAccountsKeys[i].toLowerCase() != "propio") {
                         if (_myAccounts[i].categorias && _myAccounts[i].value > 0) {
                             if (parseFloat(_miSaldoSend) <= parseFloat(this.miSaldoTotal)) {
                                 if (parseFloat(_miSaldoSend) <= parseFloat(_myAccounts[i].value)) {
@@ -277,7 +278,7 @@
                                             var html2 = `
                                                 <div class="checkedRadio__group">
                                                     <input type="radio" data-radio="${_myAccounts[i].id_plan}" id="radio_${_myAccounts[i].id_plan}" name="tipoPago">
-                                                    <label for="radio_${_myAccounts[i].id_plan}">${_myAccounts[i].name}</label>
+                                                    <label for="radio_${_myAccounts[i].id_plan}">${_myAccountsKeys[i]}</label>
                                                 </div>
                                             `;
                 
@@ -293,7 +294,7 @@
                                         if (_myAccounts[i].categorias[x].nombre.toLowerCase() === _cate.toLowerCase()) {
                                             this.pagoMix.push({
                                                 id_plan: _myAccounts[i].id_plan,
-                                                name: _myAccounts[i].name
+                                                name: _myAccountsKeys[i]
                                             });
                                         }
                                     }
@@ -318,6 +319,7 @@
                 var _uid = this.$store.getters.uid;
                 if (_uid != "" || _uid != null || _uid != undefined) {
                     this.$store.commit("loading");
+                    var _myAccountsKeys = [];
                     var _myAccounts = [];
                     var accountActual = this.$store.getters.user.accounts;
                     
@@ -339,11 +341,11 @@
                         _balanceResActual = parseFloat(res.balance);
                         var sendMonto = _balanceResActual + parseFloat(_monto);
 
-                        if (_dataradio === "propia") {
+                        if (_dataradio === "propio") {
                             api.put('restaurante/send/saldo/', {idRes: _idRes, balance: sendMonto}).then(res => {
                                 if (res.msg === "OK") {
-                                    if (parseFloat(_monto) <= parseFloat(accountActual.propia.value)) {
-                                        accountActual.propia.value = parseFloat(accountActual.propia.value) - parseFloat(_monto);
+                                    if (parseFloat(_monto) <= parseFloat(accountActual.propio.value)) {
+                                        accountActual.propio.value = parseFloat(accountActual.propio.value) - parseFloat(_monto);
                                     }
 
                                     api.put('update/saldo/propia/', {id: _uid, data: accountActual}).then(res => {
@@ -365,13 +367,14 @@
                             });
                         }
 
-                        if (_dataradio != "propia" && _dataradio != "mix") {
+                        if (_dataradio != "propio" && _dataradio != "mix") {
+                            _myAccountsKeys = Object.keys(accountActual);
                             _myAccounts = Object.values(accountActual);
                             for (var i = 0; i < _myAccounts.length; i++) {
-                                if (_myAccounts[i].name.toLowerCase() != "propia") {
+                                if (_myAccountsKeys[i].toLowerCase() != "propio") {
                                     if (_myAccounts[i].id_plan === _dataradio) {
-                                        if (parseFloat(_monto) <= parseFloat(accountActual[`${_myAccounts[i].name}`].value)) {
-                                            accountActual[`${_myAccounts[i].name}`].value = parseFloat(accountActual[`${_myAccounts[i].name}`].value) - parseFloat(_monto);
+                                        if (parseFloat(_monto) <= parseFloat(accountActual[`${_myAccountsKeys[i]}`].value)) {
+                                            accountActual[`${_myAccountsKeys[i]}`].value = parseFloat(accountActual[`${_myAccountsKeys[i]}`].value) - parseFloat(_monto);
                                         } else {
                                             console.log("El monto es insuficiente, le recomendamos pago mix.");
                                         }
@@ -410,6 +413,7 @@
             },
             Pay() {
                 var _myAccounts = this.$store.getters.user.accounts;
+                var _keys = Object.keys(_myAccounts);
                 _myAccounts = Object.values(_myAccounts);
                 var _cate = this.selectedRes.categoria.replace("#", "");
 
@@ -439,7 +443,7 @@
 
                 var _myBalanceTotal = 0;
                 for (var i = 0; i < _myAccounts.length; i++) {
-                    if (_myAccounts[i].name.toLowerCase() != "propia") {
+                    if (_keys[i].toLowerCase() != "propio") {
                         if (_myAccounts[i].categorias && _myAccounts[i].value > 0) {
                             for (var y = 0; y < _myAccounts[i].categorias.length; y++) {
                                 if (_myAccounts[i].categorias[y].nombre.toLowerCase() === _cate.toLowerCase()) {
@@ -450,7 +454,7 @@
                     }
                 }
 
-                _myBalanceTotal = _myBalanceTotal + parseFloat(this.$store.getters.user.accounts.propia.value);
+                _myBalanceTotal = _myBalanceTotal + parseFloat(this.$store.getters.user.accounts.propio.value);
                 if (parseFloat(document.querySelector("#saldoSend").value.replace(",", ".")) > parseFloat(_myBalanceTotal)) {
                     document.querySelector("[data-error='saldoSend']").innerText = `El saldo es insuficiente. su monto actual es de: ${_myBalanceTotal.toFixed(2)}€`;
                     document.querySelector("[data-error='saldoSend']").classList.remove("d-none");
@@ -476,14 +480,7 @@
                 }
             },
             stopLoader() { this.$store.commit("notLoading"); },
-        },
-        beforeMount() {
-            this.restaurantes.sort(function(a, b){ 
-                if (a.name < b.name) {
-                    return -1;
-                }
-            });
-        },
+        }
     }
 </script>
 

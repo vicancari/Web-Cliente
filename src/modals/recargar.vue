@@ -30,7 +30,7 @@
                        <div class="row m-0">
                            <div class="col-12 p-0">
                                 <div class="form-group">
-                                    <input type="text" id="name" onkeydown="return funciones.campoNumber(event);" class="form-control" placeholder="Tarjeta número / cuenta número" autocomplete="off">
+                                    <input type="text" id="name" maxlength="16" onkeypress="if(this.value.length==this.getAttribute('maxlength')) return false;" onkeydown="return funciones.campoNumber(event);" class="form-control" placeholder="Tarjeta número / cuenta número" autocomplete="off">
                                     <p data-error="name" class="msgError d-none">*msgError</p>
                                 </div>
                            </div>
@@ -176,7 +176,7 @@
                 var accountActual = this.$store.getters.user.accounts;
                 var _m = this.saldo.replace(".", "");
                 var miSaldo = _m.replace(",", ".");
-                accountActual.propia.value = parseFloat(accountActual.propia.value) + parseFloat(miSaldo);
+                accountActual.propio.value = parseFloat(accountActual.propio.value) + parseFloat(miSaldo);
 
                 if (_uid != "" || _uid != null || _uid != undefined) {
                     this.$store.commit("loading");

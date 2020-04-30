@@ -702,6 +702,7 @@
                     opacity: 1;
                     transform: translateX(-50%);
                     left: 50%;
+                    width: 100%;
                 }
 
                 .form-control:focus + .form-control-placeholder,

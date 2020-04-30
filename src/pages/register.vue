@@ -26,9 +26,11 @@
                         <label class="form-control-placeholder" for="dni">Dni</label>
                         <p data-error="dni" class="msgError d-none">*msgError</p>
                     </div>
-                    <div class="form-group botonera formRegister">
-                        <a class="btn btnRegister" @click="nextForm">Siguiente</a>
-                        <a class="btn btnBack" @click="irAllogin">Cancelar</a>
+                    <div class="form-group">
+                        <div class="boxBtnFooter">
+                            <button type="button" class="btn _back" @click="irAllogin">Cancelar</button>
+                            <button type="button" class="btn _next" @click="nextForm">Siguiente</button>
+                        </div>
                     </div>
                 </div>
                 <div class="form1" v-if="section == 2">
@@ -58,9 +60,11 @@
                         <span style="outline: none; cursor: pointer;" class="mapMarket"><i class="fas fa-map-marker-alt" id="loadMap" v-b-modal.modal-map v-on:click="loadMap"></i></span>
                         <p data-error="address" class="msgError d-none">*msgError</p>
                     </div>
-                    <div class="form-group botonera formRegister">
-                        <a class="btn btnRegister" @click="nextFormTwo">Siguiente</a>
-                        <a class="btn btnBack" @click="backOne">Volver</a>
+                    <div class="form-group">
+                        <div class="boxBtnFooter">
+                            <button type="button" class="btn _back" @click="backOne">Volver</button>
+                            <button type="button" class="btn _next" @click="nextFormTwo">Siguiente</button>
+                        </div>
                     </div>
                 </div>
                 <div class="form1" v-if="section == 3">
@@ -103,9 +107,11 @@
                         </a>
                         <p data-error="cPass" class="msgError d-none">*msgError</p>
                     </div>
-                    <div class="form-group botonera formRegister">
-                        <button type="button" id="btnRegistar" disabled class="btn btnRegister _cBlue" @click="register">Entrar a raus</button>
-                        <button type="button" class="btn btnBack" @click="backTwo">Volver</button>
+                    <div class="form-group">
+                        <div class="boxBtnFooter">
+                            <button type="button" class="btn _back" @click="backTwo">Volver</button>
+                            <button type="button" class="btn _ok" id="btnRegistar" disabled @click="register">Continuar</button>
+                        </div>
                         <button type="button" style="display: none;" id="btn-modal" v-b-modal.my-modal></button>
                         <router-link style="display: none;" @click="okRegister" id="nextLink" to="/validar-numero">next</router-link>
                         <router-link style="display: none;" @click="reload" id="aqui" to="/register">next</router-link>
@@ -514,7 +520,7 @@
                 if (document.querySelector("#telephone").value != "" && document.querySelector("#password").value != "" && document.querySelector("#confPassword").value != "") {
                     this.$store.commit("loading");
                     var data = [{
-                        email: this.dataForm.email,
+                        email: this.dataForm.email.toLowerCase(),
                         phone: this.dataForm.carea + this.dataForm.phone,
                         password: this.dataForm.cPass,
                         address: this.dataForm.address,
@@ -834,7 +840,7 @@
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped lang="scss">
+<style lang="scss">
     .box-login{
         background-image: url('../assets/img/fondo.jpeg');
         min-height: 100vh;
@@ -1043,6 +1049,46 @@
         &__right {
             position: relative;
             width: calc((100% - 80px));
+        }
+    }
+
+    .boxBtnFooter {
+        width: 100%;
+        height: max-content;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 40px;
+
+        .btn {
+            width: 120px;
+            border-radius: 0;
+            color: #fff;
+            margin: 0;
+            padding: 4px;
+            font-size: 14px;
+
+            &:hover {
+                color: #fff;
+            }
+
+            &:last-child {
+                margin-left: 2rem;
+            }
+        }
+        
+        ._back {
+            background: #fff;
+            border-color: var(--blue);
+            color: var(--blue);
+        }
+
+        ._next {
+            background-color: var(--yellow);
+        }
+
+        ._ok {
+            background-color: var(--blue);
         }
     }
 </style>
