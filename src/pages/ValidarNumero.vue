@@ -42,7 +42,6 @@
     import image from "../assets/img/logo.png";
     import axios from "axios";
     import api from "../api.js";
-    var Jquery = require("jquery");
 
     export default {
         name: 'validarNumero',
@@ -65,22 +64,11 @@
         },
         methods: {
             signIn(id) {
-                Jquery.ajax({
-                    type: "POST",
-                    url: config.rutaApi("auth/signIn/"),
-                    data: {
-                        uid: id
-                    },
-                    dataType: "json",
-                    beforeSend: function () {
-                        console.log("Iniciando sesion....");
-                    },
-                    success: function(data) {
-                        window.localStorage.setItem("token", data.token);
-                    },
-                    error: function(data) {
-                        console.log(data);
-                    }
+                api.post("auth/signIn/", {uid: id}).then(res => {
+                    console.log("Iniciando sesión.");
+                    window.localStorage.setItem("token", res.token);
+                }).catch(err => {
+                    console.log(err);
                 });
             },
             getOtroCode() {

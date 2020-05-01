@@ -7,7 +7,7 @@
             <form id="form-register">
                 <div class="form1" v-if="section == 1">
                     <div class="form-group">
-                        <input type="email" id="email" autocomplete="off" class="form-control" v-model="dataForm.email" required>
+                        <input type="text" id="email" autocomplete="off" class="form-control" v-model="dataForm.email" required>
                         <label class="form-control-placeholder" for="email">Email</label>
                         <p data-error="email" class="msgError d-none">*msgError</p>
                     </div>
@@ -165,10 +165,9 @@
 
     import Datepicker from 'vuejs-datepicker';
     import { es } from 'vuejs-datepicker/dist/locale';
-    // import store from "../store/store.js";
+    
     import api from "../api.js";
-    // import LoadScript from "vue-plugin-load-script";
-    var Jquery = require("jquery");
+    import axios from "axios";
 
     export default {
         name: 'register',
@@ -336,6 +335,17 @@
                     return false;
                 }
 
+                if (funciones.validarEmail(document.querySelector("#email").value.toLowerCase()) === false) {
+                    document.querySelector("[data-error='email']").innerText = "El correo que ingreso no es válido.";
+                    document.querySelector("[data-error='email']").classList.remove("d-none");
+
+                    setTimeout(() => {
+                        document.querySelector("[data-error='email']").classList.add("d-none");
+                    }, 3500);
+
+                    return false;
+                }
+
                 if (document.querySelector("#name").value === "") {
                     document.querySelector("[data-error='name']").innerText = "El nombre esta vacio, por favor completelo.";
                     document.querySelector("[data-error='name']").classList.remove("d-none");
@@ -378,7 +388,7 @@
 
                         return false;
                     } else {
-                        if (document.querySelector("#email").value != "" && document.querySelector("#name").value != "" && document.querySelector("#lastname").value != "" && document.querySelector("#dni").value != "" && document.querySelector("#dni").value.length >= 8) {
+                        if (document.querySelector("#email").value != "" && funciones.validarEmail(document.querySelector("#email").value.toLowerCase()) === true && document.querySelector("#name").value != "" && document.querySelector("#lastname").value != "" && document.querySelector("#dni").value != "" && document.querySelector("#dni").value.length >= 8) {
                             this.section = 2;
                             this.getStreetAddressFrom(this.ubiLat, this.ubiLng);
                         }
@@ -590,7 +600,9 @@
                             lng: e.latLng.lng()
                         }
 
-                        Jquery.post("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + coords.lat + "," + coords.lng + "&key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho", function(data) {
+                        axios.get("https://maps.googleapis.com/maps/api/geocode/json?latlng=" + coords.lat + "," + coords.lng + "&key=AIzaSyANVVkDC6JNomt7PHT2tj4a8m1qjaKCPho").then(res => {
+                            var data = res.data;
+
                             if (document.querySelector("#lat") && document.querySelector("#lng")) {
                                 document.querySelector("#lat").value = coords.lat;
                                 document.querySelector("#lng").value = coords.lng;
@@ -612,7 +624,6 @@
                                         }
                                     }
                                 }
-
 
                                 if (_getType.types[0] === "locality") {
                                     if (document.querySelector("#city")) document.querySelector("#city").value = _getType.long_name;
@@ -1081,6 +1092,11 @@
             background: #fff;
             border-color: var(--blue);
             color: var(--blue);
+
+            &:hover {
+                border-color: var(--blue);
+                color: var(--blue);
+            }
         }
 
         ._next {
