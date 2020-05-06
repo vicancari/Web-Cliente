@@ -39,8 +39,17 @@ const configOptions = {
 firebase.initializeApp(configOptions);
 
 firebase.auth().onAuthStateChanged(user => {
+  var _uid = "";
   if (user) {
     console.log("user is loggin");
+    _uid = "";
+    _uid = user.uid;
+
+    api.post('auth/isloggin/', {id: _uid, is_loggin: true}).then(res => {
+      console.log(res);
+    }).catch(err => {
+      console.log("error: ", err);
+    });
   } else {
     console.log("user is not loggin");
   }

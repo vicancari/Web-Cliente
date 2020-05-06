@@ -42,6 +42,7 @@
     import image from "../assets/img/logo.png";
     import axios from "axios";
     import api from "../api.js";
+    import * as firebase from "firebase";
 
     export default {
         name: 'validarNumero',
@@ -133,50 +134,22 @@
                                 var uid = res.key;
                                 if (res.next === "OK") {
                                     if (uid != "" || uid != null || uid != undefined) {
-                                        var _keys = [];
-                                        var _values = [];
-                                        var accounts = {};
-                                        api.get('planes/').then(res => {
-                                            _keys = Object.keys(res);
-                                            _values = Object.values(res);
+                                        firebase.auth().signInWithEmailAndPassword(this.$store.getters.newRegister[0].email.trim(), this.$store.getters.newRegister[0].password.trim()).then((res2) => {
+                                            this.signIn(res2.user.uid);
+                                            if (window.localStorage.getItem("token") != "") {
+                                                this.$store.state.token = window.localStorage.getItem("token");
+                                                this.$store.state.isLoggedIn = true;
+                                                this.$store.state.uid = uid;
+                                                document.querySelector("#stopLoader").click();
+                                                this.btnModal = document.querySelector(`#btn-modal`);
+                                                this.btnModal.click();
 
-                                            for (var i = 0; i < _values.length; i++) {
-                                                accounts[`${_values[i].nombre}`] = {
-                                                    categorias: _values[i].categorias,
-                                                    establecimientos: _values[i].establecimientos,
-                                                    id_plan: _keys[i],
-                                                    is_base: true,
-                                                    type: _values[i].type,
-                                                    name: _values[i].nombre,
-                                                    value: 0
-                                                }
-                                            }
-
-                                            accounts['propio'] = {
-                                                type: 3,
-                                                name: 'propio',
-                                                value: 0
-                                            }
-                                            
-                                            api.put('accounts/update/cliente/', {id: uid, data: accounts}).then(res => {
-                                                if (res.success === true) {
-                                                    this.signIn(uid);
-                                                    if (window.localStorage.getItem("token") != "") {
-                                                        this.$store.state.token = window.localStorage.getItem("token");
-                                                        this.$store.state.isLoggedIn = true;
-                                                        this.$store.state.uid = uid;
-                                                        document.querySelector("#stopLoader").click();
-                                                        this.btnModal = document.querySelector(`#btn-modal`);
-                                                        this.btnModal.click();
-    
-                                                        setTimeout(() => {
-                                                            if (document.querySelector("#nextLink")) {
-                                                                document.querySelector("#nextLink").click();
-                                                            }
-                                                        }, 500);
+                                                setTimeout(() => {
+                                                    if (document.querySelector("#nextLink")) {
+                                                        document.querySelector("#nextLink").click();
                                                     }
-                                                }
-                                            });
+                                                }, 500);
+                                            }
                                         });
                                     }
                                 }
@@ -232,7 +205,8 @@
             this.$store.state.status = "";
             this.$store.state.newRegister = JSON.parse(window.localStorage.getItem("dataRegister"));
 
-            console.log(this.$store.getters.newRegister);
+            console.log(firebase);
+            console.log(this.$store.getters.newRegister[0]);
         },
     }
 </script>

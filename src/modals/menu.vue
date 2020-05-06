@@ -108,6 +108,7 @@
     import back from '../assets/img/icons/flechavolver.svg';
 
     import * as firebase from "firebase";
+    import api from "../api.js";
 
     export default {
         name: 'menu',
@@ -130,6 +131,12 @@
         methods: {
             logout() {
                 firebase.auth().signOut().then(() => {
+                    api.post('auth/isloggin/', {id: this.$store.getters.uid, is_loggin: false}).then(res => {
+                        console.log(res);
+                    }).catch(err => {
+                        console.log("error: ", err);
+                    });
+
                     this.$store.commit("logout");
                     this.$store.commit("notLoading");
                     this.$router.push("/");
