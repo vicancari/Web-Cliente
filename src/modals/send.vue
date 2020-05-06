@@ -239,10 +239,12 @@
                 var _box = document.querySelector("#selectCuenta");
                 var _myAccounts = this.$store.getters.user.accounts;
                 var _cate = this.selectedRes.categoria.replace("#", "");
+                var _businessname = this.selectedRes.name;
                 // var _subcate = this.selectedRes.subcategoria.replace("#", "");
                 var _m = this.saldoSend.replace(".", "");
                 var _miSaldoSend = _m.replace(",", ".");
-                
+                this.pagoMix = [];
+
                 var _myAccountsKeys = Object.keys(_myAccounts);
                 _myAccounts = Object.values(_myAccounts);
 
@@ -270,32 +272,85 @@
                 
                 for (var i = 0; i < _myAccounts.length; i++) {
                     if (_myAccountsKeys[i].toLowerCase() != "propio") {
-                        if (_myAccounts[i].categorias && _myAccounts[i].value > 0) {
+                        if ((_myAccounts[i].categorias || _myAccounts[i].establecimientos) &&  _myAccounts[i].value > 0) {
                             if (parseFloat(_miSaldoSend) <= parseFloat(this.miSaldoTotal)) {
                                 if (parseFloat(_miSaldoSend) <= parseFloat(_myAccounts[i].value)) {
-                                    for (var y = 0; y < _myAccounts[i].categorias.length; y++) {
-                                        if (_myAccounts[i].categorias[y].nombre.toLowerCase() === _cate.toLowerCase()) {
-                                            var html2 = `
-                                                <div class="checkedRadio__group">
-                                                    <input type="radio" data-radio="${_myAccounts[i].id_plan}" id="radio_${_myAccounts[i].id_plan}" name="tipoPago">
-                                                    <label for="radio_${_myAccounts[i].id_plan}">${_myAccountsKeys[i]}</label>
-                                                </div>
-                                            `;
-                
-                                            _box.innerHTML += html2;
+                                    if (_myAccounts[i].categorias) {
+                                        for (var y = 0; y < _myAccounts[i].categorias.length; y++) {
+                                            if (_myAccounts[i].categorias[y].nombre.toLowerCase() === _cate.toLowerCase()) {
+                                                var html3 = `
+                                                    <div class="checkedRadio__group">
+                                                        <input type="radio" data-radio="${_myAccounts[i].id_plan}" id="radio_${_myAccounts[i].id_plan}" name="tipoPago">
+                                                        <label for="radio_${_myAccounts[i].id_plan}">${_myAccountsKeys[i]}</label>
+                                                    </div>
+                                                `;
+                    
+                                                _box.innerHTML += html3;
+                                            }
                                         }
                                     }
-        
-                                    _mix = true;
+
+                                    if (_myAccounts[i].establecimientos) {
+                                        for (var b = 0; b < _myAccounts[i].establecimientos.length; b++) {
+                                            if (_myAccounts[i].establecimientos[b].business_name.toLowerCase() === _businessname.toLowerCase()) {
+                                                var html2 = `
+                                                    <div class="checkedRadio__group">
+                                                        <input type="radio" data-radio="${_myAccounts[i].id_plan}" id="radio_${_myAccounts[i].id_plan}" name="tipoPago">
+                                                        <label for="radio_${_myAccounts[i].id_plan}">${_myAccountsKeys[i]}</label>
+                                                    </div>
+                                                `;
+                    
+                                                _box.innerHTML += html2;
+                                            }
+                                        }
+                                    }
+
+                                    _mix = false;
+                                } else {
+                                    if (parseFloat(this.miSaldoTotal) > parseFloat(_miSaldoSend)) {
+                                        if (_myAccounts[i].categorias) {
+                                            for (var z = 0; z < _myAccounts[i].categorias.length; z++) {
+                                                if (_myAccounts[i].categorias[z].nombre.toLowerCase() === _cate.toLowerCase()) {
+                                                    this.pagoMix.push({
+                                                        name: _myAccountsKeys[i]
+                                                    });
+                                                }
+                                            }
+                                        }
+
+                                        if (_myAccounts[i].establecimientos) {
+                                            for (var z23 = 0; z23 < _myAccounts[i].establecimientos.length; z23++) {
+                                                if (_myAccounts[i].establecimientos[z23].business_name.toLowerCase() === _businessname.toLowerCase()) {
+                                                    this.pagoMix.push({
+                                                        name: _myAccountsKeys[i]
+                                                    });
+                                                }
+                                            }
+                                        }
+
+                                        console.log(this.pagoMix);
+                                        _mix = true;
+                                    }
                                 }
                             } else {
                                 if (parseFloat(_myAccounts[i].value) < parseFloat(_miSaldoSend)) {
-                                    for (var x = 0; x < _myAccounts[i].categorias.length; x++) {
-                                        if (_myAccounts[i].categorias[x].nombre.toLowerCase() === _cate.toLowerCase()) {
-                                            this.pagoMix.push({
-                                                id_plan: _myAccounts[i].id_plan,
-                                                name: _myAccountsKeys[i]
-                                            });
+                                    if (_myAccounts[i].categorias) {
+                                        for (var x = 0; x < _myAccounts[i].categorias.length; x++) {
+                                            if (_myAccounts[i].categorias[x].nombre.toLowerCase() === _cate.toLowerCase()) {
+                                                this.pagoMix.push({
+                                                    name: _myAccountsKeys[i]
+                                                });
+                                            }
+                                        }
+                                    }
+
+                                    if (_myAccounts[i].establecimientos) {
+                                        for (var z2 = 0; z2 < _myAccounts[i].establecimientos.length; z2++) {
+                                            if (_myAccounts[i].establecimientos[z2].business_name.toLowerCase() === _businessname.toLowerCase()) {
+                                                this.pagoMix.push({
+                                                    name: _myAccountsKeys[i]
+                                                });
+                                            }
                                         }
                                     }
 
@@ -303,6 +358,9 @@
                                     _mixChecked = true;
                                 }
                             }
+                        } else {
+                            console.log("No tiene saldo solo propio.");
+                            _mix = false;
                         }
                     }
                 }
@@ -406,6 +464,61 @@
                                 }
                             }
                         }
+
+                        if (_dataradio === "mix") {
+                            var _accountsMixs = this.pagoMix;
+
+                            api.put('restaurante/send/saldo/', {idRes: _idRes, balance: sendMonto}).then(res => {
+                                if (res.msg === "OK") {
+                                    if (parseFloat(_monto) <= parseFloat(accountActual.propio.value)) {
+                                        var montoFirst = 0;
+                                        var miMonto = _monto;
+                                        var resto = 0;
+                                        for (var w = 0; w < _accountsMixs.length; w++) {
+                                            var n = parseFloat(accountActual[_accountsMixs[w].name].value);
+                                            var n2 = montoFirst == 0 ? parseFloat(miMonto) : ((resto * resto)**0.5);
+                                            var total = n - n2;
+
+                                            if (total < 0) {
+                                                accountActual[_accountsMixs[w].name].value = 0;
+                                                resto = parseFloat(total);
+                                            } else {
+                                                accountActual[_accountsMixs[w].name].value = ((total * total)**0.5);
+                                                resto = parseFloat(total);
+
+                                                if (total > 0) {
+                                                    miMonto = 0;
+                                                }
+                                            }
+
+                                            montoFirst = montoFirst + 1;
+                                            miMonto = miMonto - ((resto * resto)**0.5);
+                                        }
+
+                                        resto = ((resto * resto)**0.5);
+                                        if (miMonto > 0) {
+                                            accountActual.propio.value = parseFloat(accountActual.propio.value) - parseFloat(resto);
+                                        }
+                                    }
+
+                                    api.put('update/saldo/propia/', {id: _uid, data: accountActual}).then(res => {
+                                        console.log(res);
+                                        console.log("se envio el dinero con exito.");
+
+                                        document.querySelector("#pagoExitoso").click();
+                                        this.stopLoader();
+                                    }).catch(err => {
+                                        console.log(err);
+                                    });
+                                } else {
+                                    console.log("Ocurrio un problema.");
+                                    api.put('restaurante/send/saldo/', {idRes: _idRes, balance: sendMonto - parseFloat(_monto)});
+                                    return false;
+                                }
+                            }).catch(err => {
+                                console.log(err);
+                            });
+                        }
                     }).catch(err => {
                         console.log(err);
                     });
@@ -415,7 +528,24 @@
                 var _myAccounts = this.$store.getters.user.accounts;
                 var _keys = Object.keys(_myAccounts);
                 _myAccounts = Object.values(_myAccounts);
-                var _cate = this.selectedRes.categoria.replace("#", "");
+                var _cate = "";
+                var _myBalanceTotal = 0;
+
+                if (document.querySelector("#searchRestaurante").value != "") {
+                    _cate = this.selectedRes.categoria.replace("#", "");
+
+                    for (var i = 0; i < _myAccounts.length; i++) {
+                        if (_keys[i].toLowerCase() != "propio") {
+                            if (_myAccounts[i].categorias && _myAccounts[i].value > 0) {
+                                for (var y = 0; y < _myAccounts[i].categorias.length; y++) {
+                                    if (_myAccounts[i].categorias[y].nombre.toLowerCase() === _cate.toLowerCase()) {
+                                        _myBalanceTotal = _myBalanceTotal + parseFloat(_myAccounts[i].value);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
 
                 if (document.querySelector("#searchRestaurante").value === "") {
                     document.querySelector("[data-error='searchRestaurante']").innerText = "Debes buscar un restaurante.";
@@ -441,19 +571,6 @@
                     return false;
                 }
 
-                var _myBalanceTotal = 0;
-                for (var i = 0; i < _myAccounts.length; i++) {
-                    if (_keys[i].toLowerCase() != "propio") {
-                        if (_myAccounts[i].categorias && _myAccounts[i].value > 0) {
-                            for (var y = 0; y < _myAccounts[i].categorias.length; y++) {
-                                if (_myAccounts[i].categorias[y].nombre.toLowerCase() === _cate.toLowerCase()) {
-                                    _myBalanceTotal = _myBalanceTotal + parseFloat(_myAccounts[i].value);
-                                }
-                            }
-                        }
-                    }
-                }
-
                 _myBalanceTotal = _myBalanceTotal + parseFloat(this.$store.getters.user.accounts.propio.value);
                 if (parseFloat(document.querySelector("#saldoSend").value.replace(",", ".")) > parseFloat(_myBalanceTotal)) {
                     document.querySelector("[data-error='saldoSend']").innerText = `El saldo es insuficiente. su monto actual es de: ${_myBalanceTotal.toFixed(2)}€`;
@@ -470,6 +587,7 @@
                 if (document.querySelector("#searchRestaurante").value != "" && document.querySelector("#saldoSend").value != "" && parseFloat(document.querySelector("#saldoSend").value.replace(",", ".")) <= parseFloat(_myBalanceTotal)) {
                     this.miSaldoTotal = _myBalanceTotal;
                     this.saldoSend = document.querySelector("#saldoSend").value;
+                    this.price = 0.00;
 
                     this.$refs['modal-send'].hide();
                     this.$refs['modal-payment'].show();

@@ -2,7 +2,7 @@
     <div>
         <b-modal :modal-class="myclass" id="menu-modal" ref="menu-modal"  hide-footer hide-header>  
             <button class="btn btnBack backModal" @click="$bvModal.hide('menu-modal')"><img class="img-fluid" :src="back" alt=""></button>
-            <div class="boxMenu">
+            <div class="_mi">
                 <button v-if="this.$store.getters.balanceBeneficio != 0" class="btn btnMenu" @click="$bvModal.hide('menu-modal')" v-b-modal.modal-beneficios>
                     <div class="price" v-b-tooltip.hover :title="this.$store.getters.balanceBeneficio+'€'">
                         <span class="a">{{ this.$store.getters.balanceBeneficio == 0 ? this.$store.getters.balanceBeneficio : this.$store.getters.balanceBeneficio.split(",")[0] }}</span>
@@ -107,6 +107,8 @@
     import salirazul from '../assets/img/icons/menu/salirazul.svg';
     import back from '../assets/img/icons/flechavolver.svg';
 
+    import * as firebase from "firebase";
+
     export default {
         name: 'menu',
         data: function () {
@@ -121,23 +123,24 @@
                 history: config.rutaWeb(history),
                 config: config.rutaWeb(settings),
                 salirazul: config.rutaWeb(salirazul),
-                back: config.rutaWeb(back)
+                back: config.rutaWeb(back),
+                next: false
             }
         },
         methods: {
             logout() {
-                if (this.$store.getters.isLoggedIn === true) {
+                firebase.auth().signOut().then(() => {
                     this.$store.commit("logout");
                     this.$store.commit("notLoading");
                     this.$router.push("/");
-                }
+                });
             }
         }
     }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped lang="scss">
+<style lang="scss">
      .modal-menu{
         .btnBack{
             position: absolute;
@@ -151,7 +154,7 @@
                 margin-top: 0px;
             }
         }
-         .boxMenu{
+        ._mi {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
@@ -176,28 +179,25 @@
                 }
                 .price{
                     display: flex;
-                    justify-content: center;
-                    align-items: flex-start;
-                    .a{
-                        font-size: 32px;
-                        text-overflow: ellipsis;
-                        white-space: nowrap;
-                        overflow: hidden;
-                        max-width: 100%;
+                    justify-content: center !important;
+                    align-items: center !important;
+                    height: 48px !important;
+
+                    .a {
+                        font-size: 16px !important;
+                        max-width: 100% !important;
                         @media (max-width: 480px){
-                            font-size: 22px;
+                            font-size: 16px;
                         }           
                         @media (max-width: 330px){
-                            font-size: 26px;
+                            font-size: 16px;
                         }                               
                     }
-                   .b{
-                        font-size: 14px;
+                   .b {
                         position: relative;
-                        top: 10px;
+                        font-size: 16px !important;
                         @media (max-width: 480px){
-                            font-size: 11px;
-                            top: 5px;
+                            font-size: 16px;
                         }
                     }
                 }
@@ -224,7 +224,7 @@
                         }
                     }
                 }
-                .imgMenu{
+                .imgMenu {
                     height: 46px;
                     transform: scale(.8);
                     @media (max-width: 480px){

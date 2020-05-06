@@ -38,6 +38,14 @@ const configOptions = {
 };
 firebase.initializeApp(configOptions);
 
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    console.log("user is loggin");
+  } else {
+    console.log("user is not loggin");
+  }
+});
+
 Vue.use(BootstrapVue);
 
 Vue.config.productionTip = true;

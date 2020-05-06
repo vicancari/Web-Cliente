@@ -143,7 +143,7 @@
                                             for (var i = 0; i < _values.length; i++) {
                                                 accounts[`${_values[i].nombre}`] = {
                                                     categorias: _values[i].categorias,
-                                                    establecimineto: _values[i].establecimientos,
+                                                    establecimientos: _values[i].establecimientos,
                                                     id_plan: _keys[i],
                                                     is_base: true,
                                                     type: _values[i].type,

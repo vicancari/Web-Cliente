@@ -240,7 +240,6 @@
                 this.getUser();
                 this.getStreetAddressFrom(ubicacion.lat, ubicacion.lon);
                 this.getRestaurantes(ubicacion.lat, ubicacion.lon);
-                this.$store.commit("done");
             }
         },
         methods: {
@@ -392,7 +391,7 @@
                     var _list = [];
                     for (var i = 0; i < _values.length; i++) {
                         //  <= 20.000
-                        if (funciones.getKilometros(myLat, myLng, _values[i].lat, _values[i].lng) <= 20.000) {
+                        if (funciones.getKilometros(myLat, myLng, _values[i].lat, _values[i].lng)) {
                             _list.push({
                                 id: _keys[i],
                                 categorias: Object.values(_values[i].categories),
@@ -457,6 +456,8 @@
                     });
 
                     this.listPromocion = _list;
+
+                    this.stopLoader();
                 }).catch(err => {
                     console.log(err);
                 });
@@ -486,6 +487,7 @@
                     console.log(err);
                 });
             },
+            stopLoader() { this.$store.commit("notLoading"); },
             async getCategorias() {
                 await axios.get("https://myraus.com:8282/api/categories-subcategories").then(res => {
                     var _list = [];
