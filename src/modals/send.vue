@@ -304,8 +304,6 @@
                                             }
                                         }
                                     }
-
-                                    _mix = false;
                                 } else {
                                     if (parseFloat(this.miSaldoTotal) > parseFloat(_miSaldoSend)) {
                                         if (_myAccounts[i].categorias) {
@@ -358,9 +356,24 @@
                                     _mixChecked = true;
                                 }
                             }
+                        }
+                        
+                        if (!_myAccounts[i].establecimientos) {
+                            for (var y9 = 0; y9 < _myAccounts[i].categorias.length; y9++) {
+                                if (_myAccounts[i].categorias[y9].nombre.toLowerCase() === _cate.toLowerCase()) {
+                                    if (_myAccounts[i].value === 0) {
+                                        _mix = false;
+                                    }
+                                }
+                            }
                         } else {
-                            console.log("No tiene saldo solo propio.");
-                            _mix = false;
+                            for (var i9 = 0; i9 < _myAccounts[i].establecimientos.length; i9++) {
+                                if (_myAccounts[i].establecimientos[i9].business_name.toLowerCase() === _businessname.toLowerCase()) {
+                                    if (_myAccounts[i].value === 0) {
+                                        _mix = false;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
