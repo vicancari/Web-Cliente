@@ -6,6 +6,8 @@ import validarNumero from '@/pages/ValidarNumero';
 import Home from '@/pages/home';
 import Tutorial from '@/pages/tutorial';
 import recovery from '@/pages/recovery';
+import Restaurante from '@/pages/detalles-restaurantes';
+
 
 Vue.use(router);
 
@@ -40,6 +42,11 @@ export default new router({
       path: '/recovery/:token',
       name: 'recovery',
       component: recovery
+    },
+    {
+      path: '/restaurante',
+      name: 'restaurante',
+      component: Restaurante
     }
   ]
 })

@@ -56,6 +56,12 @@ body {
   height:100%;
   font-family: var(--font) !important;
 }
+*{
+  outline: none;
+  &:focus{
+    outline: none;
+  }
+}
 
 
 h6,h5,h4,h3,h2,h1,p,span,label{
@@ -410,6 +416,44 @@ $md-checkbox-label-padding: .75em;
     }
   }
 }
+.logout{
+  padding: 0 !important;
+  .modal-dialog{
+    max-width:300px;
+    .modal-content{
+      border-radius: 0;
+      border-color: 1px solid #d1d1d1;
+      .modal-body{
+        max-width: 95%;
+        margin: auto;
+      }
+    }
+    @media (max-width: 767px){
+      width: 90%;
+    }
+  }
+}
+
+.detalles-productos{
+  .modal-dialog{
+    max-width: 1024px;
+    @media (max-width: 767px){
+      max-width: 95%;
+      margin: auto;
+      width: 100%;
+    }
+    @media(min-width: 767px) and (max-width: 992px){
+      max-width: 95%;
+      width: 100%;
+    }
+    .modal-content{
+      border-radius: 0;
+      .modal-body{
+        padding: 0;
+      }
+    }
+  }
+}
 
 .modal-backdrop{
   background-color: transparent !important;
@@ -449,15 +493,23 @@ $md-checkbox-label-padding: .75em;
 .cardStyle{
   border-radius: 0 !important;
   margin: auto 15px;
-  @media (max-width: 576px){
+  
+   @media (min-width: 1024px){
+     width: 90%!important;
+      max-width: 90%;
+   }
+  @media (max-width: 767px){
     margin: auto;
-    max-width: 330px;
+    max-width: 250px;
     width: 90%;
   }
   .card-img-top{
       height: 200px;
       object-fit: cover;
       border-radius: 0;
+      @media (min-width: 767px) and (max-width: 992px){
+        height: 170px;
+      }
   }
   .card-body{
       padding: 15px;
@@ -593,6 +645,17 @@ $md-checkbox-label-padding: .75em;
   color: red;
   text-align:center;
   margin: 5px auto;
+}
+.VueCarousel-pagination{
+  position: absolute;
+  bottom: 00px;
+  left: 50%;
+  transform: translateX(-50%);
+  .VueCarousel-dot-container{
+    button.VueCarousel-dot--active{
+      background-color: var(--bluePrimary) !important;
+    }
+  }
 }
 
 </style>

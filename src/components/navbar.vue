@@ -10,7 +10,7 @@
             </div>
             <div class="col-md-4 col-12 order">
                 <div class="d-flex justify-content-center align-items-center menu">
-                    <h5>{{ this.$store.getters.user.name }} {{ this.$store.getters.user.lastname }}</h5>
+                    <h5 v-b-modal.modalLogout>{{ this.$store.getters.user.name }} {{ this.$store.getters.user.lastname }}</h5>
                     <button class="btn"  v-b-modal.menu-modal> <i class="fas fa-bars"></i></button>
                 </div>
             </div>
@@ -41,6 +41,7 @@
         <Historial></Historial>
         <Configuracion></Configuracion>
         <Explorar></Explorar>
+        <logout></logout>
     </div>
 </template>
 
@@ -66,6 +67,8 @@
     import Historial from '../modals/historial';
     import Configuracion from '../modals/configuracion';
     import Explorar from '../modals/explorar';
+    import logout from '../modals/logout';
+
 
     export default {
         name: 'navbar',
@@ -92,7 +95,8 @@
             Profile,
             Historial,
             Configuracion,
-            Explorar
+            Explorar,
+            logout
         },
         methods: {
             reloadActiveCategory() {

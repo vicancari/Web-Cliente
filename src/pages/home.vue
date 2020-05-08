@@ -13,7 +13,41 @@
         <div class="bodySection">
             <div class="box">
                 <h5 class="titlePromotions">Promociones</h5>
-                <carousel class="carouselEdit"
+                <carousel
+                    :paginationEnabled="false"
+                    :navigationEnabled="true"
+                    :perPageCustom="[[0, 1], [768, 2], [1024, 3], [1250, 4]]"
+                    navigationNextLabel=""
+                    navigationPrevLabel=""
+                >
+                    <slide v-for="promo in this.listPromocion" :key="promo.id">
+                       <b-card
+                        :key="promo.id"
+                        :id="promo.id"
+                        :img-src="promo.img"
+                        :img-alt="promo.title"
+                        img-top
+                        tag="article"
+                        class="mb-2 cardStyle"
+                        :data-category="promo.categoria"
+                    >
+                        <div class="body">
+                            <div class="text">
+                                <h5>{{ promo.title }}</h5>
+                                <p>{{ promo.desc }}</p>
+                            </div>
+                            <div class="price">
+                                <div class="number" v-b-tooltip.hover :title="promo.price+',00 €'">
+                                    <p>{{ promo.price }}</p>
+                                    <span>,00€</span>
+                                </div>
+                                <button class="btn"><img class="img-fluid img-shared" :src="shared" alt=""></button>
+                            </div>
+                        </div>
+                    </b-card>
+                    </slide>
+                </carousel>
+                <!-- <carousel class="carouselEdit"
                     :autoplay="false" 
                     :nav="false"
                     :dots="false"
@@ -53,7 +87,7 @@
                             <img class="img-fluid" :src="arrowNext" alt="">
                         </span>
                     </template>
-                </carousel>
+                </carousel> -->
                 <div class="row navSection">
                     <div class="col-4">
                         <button class="btn btnProductos" @click="showSectionHome(1)" v-bind:class="{ 'active': activeSection == 1, '': activeSection == 2 }">
@@ -88,7 +122,8 @@
                                     <div class="text">
                                         <h5 style="text-transform: uppercase !important;" class="title">{{ rest.name }}</h5>
                                         <p class="distancia">Distancia: {{ rest.km }} km.</p>
-                                        <button class="btn">Ir <img :src="chevRight" alt=""></button>
+               
+                                        <button class="btn" @click="restaurante()">Ir <img :src="chevRight" alt=""></button>
                                         <div v-if="rest.categorias[0].name === '#Comer'" class="star-content">
                                             <div class="row">
                                                 <div class="col-3">
@@ -171,8 +206,12 @@
 <script>
     // import config from "../config.js";
     /* Components */
+    import Vue from 'vue';
+    import VueCarousel from 'vue-carousel';
+    Vue.use(VueCarousel);
     import GoogleMapsApiLoader from "google-maps-api-loader";
-    import carousel from 'vue-owl-carousel'
+    /* import carousel from 'vue-owl-carousel' */
+    import { Carousel, Slide } from 'vue-carousel';
     import Navbar from '../components/navbar';
     /* Modals */
     import search from '../modals/search';
@@ -197,7 +236,8 @@
     export default {
         name: 'home',
         components: {
-            carousel,
+            Carousel,
+            Slide,
             Navbar,
             search
         },
@@ -246,6 +286,9 @@
             onSlideStart() {
                 this.sliding = true;
             },
+            restaurante(){
+            this.$router.push("/restaurante");
+        },
             onSlideEnd() {
                 this.sliding = false;
             },
@@ -514,6 +557,7 @@
                 });
             }
         },
+        
         async beforeMount() {
             if (this.$store.getters.isLoggedIn === false) {
                 this.$store.commit("logout");
@@ -800,5 +844,34 @@
 
     .btn.btnBack.backModal img {
         width: 70px !important;
+    }
+
+    .VueCarousel-navigation-prev{
+        background-image: url('../assets/img/icons/arrow-prev.png');
+        height: 90px;
+        padding: 0 !important;
+        width: 30px;
+        background-size: 100%;
+        background-repeat: no-repeat;
+        background-position: center center;
+        left: 10px !important;
+        outline: none;
+        @media (max-width: 767px){
+            left: 20px !important;
+        }
+    }
+    .VueCarousel-navigation-next{
+        background-image: url('../assets/img/icons/arrow-next.png');
+        height: 90px;
+        padding: 0 !important;
+        width: 30px;
+        background-size: 100%;
+        background-repeat: no-repeat;
+        background-position: center center;
+        right: 10px !important;
+        outline: none;
+        @media (max-width: 767px){
+            right: 20px !important;
+        }
     }
 </style>

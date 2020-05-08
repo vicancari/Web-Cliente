@@ -19,6 +19,7 @@
     "sass-loader": "^8.0.2",
     "v-money": "^0.8.1",
     "vue": "^2.6.11",
+    "vue-carousel": "^0.18.0",
     "vue-google-maps": "^0.1.21",
     "vue-owl-carousel": "^2.0.3",
     "vue-plugin-load-script": "^1.2.0",
