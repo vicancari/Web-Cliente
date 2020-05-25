@@ -439,6 +439,7 @@
                         }
 
                         if (_dataradio != "propio" && _dataradio != "mix") {
+                            console.log("Otras cuentas.");
                             _myAccountsKeys = Object.keys(accountActual);
                             _myAccounts = Object.values(accountActual);
                             for (var i = 0; i < _myAccounts.length; i++) {
@@ -452,8 +453,8 @@
 
                                         api.put('restaurante/send/saldo/', {idRes: _idRes, balance: sendMonto}).then(res => {
                                             if (res.msg === "OK") {
-                                                if (parseFloat(_monto) <= parseFloat(accountActual.propia.value)) {
-                                                    accountActual.propia.value = parseFloat(accountActual.propia.value) - parseFloat(_monto);
+                                                if (parseFloat(_monto) <= parseFloat(accountActual.propio.value)) {
+                                                    accountActual.propio.value = parseFloat(accountActual.propio.value) - parseFloat(_monto);
                                                 }
 
                                                 api.put('update/saldo/propia/', {id: _uid, data: accountActual}).then(res => {
