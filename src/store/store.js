@@ -25,7 +25,10 @@ export default function(/* { ssrContext } */) {
                 lat: "",
                 lng: "",
             },
-            listRestaurantes: [],
+            listRestaurantes: {
+                all: [],
+                filter: []
+            },
             listRestauranteSearchs: [],
             newRegister: {},
             user: {}
@@ -82,7 +85,10 @@ export default function(/* { ssrContext } */) {
                 state.listPropio = [];
                 state.listCategorias = [];
                 state.coords = {lat: "", lng: ""};
-                state.listRestaurantes = [];
+                state.listRestaurantes = {
+                    all: [],
+                    filter: []
+                };
                 state.listRestauranteSearchs = [];
                 state.newRegister = {};
                 state.filterCategory = {};

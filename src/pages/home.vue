@@ -47,47 +47,6 @@
                     </b-card>
                     </slide>
                 </carousel>
-                <!-- <carousel class="carouselEdit"
-                    :autoplay="false" 
-                    :nav="false"
-                    :dots="false"
-                >
-                    <b-card
-                        v-for="promo in this.listPromocion"
-                        :key="promo.id"
-                        :id="promo.id"
-                        :img-src="promo.img"
-                        :img-alt="promo.title"
-                        img-top
-                        tag="article"
-                        class="mb-2 cardStyle"
-                        :data-category="promo.categoria"
-                    >
-                        <div class="body">
-                            <div class="text">
-                                <h5>{{ promo.title }}</h5>
-                                <p>{{ promo.desc }}</p>
-                            </div>
-                            <div class="price">
-                                <div class="number" v-b-tooltip.hover :title="promo.price+',00 €'">
-                                    <p>{{ promo.price }}</p>
-                                    <span>,00€</span>
-                                </div>
-                                <button class="btn"><img class="img-fluid img-shared" :src="shared" alt=""></button>
-                            </div>
-                        </div>
-                    </b-card>
-                    <template slot="prev">
-                       <span class="prev carouselPrev">
-                           <img class="img-fluid" :src="arrowPrev" alt="">
-                       </span>
-                    </template>
-                    <template slot="next">
-                        <span class="next carouselNext">
-                            <img class="img-fluid" :src="arrowNext" alt="">
-                        </span>
-                    </template>
-                </carousel> -->
                 <div class="row navSection">
                     <div class="col-4">
                         <button class="btn btnProductos" @click="showSectionHome(1)" v-bind:class="{ 'active': activeSection == 1, '': activeSection == 2 }">
@@ -110,7 +69,7 @@
                 </div>
                 <div class="row alignHorizontal" v-if="activeSection == 2">
                     <div style="width: 100%; margin: 0;" class="row">
-                        <div v-for="rest in this.$store.getters.listRestaurantes" :key="rest.id" :id="rest.id" :aria-sort="rest.km" :data-category="rest.categorias[0].name" class="col-md-6 col-12 mb-4">
+                        <div v-for="rest in this.$store.getters.listRestaurantes.filter" :key="rest.id" :id="rest.id" :aria-sort="rest.km" :data-category="rest.categorias[0].name" class="col-md-6 col-12 mb-4">
                             <b-card
                                 :img-src="rest.photo"
                                 :img-alt="rest.name"
@@ -161,6 +120,9 @@
                                 </div>
                             </b-card>
                         </div>
+                        <!-- <div v-if="this.$store.getters.listRestaurantes.all.length === this.rts.page" class="nodata">
+                            <p class="mensaje">No se encontraron mas comercios.</p>
+                        </div> -->
                     </div>
                 </div>
                 <div class="row alignHorizontal" v-if="activeSection == 1">
@@ -196,6 +158,13 @@
                         </div>
                     </div>
                 </div>
+                
+                <span v-if="this.rts.page != 0" @click="prevComercios" class="boxArrows__btn left">
+                    <img class="img-fluid" :src="arrowPrev">
+                </span>
+                <span v-if="this.$store.getters.listRestaurantes.all.length != this.rts.page + 1" @click="nextComercios" class="boxArrows__btn right">
+                    <img class="img-fluid" :src="arrowNext">
+                </span>
             </div>
         </div>
         <!-- modals -->
@@ -263,7 +232,10 @@
                 myLng: "",
                 listPropio: [],
                 listBeneficio: [],
-                listIncentivo: []
+                listIncentivo: [],
+                rts: {
+                    page: 0
+                }
             }
         },
         async created() {
@@ -279,7 +251,7 @@
             if (this.$store.getters.isLoggedIn === true) {
                 this.getUser();
                 this.getStreetAddressFrom(ubicacion.lat, ubicacion.lon);
-                this.getRestaurantes(ubicacion.lat, ubicacion.lon);
+                this.getRestaurantes(ubicacion.lat, ubicacion.lon, this.rts.page);
             }
         },
         methods: {
@@ -287,8 +259,8 @@
                 this.sliding = true;
             },
             restaurante(){
-            this.$router.push("/restaurante");
-        },
+                this.$router.push("/restaurante");
+            },
             onSlideEnd() {
                 this.sliding = false;
             },
@@ -426,12 +398,13 @@
                     }
                 });
             },
-            async getRestaurantes(myLat, myLng) {
+            async getRestaurantes(myLat, myLng, page) {
                 await api.get(`restaurantes/list/`).then(res => {
-                    var _keys = Object.keys(res);
-                    var _values = Object.values(res);
+                    var _keys = Object.keys(res[page]);
+                    var _values = Object.values(res[page]);
 
                     var _list = [];
+
                     for (var i = 0; i < _values.length; i++) {
                         //  <= 20.000
                         if (funciones.getKilometros(myLat, myLng, _values[i].lat, _values[i].lng)) {
@@ -441,7 +414,11 @@
                                 direccion: _values[i].direction,
                                 name: _values[i].name,
                                 phone: _values[i].phone,
-                                photo: _values[i].photo ? _values[i].photo : imgDefault,
+                                photo: _values[i].photo
+                                            ? _values[i].photo.substr(_values[i].photo.length - "generic_business-71.png".length, _values[i].photo.length) === "generic_business-71.png"
+                                                ? imgDefault
+                                                : _values[i].photo
+                                            : imgDefault,
                                 rating: _values[i].rating,
                                 lat: _values[i].lat,
                                 lng: _values[i].lng,
@@ -465,10 +442,14 @@
                     });
 
                     this.$store.state.listRestauranteSearchs = _listOrderAlfabetico;
-                    this.$store.state.listRestaurantes = _list;
+                    this.$store.state.listRestaurantes.all = res;
+                    this.$store.state.listRestaurantes.filter = _list;
+                    console.log("comercios: ", this.$store.getters.listRestaurantes);
                     this.getCategorias();
-                    this.getProductos(this.$store.getters.listRestaurantes);
-                    this.getProductosPromocionados(this.$store.getters.listRestaurantes);
+                    this.getProductos(res);
+                    this.getProductosPromocionados(res);
+
+                    this.stopLoader();
 
                     setTimeout(() => {
                         var img = document.querySelectorAll(".card-img-top");
@@ -485,15 +466,17 @@
                     var _list = [];
                     res.product.forEach(el => {
                         for (var i = 0; i < comercios.length; i++) {
-                            if (el.id_restaurant === comercios[i].id) {
-                                _list.push({
-                                    id: el._id,
-                                    title: el.name,
-                                    desc: el.description,
-                                    price: el.price_with_iva,
-                                    categoria: comercios[i].categorias[0].name,
-                                    img: el.images[0] ? el.images[0].img : imgDefault
-                                });
+                            for (var y = 0; y < comercios[i].length; y++) {
+                                if (el.id_restaurant === comercios[i][y].id) {
+                                    _list.push({
+                                        id: el._id,
+                                        title: el.name,
+                                        desc: el.description,
+                                        price: el.price_with_iva,
+                                        categoria: comercios[i][y].categorias[0].name,
+                                        img: el.images[0] ? el.images[0].img : imgDefault
+                                    });
+                                }
                             }
                         }
                     });
@@ -511,16 +494,18 @@
 
                     res.forEach(el => {
                         for (var i = 0; i < comercios.length; i++) {
-                            if (el.id_restaurant === comercios[i].id) {
-                                _list.push({
-                                    id: el._id,
-                                    title: el.name,
-                                    desc: el.description,
-                                    price: el.price_with_iva,
-                                    categoria: comercios[i].categorias[0].name,
-                                    img: el.images[0] ? el.images[0].img : imgDefault,
-                                    category: el.listProductos
-                                });
+                            for (var y = 0; y < comercios[i].length; y++) {
+                                if (el.id_restaurant === comercios[i][y].id) {
+                                    _list.push({
+                                        id: el._id,
+                                        title: el.name,
+                                        desc: el.description,
+                                        price: el.price_with_iva,
+                                        categoria: comercios[i][y].categorias[0].name,
+                                        img: el.images[0] ? el.images[0].img : imgDefault,
+                                        category: el.listProductos
+                                    });
+                                }
                             }
                         }
                     });
@@ -555,6 +540,104 @@
                 }).catch(err => {
                     console.log(err);
                 });
+            },
+            nextComercios() {
+                var res = this.$store.state.listRestaurantes.all;
+                this.$store.commit("loading");
+                this.rts.page++;
+                var _keys = Object.keys(res[this.rts.page]);
+                var _values = Object.values(res[this.rts.page]);
+
+                var _list = [];
+
+                for (var i = 0; i < _values.length; i++) {
+                    //  <= 20.000
+                    if (funciones.getKilometros(this.ubiLat, this.ubiLng, _values[i].lat, _values[i].lng)) {
+                        _list.push({
+                            id: _keys[i],
+                            categorias: Object.values(_values[i].categories),
+                            direccion: _values[i].direction,
+                            name: _values[i].name,
+                            phone: _values[i].phone,
+                            photo: _values[i].photo
+                                        ? _values[i].photo.substr(_values[i].photo.length - "generic_business-71.png".length, _values[i].photo.length) === "generic_business-71.png"
+                                            ? imgDefault
+                                            : _values[i].photo
+                                        : imgDefault,
+                            rating: _values[i].rating,
+                            lat: _values[i].lat,
+                            lng: _values[i].lng,
+                            km: funciones.getKilometros(this.ubiLat, this.ubiLng, _values[i].lat, _values[i].lng)
+                        });
+                    }
+                }
+
+                var _listOrderAlfabetico = _list;
+
+                _list.sort(function(a, b){ 
+                    if (a.km < b.km) {
+                        return -1;
+                    }
+                });
+
+                _listOrderAlfabetico.sort(function(a, b){ 
+                    if (a.name < b.name) {
+                        return -1;
+                    }
+                });
+
+                this.$store.state.listRestauranteSearchs = _listOrderAlfabetico;
+                this.$store.state.listRestaurantes.filter = _list;
+                this.stopLoader();
+            },
+            prevComercios() {
+                var res = this.$store.state.listRestaurantes.all;
+                this.$store.commit("loading");
+                this.rts.page--;
+                var _keys = Object.keys(res[this.rts.page]);
+                var _values = Object.values(res[this.rts.page]);
+
+                var _list = [];
+
+                for (var i = 0; i < _values.length; i++) {
+                    //  <= 20.000
+                    if (funciones.getKilometros(this.ubiLat, this.ubiLng, _values[i].lat, _values[i].lng)) {
+                        _list.push({
+                            id: _keys[i],
+                            categorias: Object.values(_values[i].categories),
+                            direccion: _values[i].direction,
+                            name: _values[i].name,
+                            phone: _values[i].phone,
+                            photo: _values[i].photo
+                                        ? _values[i].photo.substr(_values[i].photo.length - "generic_business-71.png".length, _values[i].photo.length) === "generic_business-71.png"
+                                            ? imgDefault
+                                            : _values[i].photo
+                                        : imgDefault,
+                            rating: _values[i].rating,
+                            lat: _values[i].lat,
+                            lng: _values[i].lng,
+                            km: funciones.getKilometros(this.ubiLat, this.ubiLng, _values[i].lat, _values[i].lng)
+                        });
+                    }
+                }
+
+                var _listOrderAlfabetico = _list;
+
+                _list.sort(function(a, b){ 
+                    if (a.km < b.km) {
+                        return -1;
+                    }
+                });
+
+                _listOrderAlfabetico.sort(function(a, b){ 
+                    if (a.name < b.name) {
+                        return -1;
+                    }
+                });
+
+                this.$store.state.listRestauranteSearchs = _listOrderAlfabetico;
+                this.$store.state.listRestaurantes.filter = _list;
+                this.stopLoader();
             }
         },
         
@@ -873,5 +956,55 @@
         @media (max-width: 767px){
             right: 20px !important;
         }
+    }
+    .boxArrows__btn {
+        position: fixed;
+        top: 50%;
+        transform: translate(0, -50%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 60px;
+        height: 60px;
+        background: rgba(0,0,0,.15);
+        z-index: 100;
+        cursor: pointer;
+    }
+
+    .boxArrows__btn img {
+        display: block;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center center;
+    }
+
+    .boxArrows__btn.left {
+        left: 0;
+        padding: .5rem 0 .5rem .75rem;
+    }
+
+    .boxArrows__btn.right {
+        right: 0;
+        padding: .5rem .75rem .5rem 0;
+    }
+
+    .nodata {
+        width: 100%;
+        height: 120px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .nodata .mensaje {
+        font-size: 1.25rem;
+        text-transform: uppercase;
+        text-align: center;
+        margin: 0;
+        font-weight: bold;
+        color: rgba(0,0,0,.45);
     }
 </style>
