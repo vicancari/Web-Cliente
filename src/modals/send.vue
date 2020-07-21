@@ -9,7 +9,7 @@
                     </div>
                     <p data-error="searchRestaurante" class="msgError d-none">*msgError</p>
                     <div @click="selectRestaurante" class="boxSeach__result">
-                        <p v-for="res in this.$store.getters.listRestauranteSearchs" :key="'result_'+res.id" :id="'result_'+res.id" :data-name="res.name" :data-categoria="res.categorias[0].name" :data-subcategoria="res.categorias[0].name_subcategory" class="result">{{ res.name }}</p>
+                        <p v-for="res in this.restaurantes" :key="'result_'+res.id" :id="'result_'+res.id" :data-name="res.name" :data-categoria="res.categorias[0].name" :data-subcategoria="res.categorias[0].name_subcategory" class="result">{{ res.name }}</p>
                     </div>
                 </div>
                 <div class="priceText" @click="closeSearching">
@@ -69,7 +69,7 @@
                 myclass: ['modal-send'],
                 payment: ['modal-payment'],
                 check: config.rutaWeb(check),
-                restaurantes: this.$store.getters.listRestauranteSearchs,
+                restaurantes: [],
                 selectedRes: {},
                 pagoMix: [],
                 saldoSend: 0,
@@ -85,6 +85,26 @@
             }
         },
         methods: {
+            orderRestaurantes() {
+                api.get(`restaurantes/list/`).then(res => {
+                    var __ar = res;
+                    var ArraySearch = []
+                    for (var is = 0; is < __ar.length; is++) {
+                        for (var ys = 0; ys < __ar[is].length; ys++) {
+                            ArraySearch.push(__ar[is][ys]);
+                        }
+                    }
+
+                    var _listOrderAlfabetico = ArraySearch;
+                    _listOrderAlfabetico.sort(function(a, b){ 
+                        if (a.name < b.name) {
+                            return -1;
+                        }
+                    });
+
+                    this.restaurantes = _listOrderAlfabetico;
+                });
+            },
             openSearching() {
                 if (document.querySelector("#searchRestaurante")) {
                     if (document.querySelector("#searchRestaurante").parentNode.parentNode.classList.contains("boxSeach")) {
@@ -612,7 +632,10 @@
                 }
             },
             stopLoader() { this.$store.commit("notLoading"); },
-        }
+        },
+        mounted() {
+            this.orderRestaurantes();
+        },
     }
 </script>
 

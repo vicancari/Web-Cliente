@@ -4,14 +4,9 @@
             <div class="body">
                 <h5 class="title">Buscar <img :src="searchImg" alt=""></h5>
                 <div class="boxInput">
-                    <input type="text" class="form-control">
-                    <ul>
-                        <li>#food</li>
-                        <li>#vetegarium</li>
-                        <li>#meat</li>
-                    </ul>
+                    <input type="text" class="form-control" v-model="search">
                 </div>
-                <button class="btn btnIr">Ir</button>
+                <button type="button" class="btn btnIr" @click="searching()">Ir</button>
             </div>
         </b-modal>
     </div>
@@ -28,10 +23,16 @@
         data: function () {
             return {
                 myclass: ['modal-search'],
-                searchImg: searchImg
+                searchImg: searchImg,
+                search: ""
             }
         },
-        methods: {}
+        methods: {
+            searching() {
+                var _conv = this.search.split(" ").join("-");
+                this.$router.push(`/home/searching=${_conv}`);
+            }
+        }
     }
 </script>
 
@@ -57,16 +58,10 @@
             color: var(--blue);
             box-shadow: none;
             border-radius: 0;
+            margin-bottom: 1.5rem;
+            
             &:focus{
                 box-shadow: none;
-            }
-        }
-        ul{
-            padding: 0;
-            list-style: none;
-            li{
-                color: var(--blue);
-                padding: 3px 15px;
             }
         }
     }

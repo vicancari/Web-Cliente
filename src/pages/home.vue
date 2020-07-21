@@ -20,17 +20,17 @@
                     navigationNextLabel=""
                     navigationPrevLabel=""
                 >
-                    <slide v-for="promo in this.listPromocion" :key="promo.id">
+                    <slide v-for="promo in this.listProducto.promo" :key="promo.id">
                        <b-card
-                        :key="promo.id"
-                        :id="promo.id"
-                        :img-src="promo.img"
-                        :img-alt="promo.title"
-                        img-top
-                        tag="article"
-                        class="mb-2 cardStyle"
-                        :data-category="promo.categoria"
-                    >
+                            :key="promo.id"
+                            :id="promo.id"
+                            :img-src="promo.img"
+                            :img-alt="promo.title"
+                            img-top
+                            tag="article"
+                            class="mb-2 cardStyle"
+                            :data-category="promo.categoria"
+                        >
                         <div class="body">
                             <div class="text">
                                 <h5>{{ promo.title }}</h5>
@@ -49,41 +49,33 @@
                 </carousel>
                 <div class="row navSection">
                     <div class="col-4">
+                        <button class="btn btnRestaurantes" @click="showSectionHome(2)" v-bind:class="{ 'active': activeSection == 2, '': activeSection == 1 }">
+                            <span></span>
+                            Comercios
+                        </button>   
+                    </div>
+                    <div class="col-4">
                         <button class="btn btnProductos" @click="showSectionHome(1)" v-bind:class="{ 'active': activeSection == 1, '': activeSection == 2 }">
                             <span></span>
                             <span></span>
                             Productos
                         </button>
                     </div>
-                    <div class="col-4">
-                        <img class="img-fluid" :src="imgPin" alt="">
-                        <p id="myUbicacion"></p>
-                    </div>
-                    <div class="col-4">
-                        <!-- Comercios antes era restaurantes -->
-                        <button class="btn btnRestaurantes" @click="showSectionHome(2)" v-bind:class="{ 'active': activeSection == 2, '': activeSection == 1 }">
-                            <span></span>
-                            Comercios
-                        </button>   
-                    </div>
                 </div>
                 <div class="row alignHorizontal" v-if="activeSection == 2">
                     <div style="width: 100%; margin: 0;" class="row">
-                        <div v-for="rest in this.$store.getters.listRestaurantes.filter" :key="rest.id" :id="rest.id" :aria-sort="rest.km" :data-category="rest.categorias[0].name" class="col-md-6 col-12 mb-4">
+                        <div v-for="rest in this.$store.getters.listRestaurantes.filter" :key="rest.id" :id="rest.id" :aria-sort="rest.km" :data-category="rest.categorias[0] ? rest.categorias[0].name : ''" class="col-md-6 col-12 mb-4">
                             <b-card
                                 :img-src="rest.photo"
                                 :img-alt="rest.name"
                                 img-top
                                 tag="article"
                                 class="card-horizontal"
+                                @click="restaurante(rest.id)"
                             >
                                 <div class="body">
                                     <div class="text">
-                                        <h5 style="text-transform: uppercase !important;" class="title">{{ rest.name }}</h5>
-                                        <p class="distancia">Distancia: {{ rest.km }} km.</p>
-               
-                                        <button class="btn" @click="restaurante()">Ir <img :src="chevRight" alt=""></button>
-                                        <div v-if="rest.categorias[0].name === '#Comer'" class="star-content">
+                                        <div v-if="rest.categorias[0] ? rest.categorias[0].name : '' === '#Comer'" class="star-content">
                                             <div class="row">
                                                 <div class="col-3">
                                                     <div class="box">
@@ -115,24 +107,33 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div v-else style="width: 100%; height: 56px;"></div>
+                                        <h5 style="text-transform: uppercase !important;" class="title">{{ rest.name }}</h5>
+                                        <p class="distancia">Distancia: {{ rest.km }} km.</p>
+               
+                                        <button class="btn" @click="restaurante(rest.id)">Ir <img :src="chevRight" alt=""></button>
                                     </div>
                                 </div>
                             </b-card>
                         </div>
-                        <!-- <div v-if="this.$store.getters.listRestaurantes.all.length === this.rts.page" class="nodata">
-                            <p class="mensaje">No se encontraron mas comercios.</p>
-                        </div> -->
+                    </div>
+                    <div class="boxPaginator">
+                        <span v-if="this.rts.page != 0" @click="prevComercios" class="boxPaginator__btn left">
+                            <img class="img-fluid" :src="arrowPrev">
+                        </span>
+                        <p class="boxPaginator__page">{{ this.rts.page + 1 }} / {{ this.$store.getters.listRestaurantes.filter.length + 1 }}</p>
+                        <span v-if="this.$store.getters.listRestaurantes.filter.length != this.rts.page + 1" @click="nextComercios" class="boxPaginator__btn right">
+                            <img class="img-fluid" :src="arrowNext">
+                        </span>
                     </div>
                 </div>
                 <div class="row alignHorizontal" v-if="activeSection == 1">
                     <div style="width: 100%; margin: 0;" class="row">
                         <div
-                            v-for="prod in this.listProductos"
+                            v-for="prod in this.listProducto.filter"
                             :key="prod.id"
                             :id="prod.id"
                             class="col-12 col-sm-6 col-md-4 col-lg-3 p-0 mb-4"
-                            :data-category="prod.categoria"
+                            :data-category="prod.category"
                         >
                             <b-card
                                 :img-src="prod.img"
@@ -158,13 +159,6 @@
                         </div>
                     </div>
                 </div>
-                
-                <span v-if="this.rts.page != 0" @click="prevComercios" class="boxArrows__btn left">
-                    <img class="img-fluid" :src="arrowPrev">
-                </span>
-                <span v-if="this.$store.getters.listRestaurantes.all.length != this.rts.page + 1" @click="nextComercios" class="boxArrows__btn right">
-                    <img class="img-fluid" :src="arrowNext">
-                </span>
             </div>
         </div>
         <!-- modals -->
@@ -225,14 +219,18 @@
                 activeSection: 2,
                 listRestauranteslength: 0,
                 myUbicaion: "",
-                listPromocion: {},
-                listProductos: {},
                 google: "",
                 myLat: "",
                 myLng: "",
+                listProducto: {
+                    all: [],
+                    filter: [],
+                    promo: []
+                },
                 listPropio: [],
                 listBeneficio: [],
                 listIncentivo: [],
+                googleMapApi: "",
                 rts: {
                     page: 0
                 }
@@ -250,7 +248,7 @@
 
             if (this.$store.getters.isLoggedIn === true) {
                 this.getUser();
-                this.getStreetAddressFrom(ubicacion.lat, ubicacion.lon);
+                this.getStreetAddressFrom();
                 this.getRestaurantes(ubicacion.lat, ubicacion.lon, this.rts.page);
             }
         },
@@ -258,8 +256,8 @@
             onSlideStart() {
                 this.sliding = true;
             },
-            restaurante(){
-                this.$router.push("/restaurante");
+            restaurante(id) {
+                this.$router.push(`/restaurante/${id}`);
             },
             onSlideEnd() {
                 this.sliding = false;
@@ -383,26 +381,44 @@
                     );
                 });
             },
-            async getStreetAddressFrom(lat, long) {
+            async getStreetAddressFrom() {
                 const googleMapApi = await GoogleMapsApiLoader({
                     apiKey: this.apiKey,
                     libraries: ['places']
                 });
-                var geocoder = new googleMapApi.maps.Geocoder();
 
-                geocoder.geocode({"latLng": new googleMapApi.maps.LatLng(lat, long)}, function(results, status) {
-                    if (status === "OK") {
-                        if (document.querySelector("#myUbicacion")) {
-                            document.querySelector("#myUbicacion").innerText = results[0].formatted_address;
-                        }
-                    }
-                });
+                this.googleMapApi = googleMapApi;
             },
             async getRestaurantes(myLat, myLng, page) {
+                const limit = 20;
                 await api.get(`restaurantes/list/`).then(res => {
-                    var _keys = Object.keys(res[page]);
-                    var _values = Object.values(res[page]);
+                    var array = [];
+                    var array2 = [];
+                    var _pArray = [];
+                    var _pArray2 = [];
 
+                    var _values = Object.values(res);
+                    _values.forEach(item => {
+                        array.push(item);
+                    });
+
+                    for (let val = 0; val < array.length; val += limit) {
+                        let pedazo = array.slice(val, val + limit);
+                        _pArray.push(pedazo);
+                    }
+
+                    var _keys = Object.keys(res);
+                    _keys.forEach(item2 => {
+                        array2.push(item2);
+                    });
+                    
+                    for (let key = 0; key < array2.length; key += limit) {
+                        let pedazo = array2.slice(key, key + limit);
+                        _pArray2.push(pedazo);
+                    }
+
+                    _keys = _pArray2[page];
+                    _values = _pArray[page];
                     var _list = [];
 
                     for (var i = 0; i < _values.length; i++) {
@@ -427,27 +443,20 @@
                         }
                     }
 
-                    var _listOrderAlfabetico = _list;
-
                     _list.sort(function(a, b){ 
                         if (a.km < b.km) {
                             return -1;
                         }
                     });
 
-                    _listOrderAlfabetico.sort(function(a, b){ 
-                        if (a.name < b.name) {
-                            return -1;
-                        }
-                    });
+                    
 
-                    this.$store.state.listRestauranteSearchs = _listOrderAlfabetico;
-                    this.$store.state.listRestaurantes.all = res;
+                    this.$store.state.listRestaurantes.ids = _pArray2;
+                    this.$store.state.listRestaurantes.all = _pArray;
                     this.$store.state.listRestaurantes.filter = _list;
-                    console.log("comercios: ", this.$store.getters.listRestaurantes);
                     this.getCategorias();
-                    this.getProductos(res);
-                    this.getProductosPromocionados(res);
+                    this.getProductos(Object.keys(res));
+                    this.getProductosPromocionados(Object.keys(res));
 
                     this.stopLoader();
 
@@ -466,23 +475,19 @@
                     var _list = [];
                     res.product.forEach(el => {
                         for (var i = 0; i < comercios.length; i++) {
-                            for (var y = 0; y < comercios[i].length; y++) {
-                                if (el.id_restaurant === comercios[i][y].id) {
-                                    _list.push({
-                                        id: el._id,
-                                        title: el.name,
-                                        desc: el.description,
-                                        price: el.price_with_iva,
-                                        categoria: comercios[i][y].categorias[0].name,
-                                        img: el.images[0] ? el.images[0].img : imgDefault
-                                    });
-                                }
+                            if (el.id_restaurant === comercios[i]) {
+                                _list.push({
+                                    id: el._id,
+                                    title: el.name,
+                                    desc: el.description,
+                                    price: el.price_with_iva,
+                                    img: el.images[0] ? el.images[0].img : imgDefault
+                                });
                             }
                         }
                     });
 
-                    this.listPromocion = _list;
-
+                    this.listProducto.promo = _list;
                     this.stopLoader();
                 }).catch(err => {
                     console.log(err);
@@ -491,26 +496,23 @@
             async getProductos(comercios) {
                 await api.get(`products/`).then(res => {
                     var _list = [];
-
                     res.forEach(el => {
                         for (var i = 0; i < comercios.length; i++) {
-                            for (var y = 0; y < comercios[i].length; y++) {
-                                if (el.id_restaurant === comercios[i][y].id) {
-                                    _list.push({
-                                        id: el._id,
-                                        title: el.name,
-                                        desc: el.description,
-                                        price: el.price_with_iva,
-                                        categoria: comercios[i][y].categorias[0].name,
-                                        img: el.images[0] ? el.images[0].img : imgDefault,
-                                        category: el.listProductos
-                                    });
-                                }
+                            if (el.id_restaurant === comercios[i]) {
+                                _list.push({
+                                    id: el._id,
+                                    title: el.name,
+                                    desc: el.description,
+                                    price: el.price_with_iva,
+                                    img: el.images[0] ? el.images[0].img : imgDefault,
+                                    category: el.listProductos
+                                });
                             }
                         }
                     });
 
-                    this.listProductos = _list;
+                    this.listProducto.all = _list;
+                    this.listProducto.filter = _list;
                 }).catch(err => {
                     console.log(err);
                 });
@@ -542,11 +544,11 @@
                 });
             },
             nextComercios() {
-                var res = this.$store.state.listRestaurantes.all;
+                var res = this.$store.getters.listRestaurantes;
                 this.$store.commit("loading");
                 this.rts.page++;
-                var _keys = Object.keys(res[this.rts.page]);
-                var _values = Object.values(res[this.rts.page]);
+                var _keys = res.ids[this.rts.page];
+                var _values = res.all[this.rts.page];
 
                 var _list = [];
 
@@ -591,11 +593,11 @@
                 this.stopLoader();
             },
             prevComercios() {
-                var res = this.$store.state.listRestaurantes.all;
+                var res = this.$store.getters.listRestaurantes;
                 this.$store.commit("loading");
                 this.rts.page--;
-                var _keys = Object.keys(res[this.rts.page]);
-                var _values = Object.values(res[this.rts.page]);
+                var _keys = res.ids[this.rts.page];
+                var _values = res.all[this.rts.page];
 
                 var _list = [];
 
@@ -1006,5 +1008,48 @@
         margin: 0;
         font-weight: bold;
         color: rgba(0,0,0,.45);
+    }
+
+    .boxPaginator {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: max-content;
+
+        &__btn {
+            width: 30px;
+            height: 30px;
+            background: #fff;
+            cursor: pointer;
+            
+            img {
+                display: block;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                object-fit: contain;
+                object-position: center center;
+            }
+        }
+
+        &__page {
+            display: block;
+            width: max-content;
+            height: max-content;
+            padding: .5rem 1rem;
+            margin: 0 .5rem;
+            background: #eee;
+            border: 2px solid var(--bluePrimary);
+            color: var(--bluePrimary);
+            font-weight: bold;
+            user-select: none;
+        }
+    }
+
+    .VueCarousel-navigation-button {
+        outline: none !important;
     }
 </style>

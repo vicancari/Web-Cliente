@@ -1,29 +1,28 @@
 <template>
     <div>
         <div class="row navbar">
-            <div class="col-md-4 col-6 order">
+            <div class="col-md-4 col-4 order">
                <div class="d-flex saldo">
                    <img class="img-fluid logo" :src="image" alt="">
                    <p>Saldo:</p>
                    <span id="myBalance">{{ this.$store.getters.myBalance }}€</span>
                 </div> 
             </div>
-            <div class="col-md-4 col-12 order">
+            <div class="col-md-4 col-4 order">
                 <div class="d-flex justify-content-center align-items-center menu">
                     <h5 v-b-modal.modalLogout>{{ this.$store.getters.user.name }} {{ this.$store.getters.user.lastname }}</h5>
-                    <button class="btn"  v-b-modal.menu-modal> <i class="fas fa-bars"></i></button>
+                    <button class="btn"  v-b-modal.menu-modal style="padding-right: 0;"><i class="fas fa-bars"></i></button>
                 </div>
             </div>
-            <div class="col-md-4 col-6 order">
+            <div class="col-md-4 col-4 order">
                 <div class="botonera">
                     <button class="btn"><img class="img-fluid" :src="notification" alt=""></button>
                     <button class="btn"><img class="img-fluid" :src="message" alt=""></button>
-                    <button class="btn"><img class="img-fluid" :src="raus" alt=""></button>
                     <button class="btn" v-b-modal.modal-explorar @click="reloadActiveCategory"><img class="img-fluid" :src="timeline" alt=""></button>
                 </div>
             </div>
         </div>
-        <button class="btn NavBtnSend" v-b-modal.modal-send>
+        <button disabled class="btn NavBtnSend" v-b-modal.modal-send>
            <!--  <i class="fas fa-caret-right"></i><br> -->
            <img :src="caretRight" alt="">
             Enviar
@@ -52,7 +51,6 @@
     import notification from "../assets/img/notification.png";
     import message from "../assets/img/message.png";
     import timeline from "../assets/img/timeline.png";
-    import raus from "../assets/img/raus.png";
     import caretRight from "../assets/img/caret-right.png";
     /* Components */
     import Menu from '../modals/menu';
@@ -78,7 +76,6 @@
                 image: image,
                 notification: notification,
                 message: message,
-                raus: raus,
                 timeline: timeline,
                 caretRight: caretRight
             }

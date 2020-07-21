@@ -26,10 +26,10 @@ export default function(/* { ssrContext } */) {
                 lng: "",
             },
             listRestaurantes: {
+                ids: [],
                 all: [],
                 filter: []
             },
-            listRestauranteSearchs: [],
             newRegister: {},
             user: {}
         },
@@ -48,7 +48,6 @@ export default function(/* { ssrContext } */) {
             balancePropio: state => state.balancePropio,
             listPropio: state => state.listPropio,
             listRestaurantes: state => state.listRestaurantes,
-            listRestauranteSearchs: state => state.listRestauranteSearchs,
             listCategorias: state => state.listCategorias,
             filterCategory: state => state.filterCategory,
             coords: state => state.coords,
@@ -86,10 +85,10 @@ export default function(/* { ssrContext } */) {
                 state.listCategorias = [];
                 state.coords = {lat: "", lng: ""};
                 state.listRestaurantes = {
+                    ids: [],
                     all: [],
                     filter: []
                 };
-                state.listRestauranteSearchs = [];
                 state.newRegister = {};
                 state.filterCategory = {};
                 state.user = {};
