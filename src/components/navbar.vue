@@ -22,7 +22,7 @@
                 </div>
             </div>
         </div>
-        <button disabled class="btn NavBtnSend" v-b-modal.modal-send>
+        <button class="btn NavBtnSend" v-b-modal.modal-send>
            <!--  <i class="fas fa-caret-right"></i><br> -->
            <img :src="caretRight" alt="">
             Enviar

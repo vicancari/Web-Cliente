@@ -151,13 +151,13 @@
                                 </div>
                                 <div class="carac">
                                     <div class="info">
-                                        <div class="box">
+                                        <div v-if="prod.data.ingredients" class="box">
                                             <p class="title">Ingredientes:</p>
                                             <b-list-group>
                                                 <b-list-group-item v-for="(ingreProd, i) in prod.data.ingredients" :key="i">{{ ingreProd.name }}</b-list-group-item>
                                             </b-list-group>
                                         </div>
-                                        <div class="box">
+                                        <div v-if="prod.data.no_ingredients" class="box">
                                             <p class="title">Alergenos:</p>
                                             <b-list-group>
                                                 <b-list-group-item v-for="(noingreProd, i) in prod.data.no_ingredients" :key="i" class="d-flex justify-content-between align-items-center">{{ noingreProd.name }}</b-list-group-item>

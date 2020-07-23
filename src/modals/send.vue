@@ -9,7 +9,7 @@
                     </div>
                     <p data-error="searchRestaurante" class="msgError d-none">*msgError</p>
                     <div @click="selectRestaurante" class="boxSeach__result">
-                        <p v-for="res in this.restaurantes" :key="'result_'+res.id" :id="'result_'+res.id" :data-name="res.name" :data-categoria="res.categorias[0].name" :data-subcategoria="res.categorias[0].name_subcategory" class="result">{{ res.name }}</p>
+                        <p v-for="res in this.listRestSearch.filters" :key="'result_'+res.id" :id="'result_'+res.id" :data-name="res.name" :data-categoria="res.categoria" :data-subcategoria="res.subcategoria" class="result">{{ res.name }}</p>
                     </div>
                 </div>
                 <div class="priceText" @click="closeSearching">
@@ -58,7 +58,7 @@
     import config from "../config.js";
     import check from '../assets/img/icons/check-blanco.svg';
     import api from "../api.js";
-    // import funciones from "../funciones.js";
+    import funciones from "../funciones.js";
 
     export default {
         name: 'send',
@@ -81,29 +81,50 @@
                     thousands: '.',
                     precision: 2,
                     masked: true
+                },
+                listRestSearch: {
+                    val: this.$store.getters.listRestaurantes.all,
+                    key: this.$store.getters.listRestaurantes.ids,
+                    filters: []
                 }
             }
         },
+        created() {
+            this.orderRestaurantes();
+        },
         methods: {
-            orderRestaurantes() {
-                api.get(`restaurantes/list/`).then(res => {
-                    var __ar = res;
-                    var ArraySearch = []
-                    for (var is = 0; is < __ar.length; is++) {
-                        for (var ys = 0; ys < __ar[is].length; ys++) {
-                            ArraySearch.push(__ar[is][ys]);
+            orderRestaurantes(myLat, myLng) {
+                var _keys = this.listRestSearch.key;
+                var _values = this.listRestSearch.val;
+                var _list = [];
+
+                for (var i = 0; i < _values.length; i++) {
+                    //  <= 20.000
+                    for (var y = 0; y < _values[i].length; y++) {
+                        if (funciones.getKilometros(myLat, myLng, _values[i][y].lat, _values[i][y].lng)) {
+                            _list.push({
+                                id: _keys[i][y],
+                                categoria: Object.values(_values[i][y].categories)[0].name,
+                                subcategoria: Object.values(_values[i][y].categories)[0].name_subcategory,
+                                direccion: _values[i][y].direction,
+                                name: _values[i][y].name,
+                                phone: _values[i][y].phone,
+                                rating: _values[i][y].rating,
+                                lat: _values[i][y].lat,
+                                lng: _values[i][y].lng,
+                                km: funciones.getKilometros(myLat, myLng, _values[i][y].lat, _values[i][y].lng)
+                            });
                         }
                     }
+                }
 
-                    var _listOrderAlfabetico = ArraySearch;
-                    _listOrderAlfabetico.sort(function(a, b){ 
-                        if (a.name < b.name) {
-                            return -1;
-                        }
-                    });
-
-                    this.restaurantes = _listOrderAlfabetico;
+                _list.sort(function(a, b){ 
+                    if (a.name < b.name) {
+                        return -1;
+                    }
                 });
+
+                this.listRestSearch.filters = _list;
             },
             openSearching() {
                 if (document.querySelector("#searchRestaurante")) {
@@ -710,10 +731,12 @@
             background: #fff;
             z-index: 100;
             height: max-content;
+            max-height: 292px;
             padding: 0;
             border-bottom-left-radius: 5px;
             border-bottom-right-radius: 5px;
             overflow: hidden;
+            overflow-y: auto;
 
             p.result {
                 display: block;

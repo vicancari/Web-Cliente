@@ -22,75 +22,31 @@
                         Egresos
                         <img class="img-fluid" :src="arrow">
                     </v-button>
-                    <b-collapse id="collapseEgresos" visible accordion="my-accordion">
+                    <b-collapse id="collapseEgresos" accordion="collapseEgresos">
                         <div class="filter">
                             <button class="btn semana">Esta semana</button>
                             <button class="btn mes">Este mes</button>
                            <input type="date" class="date form-contrl">
                         </div>
                         <div class="scroll">
-                            <div class="boxcontent">
-                                <v-button block class="btn title" v-b-toggle.articleEgresos >
-                                    Pizza Free
+                            <div v-for="(egre, i) in listTransacciones.e" :key="i" class="boxcontent">
+                                <v-button v-if="egre.typeTransaccion === 'envio'" block class="btn title" v-b-toggle="egre._id">
+                                    {{ getComercio(egre.comercio != undefined ? egre.comercio.id : egre.id_comercio != undefined ? egre.id_comercio : 'Envio') }}
                                     <img class="img-fluid" :src="arrow">
                                 </v-button>
-                                <b-collapse id="articleEgresos" accordion="articleEgresos">
+                                <b-collapse :id="egre._id" :accordion="egre._id">
                                     <ul>
-                                        <li>
-                                            Id de operación: 59649
+                                        <li v-if="egre.typeTransaccion === 'envio'">
+                                            Tipo de transacción: {{ egre.typeTransaccion }}
                                         </li>
                                         <li>
-                                            Monto: 19,00€ 
+                                            Id de operación: {{ egre.key }}
                                         </li>
                                         <li>
-                                            Fecha: 25/09/2019 Hora: 13:30
+                                            Monto: {{ egre.price }}€ 
                                         </li>
                                         <li>
-                                            Origen: Mediaset
-                                        </li>
-                                    </ul>
-                                </b-collapse>     
-                            </div>
-                            <div class="boxcontent">
-                                <v-button block class="btn title" v-b-toggle.articleEgresos2 >
-                                    Teresa Carles
-                                    <img class="img-fluid" :src="arrow">
-                                </v-button>
-                                <b-collapse id="articleEgresos2" accordion="articleEgresos2">
-                                    <ul>
-                                        <li>
-                                            Id de operación: 59649
-                                        </li>
-                                        <li>
-                                            Monto: 19,00€ 
-                                        </li>
-                                        <li>
-                                            Fecha: 25/09/2019 Hora: 13:30
-                                        </li>
-                                        <li>
-                                            Origen: Mediaset
-                                        </li>
-                                    </ul>
-                                </b-collapse>     
-                            </div>
-                            <div class="boxcontent">
-                                <v-button block class="btn title" v-b-toggle.articleEgresos3 >
-                                    Onbo Sushi
-                                    <img class="img-fluid" :src="arrow">
-                                </v-button>
-                                <b-collapse id="articleEgresos3" accordion="articleEgresos3">
-                                    <ul>
-                                        <li>
-                                            Id de operación: 59649
-                                        </li>
-                                        <li>
-                                            Monto: 19,00€ 
-                                        </li>
-                                        <li>
-                                            Fecha: 25/09/2019 Hora: 13:30
-                                        </li>
-                                        <li>
-                                            Origen: Mediaset
+                                            Fecha: {{ egre.date }} Hora: {{ egre.time }}
                                         </li>
                                     </ul>
                                 </b-collapse>     
@@ -105,82 +61,42 @@
                             </button>
                         </div>
                     </b-collapse>
-                     <v-button block class="btn btnHeader" v-b-toggle.collapseingresos >
+                    <v-button block class="btn btnHeader" v-b-toggle.collapseingresos >
                         Ingresos
                         <img class="img-fluid" :src="arrow">
                     </v-button>
-                    <b-collapse id="collapseingresos" accordion="my-accordion2">
+                    <b-collapse id="collapseingresos" accordion="collapseingresos">
                         <div class="filter">
                             <button class="btn semana">Esta semana</button>
                             <button class="btn mes">Este mes</button>
                            <input type="date" class="date form-contrl">
                         </div>
                         <div class="scroll">
-                            <div class="boxcontent">
-                                    <v-button block class="btn title" v-b-toggle.articleIngresos >
-                                        Pizza Free
-                                        <img class="img-fluid" :src="arrow">
-                                    </v-button>
-                                    <b-collapse id="articleIngresos" accordion="articleIngresos">
-                                        <ul>
-                                            <li>
-                                                Id de operación: 59649
-                                            </li>
-                                            <li>
-                                                Monto: 19,00€ 
-                                            </li>
-                                            <li>
-                                                Fecha: 25/09/2019 Hora: 13:30
-                                            </li>
-                                            <li>
-                                                Origen: Mediaset
-                                            </li>
-                                        </ul>
-                                    </b-collapse>     
-                            </div>
-                                <div class="boxcontent">
-                                    <v-button block class="btn title" v-b-toggle.articleIngresos2 >
-                                        Teresa Carles
-                                        <img class="img-fluid" :src="arrow">
-                                    </v-button>
-                                    <b-collapse id="articleIngresos2" accordion="articleIngresos2">
-                                        <ul>
-                                            <li>
-                                                Id de operación: 59649
-                                            </li>
-                                            <li>
-                                                Monto: 19,00€ 
-                                            </li>
-                                            <li>
-                                                Fecha: 25/09/2019 Hora: 13:30
-                                            </li>
-                                            <li>
-                                                Origen: Mediaset
-                                            </li>
-                                        </ul>
-                                    </b-collapse>     
-                            </div>
-                                <div class="boxcontent">
-                                    <v-button block class="btn title" v-b-toggle.articleIngresos3 >
-                                        Onbo Sushi
-                                        <img class="img-fluid" :src="arrow">
-                                    </v-button>
-                                    <b-collapse id="articleIngresos3" accordion="articleIngresos3">
-                                        <ul>
-                                            <li>
-                                                Id de operación: 59649
-                                            </li>
-                                            <li>
-                                                Monto: 19,00€ 
-                                            </li>
-                                            <li>
-                                                Fecha: 25/09/2019 Hora: 13:30
-                                            </li>
-                                            <li>
-                                                Origen: Mediaset
-                                            </li>
-                                        </ul>
-                                    </b-collapse>     
+                            <div v-for="(ingre, i) in listTransacciones.i" :key="i" class="boxcontent">
+                                <v-button v-if="ingre.typeTransaccion === 'envio'" block class="btn title" v-b-toggle="ingre._id" >
+                                    {{ getComercio(ingre.comercio != undefined ? ingre.comercio.id : ingre.id_comercio != undefined ? ingre.id_comercio : 'Envio') }}
+                                    <img class="img-fluid" :src="arrow">
+                                </v-button>
+                                <v-button v-if="ingre.typeTransaccion === 'recarga-saldo'" block class="btn title" v-b-toggle="ingre._id" >
+                                    Recarga saldo
+                                    <img class="img-fluid" :src="arrow">
+                                </v-button>
+                                <b-collapse :id="ingre._id" :accordion="ingre._id">
+                                    <ul>
+                                        <li v-if="ingre.typeTransaccion === 'envio'">
+                                            Tipo de transacción: {{ ingre.typeTransaccion }}
+                                        </li>
+                                        <li>
+                                            Id de operación: {{ ingre.key }}
+                                        </li>
+                                        <li>
+                                            Monto: {{ ingre.price }}€ 
+                                        </li>
+                                        <li>
+                                            Fecha: {{ ingre.date }} Hora: {{ ingre.time }}
+                                        </li>
+                                    </ul>
+                                </b-collapse>     
                             </div>
                         </div>
                         <div class="boxBtn">
@@ -206,6 +122,8 @@
     import compartir from '../assets/img/icons/compartir.svg';
     import descargar from '../assets/img/icons/icondescargar.svg';
 
+    import api from '../api.js';
+
     export default {
         name: 'historial',
         components: {},
@@ -216,10 +134,65 @@
                 back: config.rutaWeb(back),
                 arrow: arrow,
                 compartir: config.rutaWeb(compartir),
-                descargar: config.rutaWeb(descargar)
+                descargar: config.rutaWeb(descargar),
+                error: "",
+                Uid: this.$store.getters.user.key,
+                listTransacciones: {
+                    i: [],
+                    e: []
+                }
             }
         },
-        methods: {}
+        async created() {
+            await api.get('transactions/list/all').then(res => {
+                res.forEach(item => {
+                    if (item.usuario != undefined) {
+                        if (this.Uid === item.usuario.uid) {
+                            if (item.mode.toLowerCase() === "ingreso") {
+                                this.listTransacciones.i.push(item);
+                            }
+        
+                            if (item.mode.toLowerCase() === "egreso") {
+                                this.listTransacciones.e.push(item);
+                            }
+                        }
+                    }
+                });
+
+                this.listTransacciones.i.sort(function(a, b){ 
+                    if (a.date && a.time < b.date && b.time) {
+                        return -1;
+                    }
+                });
+
+                this.listTransacciones.e.sort(function(a, b){ 
+                    if (a.date && a.time < b.date && b.time) {
+                        return -1;
+                    }
+                });
+
+                console.log("Historial -> ", this.listTransacciones);
+            }).catch(err => {
+                this.error = err;
+            });
+        },
+        methods: {
+            getComercio(id_comercio) {
+                let _name = "";
+                let _keys = this.$store.getters.listRestaurantes.ids;
+                let _values = this.$store.getters.listRestaurantes.all;
+
+                for (var i = 0; i < _values.length; i++) {
+                    for (var y = 0; y < _values[i].length; y++) {
+                        if (id_comercio === _keys[i][y]) {
+                            _name = _values[i][y].business_name;
+                        }
+                    }
+                }
+
+                return _name;
+            }
+        }
     }
 </script>
 
@@ -313,10 +286,10 @@
             }
         }
         .scroll{
-                max-height: 300px;
-                overflow-y: auto;
-                margin: 0 -30px;
-                padding: 0 30px;
+            overflow-y: hidden;
+            margin: 0 -30px;
+            padding: 0 30px;
+            max-height: max-content;
             .boxcontent{
                 border: 1px solid var(--bluePrimary);
                 border-bottom: 0;

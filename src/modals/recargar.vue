@@ -140,6 +140,17 @@
                     thousands: '.',
                     precision: 2,
                     masked: false
+                },
+                tranRecarga: {
+                    price: "",
+                    typeTransaccion: "recarga-saldo",
+                    mode: "ingreso",
+                    typeAccount: "",
+                    nameAccount: "",
+                    name: this.$store.getters.user.name + " " + this.$store.getters.user.lastname,
+                    uid: this.$store.getters.user.key,
+                    phone: this.$store.getters.user.phone,
+                    nameapp: "web-personas",
                 }
             }
         },
@@ -181,9 +192,19 @@
                 if (_uid != "" || _uid != null || _uid != undefined) {
                     this.$store.commit("loading");
                     api.put('update/saldo/propia/', {id: _uid, data: accountActual}).then(res => {
-                        console.log(res);
-                        document.querySelector("#recargaExitosa").click();
-                        this.stopLoader();
+                        this.tranRecarga.price = miSaldo;
+                        this.tranRecarga.typeAccount = accountActual.propio.type;
+                        this.tranRecarga.nameAccount = accountActual.propio.name;
+                        console.log("Update saldo -> ", res);
+                        console.log("trans -> ", this.tranRecarga);
+
+                        api.post('transactions/add', this.tranRecarga).then(res => {
+                            console.log("Transaction -> ", res);
+                            document.querySelector("#recargaExitosa").click();
+                            this.stopLoader();
+                        }).catch(err => {
+                            console.log(err);
+                        });
                     }).catch(err => {
                         console.log(err);
                     });

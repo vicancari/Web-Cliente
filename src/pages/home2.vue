@@ -5,7 +5,10 @@
             <router-link to="/home" class="btn backbutton">
                 <img class="img-fluid" :src="back" alt="">
             </router-link>
-            <h5>Buscando: {{ this.searching }}</h5>
+            <div class="boxSearch">
+                <input id="searching" type="text" class="boxSearch__input" :value="this.searching" placeholder="Buscar" @keypress.enter="search()">
+                <button type="button" class="boxSearch__btn" @click="search()"><img :src="searchImg" :alt="'buscar_'+this.searching"></button>
+            </div>
         </div>
         <div class="bodySection">
             <div class="box">
@@ -145,6 +148,15 @@
             restaurante(id) {
                 this.$router.push(`/restaurante/${id}`);
             },
+            search() {
+                this.listRest = [];
+                var _input = document.querySelector("#searching").value;
+                window.location = window.location.hash.replace(this.searching.split(" ").join("-"), _input.split(" ").join("-"));
+                this.searching = _input;
+                var _conv = _input.split(" ").join("-");
+                this.$router.currentRoute.params.search = _conv;
+                this.getRestaurantes(this.ubiLat, this.ubiLng);
+            },
             async geo() {
                 return new Promise((resolve, reject) => {
                     navigator.geolocation.getCurrentPosition(
@@ -165,8 +177,6 @@
                 var _keys = this.$store.getters.listRestaurantes.ids;
                 var _values = this.$store.getters.listRestaurantes.all;
                 var _list = [];
-
-                console.log(_values);
 
                 for (var i = 0; i < _values.length; i++) {
                     //  <= 20.000
@@ -190,26 +200,6 @@
                                     km: funciones.getKilometros(myLat, myLng, _values[i][y].lat, _values[i][y].lng)
                                 });
                             }
-
-                            // if (_values[i][y].business_name.toLowerCase() === this.searching.toLowerCase()) {
-                            //     _list = [{
-                            //         id: _keys[i][y],
-                            //         categorias: Object.values(_values[i][y].categories),
-                            //         direccion: _values[i][y].direction,
-                            //         name: _values[i][y].name,
-                            //         phone: _values[i][y].phone,
-                            //         photo: _values[i][y].photo
-                            //                     ? _values[i][y].photo.substr(_values[i][y].photo.length - "generic_business-71.png".length, _values[i][y].photo.length) === "generic_business-71.png"
-                            //                         ? imgDefault
-                            //                         : _values[i][y].photo
-                            //                     : imgDefault,
-                            //         rating: _values[i][y].rating,
-                            //         lat: _values[i][y].lat,
-                            //         lng: _values[i][y].lng,
-                            //         km: funciones.getKilometros(myLat, myLng, _values[i][y].lat, _values[i][y].lng)
-                            //     }];
-                            //     return false;
-                            // }
                         }
                     }
                 }
@@ -668,5 +658,52 @@
 
     .VueCarousel-navigation-button {
         outline: none !important;
+    }
+
+    .boxSearch {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        width: 100%;
+        height: max-content;
+        margin: 0;
+        padding: 0;
+
+        &__input {
+            display: block;
+            width: 200px;
+            height: 40px;
+            line-height: 40px;
+            padding: 0;
+            background: #fff;
+            border: 0;
+            border-bottom: 1px solid #888;
+            box-shadow: none;
+            outline: none;
+            border-radius: 0;
+        }
+
+        &__btn {
+            width: 40px;
+            height: 40px;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            border-radius: 0;
+            background: transparent;
+            margin: 0 0 0 .5rem;
+            cursor: pointer;
+
+            img {
+                display: block;
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                object-position: center center;
+                outline: none !important;
+            }
+        }
     }
 </style>

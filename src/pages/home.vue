@@ -449,8 +449,6 @@
                         }
                     });
 
-                    
-
                     this.$store.state.listRestaurantes.ids = _pArray2;
                     this.$store.state.listRestaurantes.all = _pArray;
                     this.$store.state.listRestaurantes.filter = _list;
@@ -652,7 +650,7 @@
         },
         mounted() {
             this.$store.commit("loading");
-            console.log(this.$store.getters);
+            console.log("Store -> ", this.$store.getters);
         }
     }
 </script>
