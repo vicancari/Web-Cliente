@@ -95,6 +95,9 @@
                                         <li>
                                             Fecha: {{ ingre.date }} Hora: {{ ingre.time }}
                                         </li>
+                                        <li v-if="ingre.typeTransaccion === 'recarga-saldo'">
+                                            Enviado a: {{ ingre.nameAccount }}
+                                        </li>
                                     </ul>
                                 </b-collapse>     
                             </div>
@@ -121,6 +124,7 @@
     import arrow from '../assets/img/arrow-down.png';
     import compartir from '../assets/img/icons/compartir.svg';
     import descargar from '../assets/img/icons/icondescargar.svg';
+    import { EventBus } from '../main.js';
 
     import api from '../api.js';
 
@@ -136,7 +140,6 @@
                 compartir: config.rutaWeb(compartir),
                 descargar: config.rutaWeb(descargar),
                 error: "",
-                Uid: this.$store.getters.user.key,
                 listTransacciones: {
                     i: [],
                     e: []
@@ -144,48 +147,70 @@
             }
         },
         async created() {
-            await api.get('transactions/list/all').then(res => {
-                res.forEach(item => {
-                    if (item.usuario != undefined) {
-                        if (this.Uid === item.usuario.uid) {
-                            if (item.mode.toLowerCase() === "ingreso") {
-                                this.listTransacciones.i.push(item);
+            if (this.$store.getters.isLoggedIn === true) {
+                if (this.$store.getters.uid != "" || this.$store.getters.uid != null || this.$store.getters.uid != undefined) {
+                    var Uid = this.$store.getters.uid;
+                    await api.get('transactions/list/all').then(res => {
+                        res.forEach(item => {
+                            if (item.usuario != undefined) {
+                                if (Uid === item.usuario.uid) {
+                                    if (item.mode.toLowerCase() === "ingreso") {
+                                        this.listTransacciones.i.push(item);
+                                    }
+                
+                                    if (item.mode.toLowerCase() === "egreso") {
+                                        this.listTransacciones.e.push(item);
+                                    }
+                                }
                             }
+                        });
         
-                            if (item.mode.toLowerCase() === "egreso") {
-                                this.listTransacciones.e.push(item);
+                        this.listTransacciones.i.sort(function(a, b){ 
+                            if (a.date && a.time < b.date && b.time) {
+                                return -1;
                             }
-                        }
-                    }
-                });
-
-                this.listTransacciones.i.sort(function(a, b){ 
-                    if (a.date && a.time < b.date && b.time) {
-                        return -1;
-                    }
-                });
-
-                this.listTransacciones.e.sort(function(a, b){ 
-                    if (a.date && a.time < b.date && b.time) {
-                        return -1;
-                    }
-                });
-
-                console.log("Historial -> ", this.listTransacciones);
-            }).catch(err => {
-                this.error = err;
-            });
+                        });
+        
+                        this.listTransacciones.e.sort(function(a, b){ 
+                            if (a.date && a.time < b.date && b.time) {
+                                return -1;
+                            }
+                        });
+        
+                        console.log("Historial -> ", this.listTransacciones);
+                    }).catch(err => {
+                        this.error = err;
+                    });
+        
+                    EventBus.$on('IngresoReady', (data) => {
+                        this.listTransacciones.i.push(data);
+                        this.listTransacciones.i.sort(function(a, b) {
+                            if (a.date && a.time < b.date && b.time) {
+                                return -1;
+                            }
+                        });
+                    });
+        
+                    EventBus.$on('EgresoReady', (data) => {
+                        this.listTransacciones.e.push(data);
+                        this.listTransacciones.e.sort(function(a, b) {
+                            if (a.date && a.time < b.date && b.time) {
+                                return -1;
+                            }
+                        });
+                    });
+                }
+            }
         },
         methods: {
             getComercio(id_comercio) {
                 let _name = "";
-                let _keys = this.$store.getters.listRestaurantes.ids;
                 let _values = this.$store.getters.listRestaurantes.all;
 
                 for (var i = 0; i < _values.length; i++) {
                     for (var y = 0; y < _values[i].length; y++) {
-                        if (id_comercio === _keys[i][y]) {
-                            _name = _values[i][y].business_name;
+                        if (id_comercio === _values[i][y].key) {
+                            _name = _values[i][y].data.business_name;
                         }
                     }
                 }

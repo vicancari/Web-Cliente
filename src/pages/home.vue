@@ -193,6 +193,8 @@
     import axios from "axios";
     import * as firebase from "firebase";
     import funciones from "../funciones.js";
+    import socket from "../socket.js";
+    import { EventBus } from "../main.js";
 
     // var Jquery = require("jquery");
 
@@ -231,6 +233,7 @@
                 listBeneficio: [],
                 listIncentivo: [],
                 googleMapApi: "",
+                distancia: "",
                 rts: {
                     page: 0
                 }
@@ -241,15 +244,21 @@
             this.ubiLat = ubicacion.lat;
             this.ubiLng = ubicacion.lon;
 
-            this.$store.state.coords = {
-                lat: ubicacion.lat,
-                lng: ubicacion.lon
-            }
+            // -> Santa marta COLOMBIA.
+            // this.ubiLat = 11.24722;
+            // this.ubiLng = -74.20167;
+            // this.distancia = 20.000;
+
+            // -> Madrid ESPAÑA.
+            this.ubiLat = 40.4893538;
+            this.ubiLng = -3.6827461;
+            this.distancia = false;
 
             if (this.$store.getters.isLoggedIn === true) {
-                this.getUser();
-                this.getStreetAddressFrom();
-                this.getRestaurantes(ubicacion.lat, ubicacion.lon, this.rts.page);
+                await this.getUser();
+                await socket.Iniciar();
+                await this.getStreetAddressFrom();
+                await this.getRestaurantes(this.ubiLat, this.ubiLng, this.distancia, this.rts.page);
             }
         },
         methods: {
@@ -389,15 +398,15 @@
 
                 this.googleMapApi = googleMapApi;
             },
-            async getRestaurantes(myLat, myLng, page) {
+            async getRestaurantes(myLat, myLng, distancia, page) {
                 const limit = 20;
-                await api.get(`restaurantes/list/`).then(res => {
+                // this.$store.state.listRestaurantes.all = [];
+                // this.$store.state.listRestaurantes.filter = [];
+                await api.get(`restaurantes/list/${myLat}/${myLng}/${distancia}`).then(res => {
                     var array = [];
-                    var array2 = [];
                     var _pArray = [];
-                    var _pArray2 = [];
 
-                    var _values = Object.values(res);
+                    var _values = res;
                     _values.forEach(item => {
                         array.push(item);
                     });
@@ -407,63 +416,82 @@
                         _pArray.push(pedazo);
                     }
 
-                    var _keys = Object.keys(res);
-                    _keys.forEach(item2 => {
-                        array2.push(item2);
-                    });
-                    
-                    for (let key = 0; key < array2.length; key += limit) {
-                        let pedazo = array2.slice(key, key + limit);
-                        _pArray2.push(pedazo);
-                    }
-
-                    _keys = _pArray2[page];
                     _values = _pArray[page];
                     var _list = [];
 
-                    for (var i = 0; i < _values.length; i++) {
-                        //  <= 20.000
-                        if (funciones.getKilometros(myLat, myLng, _values[i].lat, _values[i].lng)) {
+                    if (_values.length) {
+                        for (var i = 0; i < _values.length; i++) {
                             _list.push({
-                                id: _keys[i],
-                                categorias: Object.values(_values[i].categories),
-                                direccion: _values[i].direction,
-                                name: _values[i].name,
-                                phone: _values[i].phone,
-                                photo: _values[i].photo
-                                            ? _values[i].photo.substr(_values[i].photo.length - "generic_business-71.png".length, _values[i].photo.length) === "generic_business-71.png"
+                                id: _values[i].key,
+                                categorias: Object.values(_values[i].data.categories),
+                                direccion: _values[i].data.direction,
+                                name: _values[i].data.name,
+                                phone: _values[i].data.phone,
+                                photo: _values[i].data.photo
+                                            ? _values[i].data.photo.substr(_values[i].data.photo.length - "generic_business-71.png".length, _values[i].data.photo.length) === "generic_business-71.png"
                                                 ? imgDefault
-                                                : _values[i].photo
+                                                : _values[i].data.photo
                                             : imgDefault,
-                                rating: _values[i].rating,
-                                lat: _values[i].lat,
-                                lng: _values[i].lng,
-                                km: funciones.getKilometros(myLat, myLng, _values[i].lat, _values[i].lng)
+                                rating: _values[i].data.rating,
+                                lat: _values[i].data.lat,
+                                lng: _values[i].data.lng,
+                                km: funciones.getKilometros(myLat, myLng, _values[i].data.lat, _values[i].data.lng)
                             });
                         }
-                    }
-
-                    _list.sort(function(a, b){ 
-                        if (a.km < b.km) {
-                            return -1;
-                        }
-                    });
-
-                    this.$store.state.listRestaurantes.ids = _pArray2;
-                    this.$store.state.listRestaurantes.all = _pArray;
-                    this.$store.state.listRestaurantes.filter = _list;
-                    this.getCategorias();
-                    this.getProductos(Object.keys(res));
-                    this.getProductosPromocionados(Object.keys(res));
-
-                    this.stopLoader();
-
-                    setTimeout(() => {
-                        var img = document.querySelectorAll(".card-img-top");
-                        img.forEach(el => {
-                            el.onerror = imgDefault;
+    
+                        _list.sort(function(a, b){ 
+                            if (a.km < b.km) {
+                                return -1;
+                            }
                         });
-                    }, 950);
+    
+                        this.$store.state.listRestaurantes.all = _pArray;
+                        this.$store.state.listRestaurantes.filter = _list;
+    
+                        var _lRSearchVAL = res;
+                        var _lRN = [];
+    
+                        for (var k = 0; k < _lRSearchVAL.length; k++) {
+                            _lRN.push({
+                                id: _lRSearchVAL[k].key,
+                                categorias: Object.values(_lRSearchVAL[k].data.categories),
+                                direccion: _lRSearchVAL[k].data.direction,
+                                name: _lRSearchVAL[k].data.name,
+                                phone: _lRSearchVAL[k].data.phone,
+                                photo: _lRSearchVAL[k].data.photo
+                                            ? _lRSearchVAL[k].data.photo.substr(_lRSearchVAL[k].data.photo.length - "generic_business-71.png".length, _lRSearchVAL[k].data.photo.length) === "generic_business-71.png"
+                                                ? imgDefault
+                                                : _lRSearchVAL[k].data.photo
+                                            : imgDefault,
+                                rating: _lRSearchVAL[k].data.rating,
+                                lat: _lRSearchVAL[k].data.lat,
+                                lng: _lRSearchVAL[k].data.lng,
+                                km: funciones.getKilometros(myLat, myLng, _lRSearchVAL[k].data.lat, _lRSearchVAL[k].data.lng)
+                            });
+                        }
+    
+                        _lRN.sort(function(a, b) {
+                            if (a.name < b.name) {
+                                return -1;
+                            }
+                        })
+    
+                        EventBus.$emit("listRestauranteSearch", _lRN);
+                        EventBus.$emit("coordenadas", {lat: this.ubiLat, lng: this.ubiLng});
+    
+                        this.getCategorias();
+                        this.getProductos(res);
+                        this.getProductosPromocionados(res);
+    
+                        this.stopLoader();
+    
+                        setTimeout(() => {
+                            var img = document.querySelectorAll(".card-img-top");
+                            img.forEach(el => {
+                                el.onerror = imgDefault;
+                            });
+                        }, 950);
+                    }
                 }).catch(err => {
                     console.log(err);
                 });
@@ -473,7 +501,7 @@
                     var _list = [];
                     res.product.forEach(el => {
                         for (var i = 0; i < comercios.length; i++) {
-                            if (el.id_restaurant === comercios[i]) {
+                            if (el.id_restaurant === comercios[i].key) {
                                 _list.push({
                                     id: el._id,
                                     title: el.name,
@@ -496,7 +524,7 @@
                     var _list = [];
                     res.forEach(el => {
                         for (var i = 0; i < comercios.length; i++) {
-                            if (el.id_restaurant === comercios[i]) {
+                            if (el.id_restaurant === comercios[i].key) {
                                 _list.push({
                                     id: el._id,
                                     title: el.name,
@@ -545,34 +573,26 @@
                 var res = this.$store.getters.listRestaurantes;
                 this.$store.commit("loading");
                 this.rts.page++;
-                var _keys = res.ids[this.rts.page];
                 var _values = res.all[this.rts.page];
-
                 var _list = [];
-
                 for (var i = 0; i < _values.length; i++) {
-                    //  <= 20.000
-                    if (funciones.getKilometros(this.ubiLat, this.ubiLng, _values[i].lat, _values[i].lng)) {
-                        _list.push({
-                            id: _keys[i],
-                            categorias: Object.values(_values[i].categories),
-                            direccion: _values[i].direction,
-                            name: _values[i].name,
-                            phone: _values[i].phone,
-                            photo: _values[i].photo
-                                        ? _values[i].photo.substr(_values[i].photo.length - "generic_business-71.png".length, _values[i].photo.length) === "generic_business-71.png"
-                                            ? imgDefault
-                                            : _values[i].photo
-                                        : imgDefault,
-                            rating: _values[i].rating,
-                            lat: _values[i].lat,
-                            lng: _values[i].lng,
-                            km: funciones.getKilometros(this.ubiLat, this.ubiLng, _values[i].lat, _values[i].lng)
-                        });
-                    }
+                    _list.push({
+                        id: _values[i].key,
+                        categorias: Object.values(_values[i].data.categories),
+                        direccion: _values[i].data.direction,
+                        name: _values[i].data.name,
+                        phone: _values[i].data.phone,
+                        photo: _values[i].data.photo
+                                    ? _values[i].data.photo.substr(_values[i].data.photo.length - "generic_business-71.png".length, _values[i].data.photo.length) === "generic_business-71.png"
+                                        ? imgDefault
+                                        : _values[i].data.photo
+                                    : imgDefault,
+                        rating: _values[i].data.rating,
+                        lat: _values[i].data.lat,
+                        lng: _values[i].data.lng,
+                        km: funciones.getKilometros(this.ubiLat, this.ubiLng, _values[i].data.lat, _values[i].data.lng)
+                    });
                 }
-
-                var _listOrderAlfabetico = _list;
 
                 _list.sort(function(a, b){ 
                     if (a.km < b.km) {
@@ -580,13 +600,6 @@
                     }
                 });
 
-                _listOrderAlfabetico.sort(function(a, b){ 
-                    if (a.name < b.name) {
-                        return -1;
-                    }
-                });
-
-                this.$store.state.listRestauranteSearchs = _listOrderAlfabetico;
                 this.$store.state.listRestaurantes.filter = _list;
                 this.stopLoader();
             },
@@ -594,34 +607,26 @@
                 var res = this.$store.getters.listRestaurantes;
                 this.$store.commit("loading");
                 this.rts.page--;
-                var _keys = res.ids[this.rts.page];
                 var _values = res.all[this.rts.page];
-
                 var _list = [];
-
                 for (var i = 0; i < _values.length; i++) {
-                    //  <= 20.000
-                    if (funciones.getKilometros(this.ubiLat, this.ubiLng, _values[i].lat, _values[i].lng)) {
-                        _list.push({
-                            id: _keys[i],
-                            categorias: Object.values(_values[i].categories),
-                            direccion: _values[i].direction,
-                            name: _values[i].name,
-                            phone: _values[i].phone,
-                            photo: _values[i].photo
-                                        ? _values[i].photo.substr(_values[i].photo.length - "generic_business-71.png".length, _values[i].photo.length) === "generic_business-71.png"
-                                            ? imgDefault
-                                            : _values[i].photo
-                                        : imgDefault,
-                            rating: _values[i].rating,
-                            lat: _values[i].lat,
-                            lng: _values[i].lng,
-                            km: funciones.getKilometros(this.ubiLat, this.ubiLng, _values[i].lat, _values[i].lng)
-                        });
-                    }
+                    _list.push({
+                        id: _values[i].key,
+                        categorias: Object.values(_values[i].data.categories),
+                        direccion: _values[i].data.direction,
+                        name: _values[i].data.name,
+                        phone: _values[i].data.phone,
+                        photo: _values[i].data.photo
+                                    ? _values[i].data.photo.substr(_values[i].data.photo.length - "generic_business-71.png".length, _values[i].data.photo.length) === "generic_business-71.png"
+                                        ? imgDefault
+                                        : _values[i].data.photo
+                                    : imgDefault,
+                        rating: _values[i].data.rating,
+                        lat: _values[i].data.lat,
+                        lng: _values[i].data.lng,
+                        km: funciones.getKilometros(this.ubiLat, this.ubiLng, _values[i].data.lat, _values[i].data.lng)
+                    });
                 }
-
-                var _listOrderAlfabetico = _list;
 
                 _list.sort(function(a, b){ 
                     if (a.km < b.km) {
@@ -629,13 +634,6 @@
                     }
                 });
 
-                _listOrderAlfabetico.sort(function(a, b){ 
-                    if (a.name < b.name) {
-                        return -1;
-                    }
-                });
-
-                this.$store.state.listRestauranteSearchs = _listOrderAlfabetico;
                 this.$store.state.listRestaurantes.filter = _list;
                 this.stopLoader();
             }

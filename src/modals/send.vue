@@ -9,7 +9,7 @@
                     </div>
                     <p data-error="searchRestaurante" class="msgError d-none">*msgError</p>
                     <div @click="selectRestaurante" class="boxSeach__result">
-                        <p v-for="res in this.listRestSearch.filters" :key="'result_'+res.id" :id="'result_'+res.id" :data-name="res.name" :data-categoria="res.categoria" :data-subcategoria="res.subcategoria" class="result">{{ res.name }}</p>
+                        <p v-for="res in this.listRestSearch.filters" :key="'result_'+res.id" :id="'result_'+res.id" :data-name="res.name" :data-categoria="res.categorias ? res.categorias[0].name : ''" :data-subcategoria="res.categorias ? res.categorias[0].name_subcategory : ''" class="result">{{ res.name }}</p>
                     </div>
                 </div>
                 <div class="priceText" @click="closeSearching">
@@ -58,7 +58,8 @@
     import config from "../config.js";
     import check from '../assets/img/icons/check-blanco.svg';
     import api from "../api.js";
-    import funciones from "../funciones.js";
+    // import funciones from "../funciones.js";
+    import { EventBus } from "../main.js";
 
     export default {
         name: 'send',
@@ -83,49 +84,29 @@
                     masked: true
                 },
                 listRestSearch: {
-                    val: this.$store.getters.listRestaurantes.all,
-                    key: this.$store.getters.listRestaurantes.ids,
                     filters: []
+                },
+                transaction: {
+                    price: "",
+                    typeTransaccion: "envio",
+                    mode: "egreso",
+                    typeAccount: "",
+                    nameAccount: "",
+                    nameapp: "web-personas",
+                    name: "",
+                    uid: "",
+                    phone: "",
+                    id_comercio: "",
+                    id_empresa: "",
                 }
             }
         },
         created() {
-            this.orderRestaurantes();
+            EventBus.$on('listRestauranteSearch', (obj) => {
+                this.listRestSearch.filters = obj;
+            });
         },
         methods: {
-            orderRestaurantes(myLat, myLng) {
-                var _keys = this.listRestSearch.key;
-                var _values = this.listRestSearch.val;
-                var _list = [];
-
-                for (var i = 0; i < _values.length; i++) {
-                    //  <= 20.000
-                    for (var y = 0; y < _values[i].length; y++) {
-                        if (funciones.getKilometros(myLat, myLng, _values[i][y].lat, _values[i][y].lng)) {
-                            _list.push({
-                                id: _keys[i][y],
-                                categoria: Object.values(_values[i][y].categories)[0].name,
-                                subcategoria: Object.values(_values[i][y].categories)[0].name_subcategory,
-                                direccion: _values[i][y].direction,
-                                name: _values[i][y].name,
-                                phone: _values[i][y].phone,
-                                rating: _values[i][y].rating,
-                                lat: _values[i][y].lat,
-                                lng: _values[i][y].lng,
-                                km: funciones.getKilometros(myLat, myLng, _values[i][y].lat, _values[i][y].lng)
-                            });
-                        }
-                    }
-                }
-
-                _list.sort(function(a, b){ 
-                    if (a.name < b.name) {
-                        return -1;
-                    }
-                });
-
-                this.listRestSearch.filters = _list;
-            },
             openSearching() {
                 if (document.querySelector("#searchRestaurante")) {
                     if (document.querySelector("#searchRestaurante").parentNode.parentNode.classList.contains("boxSeach")) {
@@ -448,6 +429,11 @@
                         }
                     });
 
+                    this.transaction.name = this.$store.getters.user.name + " " + this.$store.getters.user.lastname;
+                    this.transaction.uid = this.$store.getters.user.key;
+                    this.transaction.phone = this.$store.getters.user.phone;
+                    this.transaction.id_comercio = _idRes;
+
                     api.get(`restaurante/${_idRes}`).then(res => {
                         var _balanceResActual = 0;
                         _balanceResActual = parseFloat(res.balance);
@@ -458,20 +444,33 @@
                                 if (res.msg === "OK") {
                                     if (parseFloat(_monto) <= parseFloat(accountActual.propio.value)) {
                                         accountActual.propio.value = parseFloat(accountActual.propio.value) - parseFloat(_monto);
+                                        this.transaction.typeAccount = accountActual.propio.type;
+                                        this.transaction.nameAccount = accountActual.propio.name;
+                                        this.transaction.price = _monto;
                                     }
 
                                     api.put('update/saldo/propia/', {id: _uid, data: accountActual}).then(res => {
                                         console.log(res);
                                         console.log("se envio el dinero con exito.");
+                                        
+                                        api.post('transactions/add', this.transaction).then(res => {
+                                            console.log("Transaction -> ", res);
+                                            document.querySelector("#pagoExitoso").click();
+                                            this.stopLoader();
+                                        }).catch(err => {
+                                            console.log(err);
+                                            this.stopLoader();
+                                        });
 
-                                        document.querySelector("#pagoExitoso").click();
                                         this.stopLoader();
                                     }).catch(err => {
                                         console.log(err);
+                                        this.stopLoader();
                                     });
                                 } else {
                                     console.log("Ocurrio un problema.");
                                     api.put('restaurante/send/saldo/', {idRes: _idRes, balance: sendMonto - parseFloat(_monto)});
+                                    this.stopLoader();
                                     return false;
                                 }
                             }).catch(err => {
@@ -488,6 +487,9 @@
                                     if (_myAccounts[i].id_plan === _dataradio) {
                                         if (parseFloat(_monto) <= parseFloat(accountActual[`${_myAccountsKeys[i]}`].value)) {
                                             accountActual[`${_myAccountsKeys[i]}`].value = parseFloat(accountActual[`${_myAccountsKeys[i]}`].value) - parseFloat(_monto);
+                                            this.transaction.typeAccount = accountActual[`${_myAccountsKeys[i]}`].type;
+                                            this.transaction.nameAccount = accountActual[`${_myAccountsKeys[i]}`].name;
+                                            this.transaction.price = _monto;
                                         } else {
                                             console.log("El monto es insuficiente, le recomendamos pago mix.");
                                         }
@@ -502,18 +504,29 @@
                                                     console.log(res);
                                                     console.log("se envio el dinero con exito.");
 
-                                                    document.querySelector("#pagoExitoso").click();
+                                                    api.post('transactions/add', this.transaction).then(res => {
+                                                        console.log("Transaction -> ", res);
+                                                        document.querySelector("#pagoExitoso").click();
+                                                        this.stopLoader();
+                                                    }).catch(err => {
+                                                        console.log(err);
+                                                        this.stopLoader();
+                                                    });
+                                                    
                                                     this.stopLoader();
                                                 }).catch(err => {
                                                     console.log(err);
+                                                    this.stopLoader();
                                                 });
                                             } else {
                                                 console.log("Ocurrio un problema.");
                                                 api.put('restaurante/send/saldo/', {idRes: _idRes, balance: sendMonto - parseFloat(_monto)});
+                                                this.stopLoader();
                                                 return false;
                                             }
                                         }).catch(err => {
                                             console.log(err);
+                                            this.stopLoader();
                                         });
                                     }
                                 }
@@ -587,6 +600,7 @@
                 var _myBalanceTotal = 0;
 
                 if (document.querySelector("#searchRestaurante").value != "") {
+                    console.log(this.selectedRes);
                     _cate = this.selectedRes.categoria.replace("#", "");
 
                     for (var i = 0; i < _myAccounts.length; i++) {
@@ -653,10 +667,7 @@
                 }
             },
             stopLoader() { this.$store.commit("notLoading"); },
-        },
-        mounted() {
-            this.orderRestaurantes();
-        },
+        }
     }
 </script>
 

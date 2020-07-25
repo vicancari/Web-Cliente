@@ -17,6 +17,7 @@
     "jquery": "^3.4.1",
     "sass": "^1.26.1",
     "sass-loader": "^8.0.2",
+    "socket.io": "^2.3.0",
     "v-money": "^0.8.1",
     "vue": "^2.6.11",
     "vue-carousel": "^0.18.0",

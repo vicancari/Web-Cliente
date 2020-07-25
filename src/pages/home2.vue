@@ -5,9 +5,12 @@
             <router-link to="/home" class="btn backbutton">
                 <img class="img-fluid" :src="back" alt="">
             </router-link>
-            <div class="boxSearch">
-                <input id="searching" type="text" class="boxSearch__input" :value="this.searching" placeholder="Buscar" @keypress.enter="search()">
-                <button type="button" class="boxSearch__btn" @click="search()"><img :src="searchImg" :alt="'buscar_'+this.searching"></button>
+            <div class="boxSearch3">
+                <input id="searchRestaurante3" type="text" class="boxSearch3__input" :value="this.searching" placeholder="Buscar" v-on:keyup="search3" v-on:focus="openSearching3" @keypress.enter="search()" autocomplete="off">
+                <button type="button" class="boxSearch3__btn" @click="search()"><img :src="searchImg" :alt="'buscar_'+this.searching"></button>
+                <div @click="selectRestaurante3" class="boxSearch3__result">
+                    <p v-for="res in this.refSearch2" :key="'result_'+res.id" :id="'result_'+res.id" :data-name="res.name" :data-categoria="res.categoria" :data-subcategoria="res.subcategoria" class="result">{{ res.name }}</p>
+                </div>
             </div>
         </div>
         <div class="bodySection">
@@ -127,36 +130,20 @@
                 myLng: "",
                 googleMapApi: "",
                 searching: this.$router.currentRoute.params.search.split("-").join(" "),
-                listRest: {}
+                listRest: {},
+                refSearch2: [],
             }
         },
         async created() {
-            var ubicacion = await this.geo();
-            this.ubiLat = ubicacion.lat;
-            this.ubiLng = ubicacion.lon;
-
-            this.$store.state.coords = {
-                lat: ubicacion.lat,
-                lng: ubicacion.lon
-            }
+            this.myUbicaion = await this.geo();
+            this.ubiLat = this.myUbicaion.lat;
+            this.ubiLng = this.myUbicaion.lon;
 
             if (this.$store.getters.isLoggedIn === true) {
-                this.getRestaurantes(ubicacion.lat, ubicacion.lon);
+                this.getRestaurantes(this.ubiLat, this.ubiLng);
             }
         },
         methods: {
-            restaurante(id) {
-                this.$router.push(`/restaurante/${id}`);
-            },
-            search() {
-                this.listRest = [];
-                var _input = document.querySelector("#searching").value;
-                window.location = window.location.hash.replace(this.searching.split(" ").join("-"), _input.split(" ").join("-"));
-                this.searching = _input;
-                var _conv = _input.split(" ").join("-");
-                this.$router.currentRoute.params.search = _conv;
-                this.getRestaurantes(this.ubiLat, this.ubiLng);
-            },
             async geo() {
                 return new Promise((resolve, reject) => {
                     navigator.geolocation.getCurrentPosition(
@@ -173,36 +160,68 @@
                     );
                 });
             },
+            restaurante(id) {
+                this.$router.push(`/restaurante/${id}`);
+            },
+            search() {
+                this.listRest = [];
+                var _input = document.querySelector("#searchRestaurante3").value;
+                window.location = window.location.hash.replace(this.searching.split(" ").join("-"), _input.split(" ").join("-"));
+                this.searching = _input;
+                var _conv = _input.split(" ").join("-");
+                this.$router.currentRoute.params.search = _conv;
+                this.getRestaurantes(this.ubiLat, this.ubiLng);
+            },
             async getRestaurantes(myLat, myLng) {
-                var _keys = this.$store.getters.listRestaurantes.ids;
                 var _values = this.$store.getters.listRestaurantes.all;
                 var _list = [];
+                var _listSearch = [];
 
                 for (var i = 0; i < _values.length; i++) {
-                    //  <= 20.000
                     for (var y = 0; y < _values[i].length; y++) {
-                        if (funciones.getKilometros(myLat, myLng, _values[i][y].lat, _values[i][y].lng)) {
-                            if (this.searching.toLowerCase() === _values[i][y].business_name.toLowerCase().substr(0, this.searching.length) || this.searching.toLowerCase() === _values[i][y].business_name.toLowerCase().substr(_values[i][y].business_name.toLowerCase().indexOf(" ") + 1, this.searching.length)) {
-                                _list.push({
-                                    id: _keys[i][y],
-                                    categorias: Object.values(_values[i][y].categories),
-                                    direccion: _values[i][y].direction,
-                                    name: _values[i][y].name,
-                                    phone: _values[i][y].phone,
-                                    photo: _values[i][y].photo
-                                                ? _values[i][y].photo.substr(_values[i][y].photo.length - "generic_business-71.png".length, _values[i][y].photo.length) === "generic_business-71.png"
-                                                    ? imgDefault
-                                                    : _values[i][y].photo
-                                                : imgDefault,
-                                    rating: _values[i][y].rating,
-                                    lat: _values[i][y].lat,
-                                    lng: _values[i][y].lng,
-                                    km: funciones.getKilometros(myLat, myLng, _values[i][y].lat, _values[i][y].lng)
-                                });
-                            }
+                        _listSearch.push({
+                            id: _values[i][y].key,
+                            categorias: Object.values(_values[i][y].data.categories),
+                            direccion: _values[i][y].data.direction,
+                            name: _values[i][y].data.name,
+                            phone: _values[i][y].data.phone,
+                            photo: _values[i][y].data.photo
+                                        ? _values[i][y].data.photo.substr(_values[i][y].data.photo.length - "generic_business-71.png".length, _values[i][y].data.photo.length) === "generic_business-71.png"
+                                            ? imgDefault
+                                            : _values[i][y].data.photo
+                                        : imgDefault,
+                            rating: _values[i][y].data.rating,
+                            lat: _values[i][y].data.lat,
+                            lng: _values[i][y].data.lng,
+                            km: funciones.getKilometros(myLat, myLng, _values[i][y].data.lat, _values[i][y].data.lng)
+                        });
+
+                        if (this.searching.toLowerCase() === _values[i][y].data.business_name.toLowerCase().substr(0, this.searching.length) || this.searching.toLowerCase() === _values[i][y].data.business_name.toLowerCase().substr(_values[i][y].data.business_name.toLowerCase().indexOf(" ") + 1, this.searching.length)) {
+                            _list.push({
+                                id: _values[i][y].key,
+                                categorias: Object.values(_values[i][y].data.categories),
+                                direccion: _values[i][y].data.direction,
+                                name: _values[i][y].data.name,
+                                phone: _values[i][y].data.phone,
+                                photo: _values[i][y].data.photo
+                                            ? _values[i][y].data.photo.substr(_values[i][y].data.photo.length - "generic_business-71.png".length, _values[i][y].data.photo.length) === "generic_business-71.png"
+                                                ? imgDefault
+                                                : _values[i][y].data.photo
+                                            : imgDefault,
+                                rating: _values[i][y].data.rating,
+                                lat: _values[i][y].data.lat,
+                                lng: _values[i][y].data.lng,
+                                km: funciones.getKilometros(myLat, myLng, _values[i][y].data.lat, _values[i][y].data.lng)
+                            });
                         }
                     }
                 }
+
+                _listSearch.sort(function(a, b) {
+                    if (a.name < b.name) {
+                        return -1;
+                    }
+                });
 
                 _list.sort(function(a, b){ 
                     if (a.km < b.km) {
@@ -210,6 +229,7 @@
                     }
                 });
 
+                this.refSearch2 = _listSearch;
                 this.listRest = _list;
                 console.log("Searching... -> ", this.listRest);
 
@@ -220,6 +240,61 @@
                         el.onerror = imgDefault;
                     });
                 }, 950);
+            },
+            selectRestaurante3(e) {
+                var _el = e.target;
+                document.querySelector("#searchRestaurante3").value = _el.getAttribute("data-name");
+                this.search();
+                
+                if (document.querySelector("#searchRestaurante3").parentNode.classList.contains("boxSearch3")) {
+                    document.querySelector("#searchRestaurante3").parentNode.classList.remove("searching3");
+                }
+            },
+            openSearching3() {
+                if (document.querySelector("#searchRestaurante3")) {
+                    if (document.querySelector("#searchRestaurante3").parentNode.classList.contains("boxSearch3")) {
+                        document.querySelector("#searchRestaurante3").parentNode.classList.add("searching3");
+                    }
+                }
+            },
+            search3(e) {
+                var _parent = e.target.parentNode;
+                var _input = e.target;
+                var _boxResult = _parent.children[2];
+                var _datas = _boxResult.children;
+
+                if (_parent.classList.contains("boxSearch3")) {
+                    if (_input.value != "") {
+                        _parent.classList.add("searching3");
+                    }
+                }
+
+                for (var el = 0; el < _datas.length; el++) {
+                    var dataLower = _datas[el].innerText.toLowerCase();
+                    var obj = {data: dataLower};
+
+                    _datas[el].classList.add("d-none");
+
+                    if (_input.value.toLowerCase() === obj.data) {
+                        _datas[el].classList.remove('d-none');
+                    }
+
+                    if (_input.value.toLowerCase() === obj.data.substr(obj.data.indexOf(" ") + 1, _input.value.length)) {
+                        _datas[el].classList.remove('d-none');
+                    }
+                    
+                    if (_input.value.toLowerCase() === obj.data.substr(obj.data.lastIndexOf(" ") + 1, _input.value.length)) {
+                        _datas[el].classList.remove('d-none');
+                    }
+            
+                    if (_input.value.toLowerCase() === obj.data.substr(0, _input.value.length)) {
+                        _datas[el].classList.remove('d-none');
+                    }
+                    
+                    if (_input.value.toLowerCase() === '') {
+                        _datas[el].classList.remove('d-none');
+                    }
+                }
             },
             stopLoader() { this.$store.commit("notLoading"); },
         },
@@ -252,6 +327,7 @@
             position: absolute;
             left: 0;
             padding: 8px 0;
+            z-index: 100;
             img{
                 width: 50px;
             }
@@ -660,7 +736,9 @@
         outline: none !important;
     }
 
-    .boxSearch {
+    .boxSearch3 {
+        --width: 250px;
+        position: relative;
         display: flex;
         justify-content: flex-end;
         align-items: center;
@@ -671,7 +749,7 @@
 
         &__input {
             display: block;
-            width: 200px;
+            width: var(--width);
             height: 40px;
             line-height: 40px;
             padding: 0;
@@ -680,6 +758,7 @@
             border-bottom: 1px solid #888;
             box-shadow: none;
             outline: none;
+            text-transform: uppercase;
             border-radius: 0;
         }
 
@@ -705,5 +784,57 @@
                 outline: none !important;
             }
         }
+
+        &__result {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 3rem;
+            width: var(--width);
+            background: #fff;
+            z-index: 100;
+            height: max-content;
+            max-height: 292px;
+            padding: 0;
+            border-bottom-left-radius: 5px;
+            border-bottom-right-radius: 5px;
+            overflow: hidden;
+            overflow-y: auto;
+            box-shadow: 1px 1px 10px 0 rgba(0,0,0,.45);
+            border-left: 1px solid #666666;
+            border-right: 1px solid #666666;
+            border-bottom: 1px solid #666666;
+
+            p.result {
+                display: block;
+                margin: 0;
+                width: 100%;
+                height: max-content;
+                padding: .5rem 1rem;
+                border-bottom: 1px solid rgba(0,0,0,.25);
+                text-transform: uppercase !important;
+                transition: all .15s ease-in-out;
+                text-align: left;
+                cursor: pointer;
+
+                &:hover {
+                    background: rgba(0,0,0,.15);
+                }
+
+                &:last-child {
+                    border-bottom: none;
+                }
+            }
+        }
+
+        &.searching3 {
+            .boxSearch3__result {
+                display: block !important;
+            }
+        }
+    }
+
+    #app {
+        min-height: 100vh;
     }
 </style>

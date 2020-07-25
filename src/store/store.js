@@ -26,7 +26,6 @@ export default function(/* { ssrContext } */) {
                 lng: "",
             },
             listRestaurantes: {
-                ids: [],
                 all: [],
                 filter: []
             },
@@ -85,7 +84,6 @@ export default function(/* { ssrContext } */) {
                 state.listCategorias = [];
                 state.coords = {lat: "", lng: ""};
                 state.listRestaurantes = {
-                    ids: [],
                     all: [],
                     filter: []
                 };

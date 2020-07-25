@@ -3,6 +3,7 @@ import Vuex from "vuex";
 import App from './App.vue';
 import router from './router';
 import store from "./store/store.js";
+import socket from "./socket.js";
 import config from "./config.js";
 import funciones from "./funciones";
 import BootstrapVue from 'bootstrap-vue/dist/bootstrap-vue.esm';
@@ -24,6 +25,7 @@ window.axios = axios;
 window.funciones = funciones;
 window.config = config;
 window.api = api;
+window.socket = socket;
 
 const configOptions = {
   apiKey: "AIzaSyCg_0bvL3l8ngTWtHq7XKMYWGcVDN0-Br0",
@@ -43,7 +45,8 @@ firebase.auth().onAuthStateChanged(user => {
     console.log("user is loggin");
     _uid = "";
     _uid = user.uid;
-
+    
+    store().state.isLoggedIn = true;
     api.post('auth/isloggin/', {id: _uid, is_loggin: true}).then(res => {
       console.log(res);
     }).catch(err => {
@@ -51,6 +54,15 @@ firebase.auth().onAuthStateChanged(user => {
     });
   } else {
     console.log("user is not loggin");
+    store().state.isLoggedIn = false;
+    
+    if (router.currentRoute.name != "login") {
+      if (router.currentRoute.name === "register" || router.currentRoute.name === "validarNumero") {
+        console.log("...");
+      } else {
+        router.push("/");
+      }
+    }
   }
 });
 
@@ -59,6 +71,7 @@ Vue.use(BootstrapVue);
 Vue.config.productionTip = true;
 Vue.use(Vuex);
 
+export const EventBus = new Vue();
 new Vue({
   el: '#app',
   router,

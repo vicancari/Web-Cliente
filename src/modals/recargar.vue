@@ -147,10 +147,10 @@
                     mode: "ingreso",
                     typeAccount: "",
                     nameAccount: "",
-                    name: this.$store.getters.user.name + " " + this.$store.getters.user.lastname,
-                    uid: this.$store.getters.user.key,
-                    phone: this.$store.getters.user.phone,
                     nameapp: "web-personas",
+                    name: "",
+                    uid: "",
+                    phone: "",
                 }
             }
         },
@@ -195,6 +195,9 @@
                         this.tranRecarga.price = miSaldo;
                         this.tranRecarga.typeAccount = accountActual.propio.type;
                         this.tranRecarga.nameAccount = accountActual.propio.name;
+                        this.tranRecarga.name = this.$store.getters.user.name + " " + this.$store.getters.user.lastname;
+                        this.tranRecarga.uid = this.$store.getters.user.key;
+                        this.tranRecarga.phone = this.$store.getters.user.phone;
                         console.log("Update saldo -> ", res);
                         console.log("trans -> ", this.tranRecarga);
 
@@ -204,9 +207,11 @@
                             this.stopLoader();
                         }).catch(err => {
                             console.log(err);
+                            this.stopLoader();
                         });
                     }).catch(err => {
                         console.log(err);
+                        this.stopLoader();
                     });
                 }
             },
