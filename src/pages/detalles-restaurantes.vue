@@ -11,23 +11,16 @@
             <div class="header2">
                 <div class="row">
                     <div class="col-md-3 col-2 px-0 px-sm-3">
-                          <b-dropdown id="dropdown-1" text="" class="dropdownEdit" toggle-class="text-decoration-none" no-caret variant="link">
+                        <b-dropdown id="dropdown-1" text="" class="dropdownEdit" toggle-class="text-decoration-none" no-caret variant="link">
                             <template v-slot:button-content>
                                 <img src="../assets/bars.png" alt="">
                             </template>
                             <div class="d-flex">
                                 <div class="category">
-                                    <b-dropdown-item>Pastas</b-dropdown-item>
-                                    <b-dropdown-item>Pizzas</b-dropdown-item>
-                                    <b-dropdown-item>Vegetariano</b-dropdown-item>
-                                    <b-dropdown-item>Electrodomésticos</b-dropdown-item>
-                                    <b-dropdown-item>Zapatos</b-dropdown-item>
-                                    <b-dropdown-item v-on:mouseover="hoverF(1)">Ropa <i class="fas fa-plus"></i></b-dropdown-item>
+                                    <b-dropdown-item v-for="(cate, i) in this.misProd.all" :key="i" :data-idcategory="cate.data.category">{{ cate.data.category_text }}</b-dropdown-item>
                                 </div>
                                 <div class="subcategory">
-                                    <b-dropdown-item>Pastas</b-dropdown-item>
-                                    <b-dropdown-item>Pizzas</b-dropdown-item>
-                                    <b-dropdown-item>Vegetariano</b-dropdown-item>
+                                    <b-dropdown-item v-for="(subcate, i) in this.misProd.all" :key="i" :data-idsubcategory="subcate.data.sub_category">{{ subcate.data.sub_category_text }}</b-dropdown-item>
                                 </div>
                             </div>
                         </b-dropdown>
@@ -40,10 +33,18 @@
                     </div>
                     <div class="col-md-3 col-4 px-0 px-sm-3">
                         <div class="groupbutton">
-                            <button class="btn"><img src="../assets/iconRestaurant/corazon-blue.svg" alt="" /></button>
-                            <button class="btn"><img src="../assets/iconRestaurant/reloj.svg" alt="" /></button>
-                            <button class="btn"><img src="../assets/iconRestaurant/llamar.svg" alt="" /></button>
-                            <button class="btn"><img src="../assets/iconRestaurant/ir.svg" alt="" /></button>
+                            <button @click="toggleCorazon()" type="button" class="btn">
+                                <img :src="this.is_myFavory === false ? corazonBlue : corazonRed">
+                            </button>
+                            <button type="button" @click="toggleHorario()" class="btn">
+                                <img src="../assets/iconRestaurant/reloj.svg">
+                            </button>
+                            <a class="btn" :href="'tel:' + dataRest.phone">
+                                <img src="../assets/iconRestaurant/llamar.svg">
+                            </a>
+                            <a target="_blank" :href="`https://www.google.com/maps/dir/${dataRest.lat},${dataRest.lng}/${this.myUbicacion}/`" class="btn">
+                                <img src="../assets/iconRestaurant/ir.svg">
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -58,12 +59,21 @@
                         :navigationEnabled="false"
                         :perPageCustom="[[0, 3], [768, 5], [1024, 7], [1250, 8]]"
                     >
-                    <slide v-for="(slideRest, i) in dataRest.slider" :key="i">
-                        <img :src="slideRest.photo" :alt="slideRest.id + '_' + dataRest.business_name">
-                    </slide>
-                </carousel>
+                        <slide v-for="(slideRest, i) in dataRest.slider" :key="i">
+                            <img @click="fprevImage(slideRest.photo)" :src="slideRest.photo" :alt="slideRest.id + '_' + dataRest.business_name">
+                        </slide>
+                    </carousel>
                 </div>
             </div>
+            <div v-if="this.showHorario === true" class="boxHorario">
+                <div class="boxHorario__item" v-for="(h, i) in this.horarios" :key="i">
+                    <p class="dia">{{ h.dia }}</p>
+                    <p class="hora">{{ h.desde }}am a {{ h.hasta }}pm</p>
+                    <p v-if="h.abierto === true" class="activo">Abierto</p>
+                    <p v-else class="no-activo">Cerrado</p>
+                </div>
+            </div>
+
             <div class="search">
                 <h5>Destacados</h5>
                 <div class="form-group">
@@ -229,6 +239,11 @@
                 </div>
             </div>
         </div>
+
+        <div id="prevImageID" class="boxPreviewImage">
+            <img @click="closePrevImage" class="boxPreviewImage__close" :src="close">
+            <img :src="prevImage" class="boxPreviewImage__img">
+        </div>
     </div>
 </template>
 
@@ -240,6 +255,9 @@ import Navbar from '../components/navbar';
 import back from '../assets/img/icons/flechavolver.svg';
 import shared from '../assets/img/icons/share.png';
 import imgDefault from '../assets/img/noimage.jpeg';
+import close from '../assets/img/icons/add2.png';
+import corazonBlue from '../assets/iconRestaurant/corazon-blue.svg';
+import corazonRed from '../assets/iconRestaurant/corazon-red.svg';
 
 /* Components */
 import Vue from 'vue';
@@ -249,10 +267,8 @@ import { Carousel, Slide } from 'vue-carousel';
 
 // API + Firebase + funciones
 import api from '../api.js';
-// import axios from "axios";
-// import * as firebase from "firebase";
-// import funciones from "../funciones.js";
-
+import axios from "axios";
+import { EventBus } from "../main.js";
 
 export default {
     name: 'restaurante',
@@ -272,16 +288,30 @@ export default {
             },
             quality: 0,
             back: back,
-            shared: shared
+            shared: shared,
+            corazonBlue: corazonBlue,
+            corazonRed: corazonRed,
+            prevImage: imgDefault,
+            close: close,
+            showHorario: false,
+            horarios: [],
+            myUbicacion: "",
+            is_myFavory: false,
+            id_favory: '',
         }
     },
     async created() {
-        await api.get("/restaurante/" + this.id_restaurante).then(res => {
+        var _ubi = await this.geo();
+        this.myUbicacion = `${_ubi.lat},${_ubi.lon}`;
+
+        await api.get("restaurante/" + this.id_restaurante).then(res => {
             this.dataRest = res;
             console.log("rest -> ", this.dataRest);
         }).catch(err => {
             this.error = err;
         });
+
+        this.isFavory();
 
         api.get(`products/`).then(res => {
             var _list = [];
@@ -294,8 +324,7 @@ export default {
                         desc: el.description,
                         price: el.price_with_iva,
                         img: el.images[0] ? el.images[0].img : imgDefault,
-                        category: el.listProductos,
-                        data: el
+                        data: el,
                     });
                 }
 
@@ -306,7 +335,6 @@ export default {
                         desc: el.description,
                         price: el.price_with_iva,
                         img: el.images[0] ? el.images[0].img : imgDefault,
-                        category: el.listProductos
                     });
                 }
             });
@@ -317,11 +345,117 @@ export default {
         }).catch(err => {
             console.log(err);
         });
+
+        axios.post(`https://myraus.com:8282/api/scheduless/get`, {id_restaurant: this.id_restaurante}).then(res => {
+            var _res = res.data.schedules.schedules;
+
+            _res.forEach(h => {
+                this.horarios.push({
+                    dia: h.name,
+                    abierto: h.status,
+                    desde: h.schedules[0].start.split("T")[1].split(":")[0],
+                    hasta: h.schedules[0].end.split("T")[1].split(":")[0],
+                });
+            });
+        });
+
+        EventBus.$on('removeFavory', obj => {
+            if (obj.id_comercio === this.id_restaurante) {
+                this.is_myFavory = false;
+                this.id_favory = '';
+            }
+        });
     },
-    method: {
-        hoverF(id){
+    methods: {
+        async geo() {
+            return new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(
+                    async function(pos) {
+                        resolve({
+                            lat: pos.coords.latitude,
+                            lon: pos.coords.longitude
+                        });
+                    },
+                    function(error) {
+                        console.log(error);
+                        reject();
+                    }
+                );
+            });
+        },
+        toggleCorazon() {
+            if (this.is_myFavory === false) {
+                this.is_myFavory = true;
+                this.addMyFavory();
+            } else {
+                this.is_myFavory = false;
+                console.log(this.id_favory);
+                if (this.id_favory != null) {
+                    this.removeMyFavory(this.id_favory);
+                }
+            }
+        },
+        toggleHorario() {
+            if (this.showHorario === false) {
+                this.showHorario = true;
+            } else {
+                this.showHorario = false;
+            }
+
+            console.log("horario_show: ", this.showHorario);
+        },
+        isFavory() {
+            api.get("favory/list/" + this.$store.getters.uid).then(res => {
+                res.forEach(item => {
+                    if (item.id_comercio === this.id_restaurante) {
+                        console.log("is favory");
+                        this.id_favory = item._id;
+                        this.is_myFavory = true;
+                    }
+                });
+            }).catch(err => {
+                console.log("Error al buscar favoritos ", err);
+            });
+        },
+        hoverF(id) {
             console.log(id);
         },
+        fprevImage(img) {
+            var __img = img;
+            var _box = document.querySelector("#prevImageID");
+
+            if (_box) {
+                if (!_box.classList.contains("__show")) {
+                    _box.classList.add("__show");
+                    this.prevImage = __img;
+                }
+            }
+        },
+        closePrevImage() {
+            var _box = document.querySelector("#prevImageID");
+
+            if (_box) {
+                if (_box.classList.contains("__show")) {
+                    _box.classList.remove("__show");
+                    this.prevImage = imgDefault;
+                }
+            }
+        },
+        addMyFavory() {
+            api.post("favory/", {id_user: this.$store.getters.uid, id_comercio: this.id_restaurante}).then(res => {
+                console.log("Is favory ", res);
+                EventBus.$emit("addFavory", {ok: 'OK'});
+            }).catch(err => {
+                console.log("Not Favory ", err);
+            });
+        },
+        removeMyFavory(id) {
+            api.post('favory/delete/', {id: id, id_user: this.$store.getters.uid}).then(res => {
+                console.log(res);
+            }).catch(err => {
+                console.log("Error al eliminar -> ", err);
+            });
+        }
     }
 }
 </script>
@@ -455,7 +589,7 @@ export default {
                 .groupbutton{
                     display: flex;
                     justify-content: flex-end;
-                    button{
+                    .btn {
                         padding: 4px;
                         margin-left: 5px;
                         img{
@@ -487,10 +621,8 @@ export default {
                 }
             }
             .box2{
-                width: calc(100% - 100px);
-                @media (max-width: 767px){
-                    width: calc(100% - 60px);
-                }
+                width: 100%;
+
                 ::v-deep .VueCarousel-slide{
                     max-width: max-content;
                     margin-right: .5rem;
@@ -811,6 +943,74 @@ export default {
     @media only screen and (min-width: 992px) {
         .ModalInfoProd .modal-dialog {
             max-width: 70% !important;
+        }
+    }
+
+    .boxPreviewImage {
+        display: none;
+        justify-content: center;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,.75);
+        margin: 0;
+        padding: 2rem;
+
+        z-index: 2500;
+
+        &__close {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            display: block;
+            margin: 0;
+            padding: 0.25rem;
+            width: 50px;
+            height: 50px;
+            border-radius: 3px;
+            transform: rotate(45deg);
+            cursor: pointer;
+        }
+
+        &__img {
+            display: block;
+            margin: 0;
+            padding: 0;
+            width: 85%;
+            height: 80%;
+            object-fit: contain;
+            object-position: center center;
+        }
+
+        &.__show {
+            display: flex;
+        }
+    }
+
+    .boxHorario {
+        position: relative;
+        width: 100%;
+        height: max-content;
+        display: flex;
+        justify-content: space-between;
+        background: #fbfbe6;
+        padding: .5rem;
+
+        &__item {
+            p {
+                margin: 0;
+                padding: .25rem 0;
+                font-size: 1rem;
+                color: #607381;
+                text-align: center;
+
+                &:nth-child(2) {
+                    padding: 0;
+                }
+            }
         }
     }
 </style>

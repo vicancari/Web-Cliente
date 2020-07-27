@@ -120,8 +120,8 @@
                         <span v-if="this.rts.page != 0" @click="prevComercios" class="boxPaginator__btn left">
                             <img class="img-fluid" :src="arrowPrev">
                         </span>
-                        <p class="boxPaginator__page">{{ this.rts.page + 1 }} / {{ this.$store.getters.listRestaurantes.filter.length + 1 }}</p>
-                        <span v-if="this.$store.getters.listRestaurantes.filter.length != this.rts.page + 1" @click="nextComercios" class="boxPaginator__btn right">
+                        <p class="boxPaginator__page">{{ this.rts.page + 1 }} / {{ this.$store.getters.listRestaurantes.all.length }}</p>
+                        <span v-if="this.$store.getters.listRestaurantes.all.length != this.rts.page + 1" @click="nextComercios" class="boxPaginator__btn right">
                             <img class="img-fluid" :src="arrowNext">
                         </span>
                     </div>
@@ -245,14 +245,14 @@
             this.ubiLng = ubicacion.lon;
 
             // -> Santa marta COLOMBIA.
-            // this.ubiLat = 11.24722;
-            // this.ubiLng = -74.20167;
-            // this.distancia = 20.000;
+            this.ubiLat = 11.24722;
+            this.ubiLng = -74.20167;
+            this.distancia = 20.000;
 
             // -> Madrid ESPAÑA.
-            this.ubiLat = 40.4893538;
-            this.ubiLng = -3.6827461;
-            this.distancia = false;
+            // this.ubiLat = 40.4893538;
+            // this.ubiLng = -3.6827461;
+            // this.distancia = false;
 
             if (this.$store.getters.isLoggedIn === true) {
                 await this.getUser();
@@ -647,8 +647,10 @@
             }
         },
         mounted() {
-            this.$store.commit("loading");
-            console.log("Store -> ", this.$store.getters);
+            if (this.$store.getters.isLoggedIn === true) {
+                this.$store.commit("loading");
+                console.log("Store -> ", this.$store.getters);
+            }
         }
     }
 </script>

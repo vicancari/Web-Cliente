@@ -18,24 +18,24 @@
             <button class="btn btnHeart"><img class="img-fluid" :src="heartred" alt=""></button>
 
             <div class="boxMenu">
-                <div class="cardEdit">
+                <div v-for="(f, i) in this.myFavory" :key="i" class="cardEdit">
                     <div class="row m-0">
                         <div class="col-5 col-sm-6 p-0">
-                            <img src="https://picsum.photos/600/300/?image=25" class="img-fluid imgCard" alt="">
+                            <img :src="f.comercio.photo" class="img-fluid imgCard" :alt="f.comercio.business_name">
                         </div>
                         <div class="col-7 col-sm-6 p-0">
                             <div class="row bodyCard">
                                 <div class="col-5">
-                                    <h5>Vegetalia restaurant</h5>
+                                    <h5>{{ f.comercio.business_name }}</h5>
                                 </div>
                                 <div class="col-7 pl-0">
                                     <div class="d-flex justify-content-center">
-                                        <button class="btn">
+                                        <button @click="removeFavory(f.id, f.id_comercio)" class="btn">
                                             <img :src="heartred" alt="">
                                         </button>
-                                        <button class="btn">
+                                        <router-link :to="'/restaurante/' + f.id_comercio" class="btn">
                                             <img :src="arrowNext" alt="">
-                                        </button>
+                                        </router-link>
                                     </div>
                                 </div>
                             </div>
@@ -53,6 +53,9 @@
     import arrowNext from '../assets/img/arrow-next.png';
     import back from '../assets/img/icons/flechavolver.svg';
 
+    import api from "../api.js";
+    import { EventBus } from "../main.js";
+
     export default {
         name: 'modal-favoritos',
         components: {},
@@ -61,10 +64,58 @@
                 myclass: ['modal-favoritos'],
                 back: config.rutaWeb(back),
                 arrowNext: arrowNext,
-                heartred: config.rutaWeb(heartred)
+                heartred: config.rutaWeb(heartred),
+                myFavory: []
             }
         },
-        methods: {}
+        created() {
+            EventBus.$on("addFavory", obj => {
+                if (obj.ok === "OK") {
+                    this.loadFavory();
+                }
+            });
+        },
+        methods: {
+            loadFavory() {
+                this.myFavory = [];
+
+                api.get('favory/list/' + this.$store.getters.uid).then(res => {
+                    res.forEach(item => {
+                        api.get('restaurante/' + item.id_comercio).then(res => {
+                            this.myFavory.push({
+                                id: item._id,
+                                id_comercio: item.id_comercio,
+                                comercio: res,
+                                date: item.date,
+                                time: item.time
+                            });
+                        });
+                    });
+                });
+
+                this.myFavory.sort(function(a, b){ 
+                    if (a.date && a.time < b.date && b.time) {
+                        return -1;
+                    }
+                });
+            },
+            removeFavory(id, id_restaurante) {
+                api.post('favory/delete/', {id: id, id_user: this.$store.getters.uid}).then(res => {
+                    console.log(res);
+                    EventBus.$emit("removeFavory", {id_comercio: id_restaurante});
+                    this.loadFavory();
+                }).catch(err => {
+                    console.log("Error al eliminar -> ", err);
+                });
+            }
+        },
+        async beforeMount() {
+            if (this.$store.getters.isLoggedIn === true) {
+                if (this.$store.getters.uid != "" || this.$store.getters.uid != null || this.$store.getters.uid != undefined) {
+                   await this.loadFavory();
+                }
+            }
+        }
     }
 </script>
 
