@@ -4,13 +4,16 @@
             <h5 class="text-center font">¿Estas seguro que deseas salir de Raus?</h5>
             <div class="buttons d-flex align-items-center justify-content-center">
                 <button class="btn" @click="$bvModal.hide('modalLogout')">Cancelar</button>
-                <button class="btn">Aceptar</button>
+                <button class="btn" @click="logout">Aceptar</button>
             </div>
         </b-modal>
     </div>
 </template>
 
 <script>
+    import * as firebase from "firebase";
+    import api from "../api.js";
+
     export default {
         name: 'logout',
         components: {},
@@ -18,7 +21,24 @@
             return {
                 myclass: ['logout'],
             }
-        }
+        },
+        methods: {
+            logout() {
+                firebase.auth().signOut().then(() => {
+                    api.post('auth/isloggin/', {id: this.$store.getters.uid, is_loggin: false}).then(res => {
+                        if (res.success === true) {
+                            console.log("logout -> Ok...");
+                        }
+                    }).catch(err => {
+                        console.log("error: ", err);
+                    });
+
+                    this.$store.commit("logout");
+                    this.$store.commit("notLoading");
+                    this.$router.push("/");
+                });
+            }
+        },
     }
 </script>
 
@@ -43,5 +63,12 @@
                 background-color: var(--blue);
             }
         }
+    }
+</style>
+
+<style lang="css">
+    .modal.show .modal-dialog {
+        margin-left: auto !important;
+        margin-right: auto !important;
     }
 </style>

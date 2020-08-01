@@ -7,12 +7,12 @@
             </div>
             <form>
                 <div class="form-group a">
-                    <input type="text" id="username" class="form-control" required>
+                    <input type="text" id="username" class="form-control" required autocomplete="off">
                     <label class="form-control-placeholder" for="username">Email / Telefono (+000000)</label>
                     <p data-error="username" class="msgError d-none">*msgError</p>
                 </div>
                 <div class="form-group  mb-0">
-                    <input type="password" id="password" class="form-control" required >
+                    <input type="password" id="password" class="form-control" required autocomplete="off" @keypress.enter="login">
                     <label class="form-control-placeholder" for="password">Password</label>
                     <a style="padding-left: 0; padding-right: 0;" class="btn btnShow" @click="showPassword">
                         <i style="display: inline-block; width: 40px; padding: .5rem 0; cursor: pointer;" class="fas fa-eye" ></i>

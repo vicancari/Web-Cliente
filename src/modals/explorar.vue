@@ -139,7 +139,7 @@
                     this.$store.commit("notLoading");
                 }
 
-                console.log(this.$store.getters.filterCategory);
+                // console.log(this.$store.getters.filterCategory);
             }
         }
     }

@@ -21,6 +21,7 @@ export default function(/* { ssrContext } */) {
             listPropio: [],
             listCategorias: [],
             filterCategory: {},
+            trolley: [],
             coords: {
                 lat: "",
                 lng: "",
@@ -30,7 +31,8 @@ export default function(/* { ssrContext } */) {
                 filter: []
             },
             newRegister: {},
-            user: {}
+            user: {},
+            carritoActual: "",
         },
         getters: {
             isLoggedIn: state => state.isLoggedIn,
@@ -46,9 +48,11 @@ export default function(/* { ssrContext } */) {
             listIncentivo: state => state.listIncentivo,
             balancePropio: state => state.balancePropio,
             listPropio: state => state.listPropio,
+            trolley: state => state.trolley,
             listRestaurantes: state => state.listRestaurantes,
             listCategorias: state => state.listCategorias,
             filterCategory: state => state.filterCategory,
+            carritoActual: state => state.carritoActual,
             coords: state => state.coords,
             myBalance: state => state.myBalance,
             user: state => state.user
@@ -87,9 +91,11 @@ export default function(/* { ssrContext } */) {
                     all: [],
                     filter: []
                 };
+                state.trolley = [];
                 state.newRegister = {};
                 state.filterCategory = {};
                 state.user = {};
+                state.carritoActual = "";
             }
         },
         plugins: [createPersistedState()]

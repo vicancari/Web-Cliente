@@ -18,22 +18,25 @@
             <h5 class="titleModal"><img :src="reloj" alt=""> Historial</h5>
             <div class="bodyHistorial">
                 <div class="bodyCollapse">
-                    <v-button block class="btn btnHeader" v-b-toggle.collapseEgresos >
+                    <button type="button" block class="btn btnHeader" v-b-toggle.collapseEgresos name="egresos">
                         Egresos
                         <img class="img-fluid" :src="arrow">
-                    </v-button>
-                    <b-collapse id="collapseEgresos" accordion="collapseEgresos">
+                    </button>
+                    <b-collapse id="collapseEgresos" visible accordion="collapseEgresos">
                         <div class="filter">
-                            <button class="btn semana">Esta semana</button>
-                            <button class="btn mes">Este mes</button>
-                           <input type="date" class="date form-contrl">
+                            <button @click="getEstaSemanaEgresos()" class="btn semana filter__item" :class="is_fSemanaE === true ? 'active' : ''">Esta semana</button>
+                            <button @click="getEsteMesEgresos()" class="btn mes filter__item" :class="is_fEsteMesE === true ? 'active' : ''">Este mes</button>
+                            <select @change="filterMesAnteriorEgresos()" id="select_egreso" style="width: 250px" class="form-control filter__item" :class="is_fOtroMesE === true ? 'active' : ''">
+                                <option value="" selected disabled>Otro mes</option>
+                                <option v-for="(m, i) in this.selectMesesAntesActual" :key="i" :value="m.datefirst" :style="m.actual === true ? 'display: none;' : 'display: block;'">{{ m.mes }}</option>
+                            </select>
                         </div>
                         <div class="scroll">
-                            <div v-for="(egre, i) in listTransacciones.e" :key="i" class="boxcontent">
-                                <v-button v-if="egre.typeTransaccion === 'envio'" block class="btn title" v-b-toggle="egre._id">
+                            <div v-for="(egre, i) in this.listTransacciones.e.filter" :key="i" class="boxcontent">
+                                <button type="button" v-if="egre.typeTransaccion === 'envio'" block class="btn title" v-b-toggle="egre._id" :name="egre._id">
                                     {{ getComercio(egre.comercio != undefined ? egre.comercio.id : egre.id_comercio != undefined ? egre.id_comercio : 'Envio') }}
                                     <img class="img-fluid" :src="arrow">
-                                </v-button>
+                                </button>
                                 <b-collapse :id="egre._id" :accordion="egre._id">
                                     <ul>
                                         <li v-if="egre.typeTransaccion === 'envio'">
@@ -46,41 +49,50 @@
                                             Monto: {{ egre.price }}€ 
                                         </li>
                                         <li>
+                                            Enviado de: {{ egre.nameAccount }}
+                                        </li>
+                                        <li>
                                             Fecha: {{ egre.date }} Hora: {{ egre.time }}
                                         </li>
                                     </ul>
                                 </b-collapse>     
                             </div>
+                            <div v-if="this.listTransacciones.e.filter.length === 0" class="mensaje-nodata">
+                                <p class="text">No se encontraron egresos.</p>
+                            </div>
                         </div>
                         <div class="boxBtn">
-                            <button class="btn btnConfirmar">
+                            <button type="button" class="btn btnConfirmar">
                                 <img class="img-fluid" :src="compartir" alt="">
                             </button>
-                            <button class="btn btnConfirmar">
+                            <button type="button" class="btn btnConfirmar">
                                 <img class="img-fluid" :src="descargar" alt="">
                             </button>
                         </div>
                     </b-collapse>
-                    <v-button block class="btn btnHeader" v-b-toggle.collapseingresos >
+                    <button type="button" block class="btn btnHeader" v-b-toggle.collapseingresos name="ingresos">
                         Ingresos
                         <img class="img-fluid" :src="arrow">
-                    </v-button>
+                    </button>
                     <b-collapse id="collapseingresos" accordion="collapseingresos">
                         <div class="filter">
-                            <button class="btn semana">Esta semana</button>
-                            <button class="btn mes">Este mes</button>
-                           <input type="date" class="date form-contrl">
+                            <button @click="getEstaSemanaIngresos()" class="btn semana filter__item" :class="is_fSemanaI === true ? 'active' : ''">Esta semana</button>
+                            <button @click="getEsteMesIngresos()" class="btn mes filter__item" :class="is_fEsteMesI === true ? 'active' : ''">Este mes</button>
+                            <select @change="filterMesAnteriorIngresos()" id="select_ingreso" style="width: 250px" class="form-control filter__item" :class="is_fOtroMesI === true ? 'active' : ''">
+                                <option value="" selected disabled>Otro mes</option>
+                                <option v-for="(m, i) in this.selectMesesAntesActual" :key="i" :value="m.datefirst" :style="m.actual === true ? 'display: none;' : 'display: block;'">{{ m.mes }}</option>
+                            </select>
                         </div>
                         <div class="scroll">
-                            <div v-for="(ingre, i) in listTransacciones.i" :key="i" class="boxcontent">
-                                <v-button v-if="ingre.typeTransaccion === 'envio'" block class="btn title" v-b-toggle="ingre._id" >
+                            <div v-for="(ingre, i) in listTransacciones.i.filter" :key="i" class="boxcontent">
+                                <button type="button" v-if="ingre.typeTransaccion === 'envio'" block class="btn title" v-b-toggle="ingre._id" :name="ingre._id">
                                     {{ getComercio(ingre.comercio != undefined ? ingre.comercio.id : ingre.id_comercio != undefined ? ingre.id_comercio : 'Envio') }}
                                     <img class="img-fluid" :src="arrow">
-                                </v-button>
-                                <v-button v-if="ingre.typeTransaccion === 'recarga-saldo'" block class="btn title" v-b-toggle="ingre._id" >
+                                </button>
+                                <button type="button" v-if="ingre.typeTransaccion === 'recarga-saldo'" block class="btn title" v-b-toggle="ingre._id" :name="ingre._id">
                                     Recarga saldo
                                     <img class="img-fluid" :src="arrow">
-                                </v-button>
+                                </button>
                                 <b-collapse :id="ingre._id" :accordion="ingre._id">
                                     <ul>
                                         <li v-if="ingre.typeTransaccion === 'envio'">
@@ -93,22 +105,25 @@
                                             Monto: {{ ingre.price }}€ 
                                         </li>
                                         <li>
-                                            Fecha: {{ ingre.date }} Hora: {{ ingre.time }}
+                                            Recivido en: {{ ingre.nameAccount }}
                                         </li>
-                                        <li v-if="ingre.typeTransaccion === 'recarga-saldo'">
-                                            Enviado a: {{ ingre.nameAccount }}
+                                        <li>
+                                            Fecha: {{ ingre.date }} Hora: {{ ingre.time }}
                                         </li>
                                     </ul>
                                 </b-collapse>     
                             </div>
+                            <div v-if="this.listTransacciones.i.filter.length === 0" class="mensaje-nodata">
+                                <p class="text">No se encontraron ingresos.</p>
+                            </div>
                         </div>
                         <div class="boxBtn">
-                                <button class="btn btnConfirmar">
-                                    <img class="img-fluid" :src="compartir" alt="">
-                                </button>
-                                <button class="btn btnConfirmar">
-                                    <img class="img-fluid" :src="descargar" alt="">
-                                </button>
+                            <button type="button" class="btn btnConfirmar">
+                                <img class="img-fluid" :src="compartir" alt="">
+                            </button>
+                            <button type="button" class="btn btnConfirmar">
+                                <img class="img-fluid" :src="descargar" alt="">
+                            </button>
                         </div>
                     </b-collapse>
                 </div>
@@ -141,50 +156,57 @@
                 descargar: config.rutaWeb(descargar),
                 error: "",
                 listTransacciones: {
-                    i: [],
-                    e: []
-                }
+                    i: {
+                        all: [],
+                        filter: []
+                    },
+                    e: {
+                        all: [],
+                        filter: []
+                    }
+                },
+                selectMesesAntesActual: [],
+                is_fSemanaE: false,
+                is_fEsteMesE: false,
+                is_fOtroMesE: false,
+                is_fSemanaI: false,
+                is_fEsteMesI: false,
+                is_fOtroMesI: false,
             }
         },
         async created() {
             if (this.$store.getters.isLoggedIn === true) {
                 if (this.$store.getters.uid != "" || this.$store.getters.uid != null || this.$store.getters.uid != undefined) {
+                    await this.mesesAntesActual();
+
                     var Uid = this.$store.getters.uid;
                     await api.get('transactions/list/all').then(res => {
                         res.forEach(item => {
                             if (item.usuario != undefined) {
                                 if (Uid === item.usuario.uid) {
                                     if (item.mode.toLowerCase() === "ingreso") {
-                                        this.listTransacciones.i.push(item);
+                                        this.listTransacciones.i.all.push(item);
+                                        this.listTransacciones.i.filter.push(item);
                                     }
                 
                                     if (item.mode.toLowerCase() === "egreso") {
-                                        this.listTransacciones.e.push(item);
+                                        this.listTransacciones.e.all.push(item);
+                                        this.listTransacciones.e.filter.push(item);
                                     }
                                 }
                             }
                         });
         
-                        this.listTransacciones.i.sort(function(a, b){ 
-                            if (a.date && a.time < b.date && b.time) {
-                                return -1;
-                            }
-                        });
-        
-                        this.listTransacciones.e.sort(function(a, b){ 
-                            if (a.date && a.time < b.date && b.time) {
-                                return -1;
-                            }
-                        });
-        
-                        console.log("Historial -> ", this.listTransacciones);
+                        this.getEstaSemanaIngresos();
+                        this.getEstaSemanaEgresos();
                     }).catch(err => {
                         this.error = err;
                     });
         
                     EventBus.$on('IngresoReady', (data) => {
-                        this.listTransacciones.i.push(data);
-                        this.listTransacciones.i.sort(function(a, b) {
+                        this.listTransacciones.i.all.push(data);
+                        this.listTransacciones.i.filter.push(data);
+                        this.listTransacciones.i.filter.sort(function(a, b) {
                             if (a.date && a.time < b.date && b.time) {
                                 return -1;
                             }
@@ -192,8 +214,9 @@
                     });
         
                     EventBus.$on('EgresoReady', (data) => {
-                        this.listTransacciones.e.push(data);
-                        this.listTransacciones.e.sort(function(a, b) {
+                        this.listTransacciones.e.all.push(data);
+                        this.listTransacciones.e.filter.push(data);
+                        this.listTransacciones.e.filter.sort(function(a, b) {
                             if (a.date && a.time < b.date && b.time) {
                                 return -1;
                             }
@@ -216,7 +239,337 @@
                 }
 
                 return _name;
-            }
+            },
+            getEstaSemanaEgresos() {
+                this.resetFilterSelect();
+                var curr = new Date;
+                var lunes = (curr.getDate() - curr.getDay()) + 1;
+                var martes = lunes + 1;
+                var miercoles = martes + 1;
+                var jueves = miercoles + 1;
+                var viernes = jueves + 1;
+                var sabado = viernes + 1;
+                var domingo = curr.getDate() - curr.getDay();
+
+                var semana = [
+                    new Date(curr.setDate(domingo)).toISOString().split("T")[0],
+                    new Date(curr.setDate(lunes)).toISOString().split("T")[0],
+                    new Date(curr.setDate(martes)).toISOString().split("T")[0],
+                    new Date(curr.setDate(miercoles)).toISOString().split("T")[0],
+                    new Date(curr.setDate(jueves)).toISOString().split("T")[0],
+                    new Date(curr.setDate(viernes)).toISOString().split("T")[0],
+                    new Date(curr.setDate(sabado)).toISOString().split("T")[0],
+                ];
+
+                this.listTransacciones.e.filter = [];
+                this.listTransacciones.e.all.forEach(data => {
+                    var fR = data.date;
+                    
+                    for (var i = 0; i < semana.length; i++) {
+                        if (fR === semana[i]) {
+                            this.listTransacciones.e.filter.push(data);
+                        }
+                    }
+                });
+
+                this.listTransacciones.e.filter.sort(function(a, b){ 
+                    if (a.date && a.time < b.date && b.time) {
+                        return -1;
+                    }
+                });
+
+                this.is_fSemanaE = true;
+                this.is_fEsteMesE = false;
+                this.is_fOtroMesE = false;
+            },
+            getEstaSemanaIngresos() {
+                this.resetFilterSelect();
+                var curr = new Date;
+                var lunes = (curr.getDate() - curr.getDay()) + 1;
+                var martes = lunes + 1;
+                var miercoles = martes + 1;
+                var jueves = miercoles + 1;
+                var viernes = jueves + 1;
+                var sabado = viernes + 1;
+                var domingo = curr.getDate() - curr.getDay();
+
+                var semana = [
+                    new Date(curr.setDate(domingo)).toISOString().split("T")[0],
+                    new Date(curr.setDate(lunes)).toISOString().split("T")[0],
+                    new Date(curr.setDate(martes)).toISOString().split("T")[0],
+                    new Date(curr.setDate(miercoles)).toISOString().split("T")[0],
+                    new Date(curr.setDate(jueves)).toISOString().split("T")[0],
+                    new Date(curr.setDate(viernes)).toISOString().split("T")[0],
+                    new Date(curr.setDate(sabado)).toISOString().split("T")[0],
+                ];
+
+                this.listTransacciones.i.filter = [];
+                this.listTransacciones.i.all.forEach(data => {
+                    var fR = data.date;
+                    
+                    for (var i = 0; i < semana.length; i++) {
+                        if (fR === semana[i]) {
+                            this.listTransacciones.i.filter.push(data);
+                        }
+                    }
+                });
+
+                this.listTransacciones.i.filter.sort(function(a, b){ 
+                    if (a.date && a.time < b.date && b.time) {
+                        return -1;
+                    }
+                });
+
+                this.is_fSemanaI = true;
+                this.is_fEsteMesI = false;
+                this.is_fOtroMesI = false;
+            },
+            getEsteMesEgresos() {
+                this.resetFilterSelect();
+                var curr = new Date;
+                var _esteMes = curr.getMonth() + 1;
+                var _mes = _esteMes <= 9 ? `0${_esteMes}` : _esteMes;
+
+                this.listTransacciones.e.filter = [];
+                this.listTransacciones.e.all.forEach(data => {
+                    var fR = data.date.split("-")[1];
+                    
+                    if (fR === _mes) {
+                        this.listTransacciones.e.filter.push(data);
+                    }
+                });
+
+                this.listTransacciones.e.filter.sort(function(a, b){ 
+                    if (a.date && a.time < b.date && b.time) {
+                        return -1;
+                    }
+                });
+
+                this.is_fSemanaE = false;
+                this.is_fEsteMesE = true;
+                this.is_fOtroMesE = false;
+            },
+            getEsteMesIngresos() {
+                this.resetFilterSelect();
+                var curr = new Date;
+                var _esteMes = curr.getMonth() + 1;
+                var _mes = _esteMes <= 9 ? `0${_esteMes}` : _esteMes;
+
+                this.listTransacciones.i.filter = [];
+                this.listTransacciones.i.all.forEach(data => {
+                    var fR = data.date.split("-")[1];
+                    
+                    if (fR === _mes) {
+                        this.listTransacciones.i.filter.push(data);
+                    }
+                });
+
+                this.listTransacciones.i.filter.sort(function(a, b){ 
+                    if (a.date && a.time < b.date && b.time) {
+                        return -1;
+                    }
+                });
+
+                this.is_fSemanaI = false;
+                this.is_fEsteMesI = true;
+                this.is_fOtroMesI = false;
+            },
+            filterMesAnteriorEgresos() {
+                var _mes = document.querySelector("#select_egreso").value.split("-")[1];
+
+                this.listTransacciones.e.filter = [];
+                this.listTransacciones.e.all.forEach(data => {
+                    var fR = data.date.split("-")[1];
+                    
+                    if (fR === _mes) {
+                        this.listTransacciones.e.filter.push(data);
+                    }
+                });
+
+                this.listTransacciones.e.filter.sort(function(a, b){ 
+                    if (a.date && a.time < b.date && b.time) {
+                        return -1;
+                    }
+                });
+
+                this.is_fSemanaE = false;
+                this.is_fEsteMesE = false;
+                this.is_fOtroMesE = true;
+            },
+            filterMesAnteriorIngresos() {
+                var _mes = document.querySelector("#select_ingreso").value.split("-")[1];
+
+                this.listTransacciones.i.filter = [];
+                this.listTransacciones.i.all.forEach(data => {
+                    var fR = data.date.split("-")[1];
+                    
+                    if (fR === _mes) {
+                        this.listTransacciones.i.filter.push(data);
+                    }
+                });
+
+                this.listTransacciones.i.filter.sort(function(a, b){ 
+                    if (a.date && a.time < b.date && b.time) {
+                        return -1;
+                    }
+                });
+
+                this.is_fSemanaI = false;
+                this.is_fEsteMesI = false;
+                this.is_fOtroMesI = true;
+            },
+            resetFilterSelect() {
+                var _s1 = document.querySelector("#select_ingreso");
+                var _s2 = document.querySelector("#select_egreso");
+
+                if (_s1) {
+                    _s1.value = "";
+                }
+                if (_s2) {
+                    _s2.value = "";
+                }
+            },
+            async mesesAntesActual() {
+                var _dateActual = new Date();
+                var _annioActual = _dateActual.getFullYear();
+                var _mesesActual = _dateActual.getMonth() + 1;
+                var _diaActual = _dateActual.getDate();
+
+                var _fechaActual = _annioActual + "-" + _mesesActual <= 9 ? "0"+_mesesActual : _mesesActual + "-" + _diaActual <= 9 ? "0"+_diaActual : _diaActual;
+
+                this.input_egreso = _fechaActual;
+                this.input_interna = _fechaActual;
+                this.input_ingreso = _fechaActual;
+                this.input_factura = _fechaActual;
+                this.input_factura_empleado = _fechaActual;
+
+                if (_mesesActual === 1) {
+                    this.selectMesesAntesActual = [
+                        {mes: "Enero", datefirst: `${_annioActual}-01-01`, lc: "enero", uc: "ENERO", actual: _mesesActual === 1 ? true : false}
+                    ]
+                }
+                if (_mesesActual === 2) {
+                    this.selectMesesAntesActual = [
+                        {mes: "Enero", datefirst: `${_annioActual}-01-01`, lc: "enero", uc: "ENERO"},
+                        {mes: "Febrero", datefirst: `${_annioActual}-02-01`, lc: "febrero", uc: "FEBRERO", actual: _mesesActual === 2 ? true : false}
+                    ]
+                }
+                if (_mesesActual === 3) {
+                    this.selectMesesAntesActual = [
+                        {mes: "Enero", datefirst: `${_annioActual}-01-01`, lc: "enero", uc: "ENERO"},
+                        {mes: "Febrero", datefirst: `${_annioActual}-02-01`, lc: "febrero", uc: "FEBRERO"},
+                        {mes: "Marzo", datefirst: `${_annioActual}-03-01`, lc: "marzo", uc: "MARZO", actual: _mesesActual === 3 ? true : false}
+                    ]
+                }
+                if (_mesesActual === 4) {
+                    this.selectMesesAntesActual = [
+                        {mes: "Enero", datefirst: `${_annioActual}-01-01`, lc: "enero", uc: "ENERO"},
+                        {mes: "Febrero", datefirst: `${_annioActual}-02-01`, lc: "febrero", uc: "FEBRERO"},
+                        {mes: "Marzo", datefirst: `${_annioActual}-03-01`, lc: "marzo", uc: "MARZO"},
+                        {mes: "Abril", datefirst: `${_annioActual}-04-01`, lc: "abril", uc: "ABRIL", actual: _mesesActual === 4 ? true : false}
+                    ]
+                }
+                if (_mesesActual === 5) {
+                    this.selectMesesAntesActual = [
+                        {mes: "Enero", datefirst: `${_annioActual}-01-01`, lc: "enero", uc: "ENERO"},
+                        {mes: "Febrero", datefirst: `${_annioActual}-02-01`, lc: "febrero", uc: "FEBRERO"},
+                        {mes: "Marzo", datefirst: `${_annioActual}-03-01`, lc: "marzo", uc: "MARZO"},
+                        {mes: "Abril", datefirst: `${_annioActual}-04-01`, lc: "abril", uc: "ABRIL"},
+                        {mes: "Mayo", datefirst: `${_annioActual}-05-01`, lc: "mayo", uc: "MAYO", actual: _mesesActual === 5 ? true : false}
+                    ]
+                }
+                if (_mesesActual === 6) {
+                    this.selectMesesAntesActual = [
+                        {mes: "Enero", datefirst: `${_annioActual}-01-01`, lc: "enero", uc: "ENERO"},
+                        {mes: "Febrero", datefirst: `${_annioActual}-02-01`, lc: "febrero", uc: "FEBRERO"},
+                        {mes: "Marzo", datefirst: `${_annioActual}-03-01`, lc: "marzo", uc: "MARZO"},
+                        {mes: "Abril", datefirst: `${_annioActual}-04-01`, lc: "abril", uc: "ABRIL"},
+                        {mes: "Mayo", datefirst: `${_annioActual}-05-01`, lc: "mayo", uc: "MAYO"},
+                        {mes: "Junio", datefirst: `${_annioActual}-06-01`, lc: "junio", uc: "JUNIO", actual: _mesesActual === 6 ? true : false}
+                    ]
+                }
+                if (_mesesActual === 7) {
+                    this.selectMesesAntesActual = [
+                        {mes: "Enero", datefirst: `${_annioActual}-01-01`, lc: "enero", uc: "ENERO"},
+                        {mes: "Febrero", datefirst: `${_annioActual}-02-01`, lc: "febrero", uc: "FEBRERO"},
+                        {mes: "Marzo", datefirst: `${_annioActual}-03-01`, lc: "marzo", uc: "MARZO"},
+                        {mes: "Abril", datefirst: `${_annioActual}-04-01`, lc: "abril", uc: "ABRIL"},
+                        {mes: "Mayo", datefirst: `${_annioActual}-05-01`, lc: "mayo", uc: "MAYO"},
+                        {mes: "Junio", datefirst: `${_annioActual}-06-01`, lc: "junio", uc: "JUNIO"},
+                        {mes: "Julio", datefirst: `${_annioActual}-07-01`, lc: "julio", uc: "JULIO", actual: _mesesActual === 7 ? true : false}
+                    ]
+                }
+                if (_mesesActual === 8) {
+                    this.selectMesesAntesActual = [
+                        {mes: "Enero", datefirst: `${_annioActual}-01-01`, lc: "enero", uc: "ENERO"},
+                        {mes: "Febrero", datefirst: `${_annioActual}-02-01`, lc: "febrero", uc: "FEBRERO"},
+                        {mes: "Marzo", datefirst: `${_annioActual}-03-01`, lc: "marzo", uc: "MARZO"},
+                        {mes: "Abril", datefirst: `${_annioActual}-04-01`, lc: "abril", uc: "ABRIL"},
+                        {mes: "Mayo", datefirst: `${_annioActual}-05-01`, lc: "mayo", uc: "MAYO"},
+                        {mes: "Junio", datefirst: `${_annioActual}-06-01`, lc: "junio", uc: "JUNIO"},
+                        {mes: "Julio", datefirst: `${_annioActual}-07-01`, lc: "julio", uc: "JULIO"},
+                        {mes: "Agosto", datefirst: `${_annioActual}-08-01`, lc: "agosto", uc: "AGOSTO", actual: _mesesActual === 8 ? true : false}
+                    ]
+                }
+                if (_mesesActual === 9) {
+                    this.selectMesesAntesActual = [
+                        {mes: "Enero", datefirst: `${_annioActual}-01-01`, lc: "enero", uc: "ENERO"},
+                        {mes: "Febrero", datefirst: `${_annioActual}-02-01`, lc: "febrero", uc: "FEBRERO"},
+                        {mes: "Marzo", datefirst: `${_annioActual}-03-01`, lc: "marzo", uc: "MARZO"},
+                        {mes: "Abril", datefirst: `${_annioActual}-04-01`, lc: "abril", uc: "ABRIL"},
+                        {mes: "Mayo", datefirst: `${_annioActual}-05-01`, lc: "mayo", uc: "MAYO"},
+                        {mes: "Junio", datefirst: `${_annioActual}-06-01`, lc: "junio", uc: "JUNIO"},
+                        {mes: "Julio", datefirst: `${_annioActual}-07-01`, lc: "julio", uc: "JULIO"},
+                        {mes: "Agosto", datefirst: `${_annioActual}-08-01`, lc: "agosto", uc: "AGOSTO"},
+                        {mes: "Septiembre", datefirst: `${_annioActual}-09-01`, lc: "septiembre", uc: "SEPTIEMBRE", actual: _mesesActual === 9 ? true : false}
+                    ]
+                }
+                if (_mesesActual === 10) {
+                    this.selectMesesAntesActual = [
+                        {mes: "Enero", datefirst: `${_annioActual}-01-01`, lc: "enero", uc: "ENERO"},
+                        {mes: "Febrero", datefirst: `${_annioActual}-02-01`, lc: "febrero", uc: "FEBRERO"},
+                        {mes: "Marzo", datefirst: `${_annioActual}-03-01`, lc: "marzo", uc: "MARZO"},
+                        {mes: "Abril", datefirst: `${_annioActual}-04-01`, lc: "abril", uc: "ABRIL"},
+                        {mes: "Mayo", datefirst: `${_annioActual}-05-01`, lc: "mayo", uc: "MAYO"},
+                        {mes: "Junio", datefirst: `${_annioActual}-06-01`, lc: "junio", uc: "JUNIO"},
+                        {mes: "Julio", datefirst: `${_annioActual}-07-01`, lc: "julio", uc: "JULIO"},
+                        {mes: "Agosto", datefirst: `${_annioActual}-08-01`, lc: "agosto", uc: "AGOSTO"},
+                        {mes: "Septiembre", datefirst: `${_annioActual}-09-01`, lc: "septiembre", uc: "SEPTIEMBRE"},
+                        {mes: "Octubre", datefirst: `${_annioActual}-10-01`, lc: "octubre", uc: "OCTUBRE", actual: _mesesActual === 10 ? true : false}
+                    ]
+                }
+                if (_mesesActual === 11) {
+                    this.selectMesesAntesActual = [
+                        {mes: "Enero", datefirst: `${_annioActual}-01-01`, lc: "enero", uc: "ENERO"},
+                        {mes: "Febrero", datefirst: `${_annioActual}-02-01`, lc: "febrero", uc: "FEBRERO"},
+                        {mes: "Marzo", datefirst: `${_annioActual}-03-01`, lc: "marzo", uc: "MARZO"},
+                        {mes: "Abril", datefirst: `${_annioActual}-04-01`, lc: "abril", uc: "ABRIL"},
+                        {mes: "Mayo", datefirst: `${_annioActual}-05-01`, lc: "mayo", uc: "MAYO"},
+                        {mes: "Junio", datefirst: `${_annioActual}-06-01`, lc: "junio", uc: "JUNIO"},
+                        {mes: "Julio", datefirst: `${_annioActual}-07-01`, lc: "julio", uc: "JULIO"},
+                        {mes: "Agosto", datefirst: `${_annioActual}-08-01`, lc: "agosto", uc: "AGOSTO"},
+                        {mes: "Septiembre", datefirst: `${_annioActual}-09-01`, lc: "septiembre", uc: "SEPTIEMBRE"},
+                        {mes: "Octubre", datefirst: `${_annioActual}-10-01`, lc: "octubre", uc: "OCTUBRE"},
+                        {mes: "Noviembre", datefirst: `${_annioActual}-11-01`, lc: "noviembre", uc: "NOVIEMBRE", actual: _mesesActual === 11 ? true : false}
+                    ]
+                }
+                if (_mesesActual === 12) {
+                    this.selectMesesAntesActual = [
+                        {mes: "Enero", datefirst: `${_annioActual}-01-01`, lc: "enero", uc: "ENERO"},
+                        {mes: "Febrero", datefirst: `${_annioActual}-02-01`, lc: "febrero", uc: "FEBRERO"},
+                        {mes: "Marzo", datefirst: `${_annioActual}-03-01`, lc: "marzo", uc: "MARZO"},
+                        {mes: "Abril", datefirst: `${_annioActual}-04-01`, lc: "abril", uc: "ABRIL"},
+                        {mes: "Mayo", datefirst: `${_annioActual}-05-01`, lc: "mayo", uc: "MAYO"},
+                        {mes: "Junio", datefirst: `${_annioActual}-06-01`, lc: "junio", uc: "JUNIO"},
+                        {mes: "Julio", datefirst: `${_annioActual}-07-01`, lc: "julio", uc: "JULIO"},
+                        {mes: "Agosto", datefirst: `${_annioActual}-08-01`, lc: "agosto", uc: "AGOSTO"},
+                        {mes: "Septiembre", datefirst: `${_annioActual}-09-01`, lc: "septiembre", uc: "SEPTIEMBRE"},
+                        {mes: "Octubre", datefirst: `${_annioActual}-10-01`, lc: "octubre", uc: "OCTUBRE"},
+                        {mes: "Noviembre", datefirst: `${_annioActual}-11-01`, lc: "noviembre", uc: "NOVIEMBRE"},
+                        {mes: "Diciembre", datefirst: `${_annioActual}-12-01`, lc: "diciembre", uc: "DICIEMBRE", actual: _mesesActual === 12 ? true : false}
+                    ]
+                }
+            },
         }
     }
 </script>
@@ -376,6 +729,62 @@
                     object-fit: contain;
                 }
             }
+        }
+    }
+
+    .bodyHistorial .bodyCollapse .btnHeader, .bodyHistorial .scroll .boxcontent .title {
+        width: 100%;
+    }
+
+    .filter {
+        padding: 1rem 0;
+        
+        &__item {
+            display: block;
+            width: calc(100% / 3) !important;
+            height: 40px!important;
+            text-align: center !important;
+            margin: 0 1rem;
+            border: 1px solid rgba(0,0,0,.25);
+            background: #fff;
+            color: #000;
+            padding-left: 0 !important;
+            line-height: 1.05 !important;
+            cursor: pointer !important;
+
+            &:first-child {
+                margin-left: 0;
+            }
+
+            &:last-child {
+                margin-right: 0;
+            }
+
+            &.form-control {
+                padding-left: .75rem !important;
+                outline: none !important;
+            }
+
+            &.active {
+                border-color: #435463;
+                color: #435463;
+                font-weight: bold !important;
+                box-shadow: 0 0 0 5px rgba(67, 84, 99, 0.15) !important;
+            }
+        }
+    }
+
+    .mensaje-nodata {
+        width: 100%;
+        height: max-content;
+        margin: 1rem 0;
+
+        .text {
+            width: 100%;
+            margin: 0;
+            text-align: center;
+            color: #666666;
+            font-size: 1.2rem;
         }
     }
 </style>

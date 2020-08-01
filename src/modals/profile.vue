@@ -22,9 +22,12 @@
                         <input type="file" class="d-none" id="addPhoto">
                         <img :src="lapiz" cljass="img-fluid" alt="">
                     </label>
-                    <!-- <button class="btn"><img :src="lapiz" cljass="img-fluid" alt=""></button> -->
                 </div>
                 <div class="bodyOptions">
+                    <div class="form-group">
+                        <h5 class="text-truncate m-0">{{dni}}</h5>
+                        <button class="btn btn-outline-secondary" type="button" @click="change('dni')"><img class="img-fluid" :src="lapiz" alt=""></button>
+                    </div>
                     <div class="form-group">
                         <h5 class="text-truncate m-0">{{name}}</h5>
                         <button class="btn btn-outline-secondary" type="button" @click="change('name')"><img class="img-fluid" :src="lapiz" alt=""></button>
@@ -42,163 +45,263 @@
                         <button class="btn btn-outline-secondary" type="button"  @click="change('telephone')"><img class="img-fluid" :src="lapiz" alt=""></button>
                     </div>
                     <div class="form-group">
-                        <h5 class="text-truncate m-0">{{date}}</h5>
-                        <button class="btn btn-outline-secondary" type="button"  @click="change('date')"><img class="img-fluid" :src="lapiz" alt=""></button>
+                        <h5 class="text-truncate m-0">{{birthday}}</h5>
+                        <button class="btn btn-outline-secondary" type="button"  @click="change('birthday')"><img class="img-fluid" :src="lapiz" alt=""></button>
                     </div>
                     <div class="form-group">
-                        <h5 class="text-truncate m-0">{{addres}}</h5>
-                        <button class="btn btn-outline-secondary" type="button"  @click="change('address')"><img class="img-fluid" :src="pin" alt=""></button>
-                    </div>
-                    <div class="form-group">
-                        <h5 class="text-truncate m-0">Cambiar contraseña</h5>
-                        <button class="btn btn-outline-secondary" type="button"  @click="change('password')"><img class="img-fluid" :src="lapiz" alt=""></button>
+                        <h5 class="text-truncate m-0">{{address}}</h5>
+                        <button disabled class="btn btn-outline-secondary" type="button"  @click="change('address')"><img class="img-fluid" :src="pin" alt=""></button>
                     </div>
                 </div>
-                <button class="btn btnConfirmar">
-                    Listo
+                <button type="button" id="buttonSave" disabled class="btn btnConfirmar" @click="update()">
+                    Guardar
                 </button>
+                <button type="button" id="guardoFin" v-b-modal.my-modal style="display: none;"></button>
             </div>
         </b-modal>
         <b-modal centered :modal-class="modalEdit" id="modal-edit" ref="modal-edit"  hide-footer hide-header>  
             <h5 class="titleModal">Editar</h5>
-                <!-- name -->
-                <div class="form-group a"  v-if="showInput == 'name'">
-                    <label class="form-control-placeholder" for="name">Ingrese nombre</label>
-                    <input type="text" id="name" class="form-control" v-model="name">
-                    <p class="msgError d-none">*msgError</p>
-                </div>
-                <!-- lastname -->
-                <div class="form-group a"  v-if="showInput == 'lastname'">
-                    <label class="form-control-placeholder" for="lastname">Ingrese apellido</label>
-                    <input type="text" id="lastname" class="form-control" v-model="lastname">
-                    <p class="msgError d-none">*msgError</p>
-                </div>
-                <!-- email -->
-                 <div class="form-group a"  v-if="showInput == 'email'">
-                    <label class="form-control-placeholder" for="email">Ingrese email</label>
-                    <input type="email" id="email" v-model="email" class="form-control">
-                    <p class="msgError d-none">*msgError</p>
-                </div>
-                <!-- telephone -->
-                <div class="form-group a"  v-if="showInput == 'telephone'">
-                    <label class="form-control-placeholder" for="phone">Ingrese Teléfono</label>
-                    <input type="number" id="phone" v-model="telephone" class="form-control">
-                    <p class="msgError d-none">*msgError</p>
-                </div>
-                <!-- date -->
-                 <div class="form-group a"  v-if="showInput == 'date'">
-                    <label class="form-control-placeholder" for="birthday">Ingrese fecha de nacimiento</label>
-                    <input type="date" id="birthday" v-model="date" class="form-control">
-                    <p class="msgError d-none">*msgError</p>
-                </div>
-                <!-- addres -->
-                <div class="form-group a"  v-if="showInput == 'address'">
-                    <label class="form-control-placeholder" for="address">Ingrese dirección</label>
-                    <input type="text" id="address" v-model="date" class="form-control">
-                    <p class="msgError d-none">*msgError</p>
-                </div>
-                <!-- password -->
-                <div class="boxPassword" v-if="showInput == 'password'">
-                    <div class="form-group a" >
-                        <label class="form-control-placeholder" for="n_pass">Nueva contraseña</label>
-                        <input :type="type2" id="n_pass" v-model="oldPassword" class="form-control">
-                        <a class="btn btnShow" @click="showPassword2">
-                            <i :class="icon2" ></i>
-                        </a>
-                    </div>
-                    <p class="msgError d-none">*msgError</p>
-                    <div class="form-group a" >
-                        <label class="form-control-placeholder" for="cn_pass">Repetir Contraseña</label>
-                        <input :type="type3" id="cn_pass" v-model="confPassword" class="form-control">
-                        <a class="btn btnShow" @click="showPassword3">
-                            <i :class="icon3" ></i>
-                        </a>
-                    </div>
-                    <p class="msgError d-none">*msgError</p>
-                </div>
+            <!-- dni -->
+            <div class="form-group a"  v-if="showInput == 'dni'">
+                <label class="form-control-placeholder" for="name">Ingrese el DNI</label>
+                <input @change="changeText" type="text" id="dni" autocomplete="off" class="form-control" v-model="dni">
+                <p class="msgError d-none">*msgError</p>
+            </div>
+            <!-- name -->
+            <div class="form-group a"  v-if="showInput == 'name'">
+                <label class="form-control-placeholder" for="name">Ingrese nombre</label>
+                <input @change="changeText" type="text" id="name" autocomplete="off" class="form-control" v-model="name">
+                <p class="msgError d-none">*msgError</p>
+            </div>
+            <!-- lastname -->
+            <div class="form-group a"  v-if="showInput == 'lastname'">
+                <label class="form-control-placeholder" for="lastname">Ingrese apellido</label>
+                <input @change="changeText" type="text" id="lastname" autocomplete="off" class="form-control" v-model="lastname">
+                <p class="msgError d-none">*msgError</p>
+            </div>
+            <!-- email -->
+                <div class="form-group a"  v-if="showInput == 'email'">
+                <label class="form-control-placeholder" for="email">Ingrese email</label>
+                <input @change="changeText" type="email" id="email" autocomplete="off" v-model="email" class="form-control">
+                <p class="msgError d-none">*msgError</p>
+            </div>
+            <!-- telephone -->
+            <div class="form-group a"  v-if="showInput == 'telephone'">
+                <label class="form-control-placeholder" for="phone">Ingrese Teléfono</label>
+                <input @change="changeText" type="number" id="phone" autocomplete="off" v-model="telephone" class="form-control">
+                <p class="msgError d-none">*msgError</p>
+            </div>
+            <!-- date -->
+                <div class="form-group a"  v-if="showInput == 'birthday'">
+                <label class="form-control-placeholder" for="birthday">Ingrese fecha de nacimiento</label>
+                <input @change="changeText" type="date" id="birthday" autocomplete="off" v-model="birthday" class="form-control">
+                <p class="msgError d-none">*msgError</p>
+            </div>
+            <!-- addres -->
+            <div class="form-group a"  v-if="showInput == 'address'">
+                <label class="form-control-placeholder" for="address">Ingrese dirección</label>
+                <input @change="changeText" type="text" id="address" autocomplete="off" v-model="address" class="form-control">
+                <p class="msgError d-none">*msgError</p>
+            </div>
             <button class="btn btnConfirmar" @click="$bvModal.hide('modal-edit')">
                 Listo
             </button>
+        </b-modal>
+
+        <b-modal :modal-class="myclassAlert" centered  id="my-modal" ref="my-modal"  hide-footer hide-header>  
+            <div class="d-block text-center">
+                <img :src="checkimg" alt="">
+                <h3>¡Éxito!</h3>
+                <p>Los datos se guardaron éxitosamente.</p>
+            </div>
         </b-modal>
     </div>
 </template>
 <script>
     import config from "../config.js";
+    import checkimg from "../assets/img/icons/check.svg";
     /* Images */
     import avatar from '../assets/img/avatar.png';
     import back from '../assets/img/icons/flechavolver.svg';
     import lapiz from '../assets/img/icons/lapizeditar.svg';
     import pin from '../assets/img/icons/pin-blue.png';
 
+    import { EventBus } from "../main.js";
+    import api from "../api.js";
 
-export default {
-    name: 'profile',
-    components: {},
-    data: function () {
-        return {
-            myclass: ['modal-profile'],
-            modalEdit: ['modal-edit'],
-            avatar: avatar,
-            back: config.rutaWeb(back),
-            lapiz: config.rutaWeb(lapiz),
-            pin: pin,
-            showInput: '',
-            icon: "fas fa-eye",
-            type: "password",
-            showHide: true,
-             icon2: "fas fa-eye",
-            type2: "password",
-            showHide2: true,
-             icon3: "fas fa-eye",
-            type3: "password",
-            showHide3: true,
-            name: this.$store.getters.user.name,
-            lastname: this.$store.getters.user.lastname,
-            email: this.$store.getters.user.email,
-            telephone: this.$store.getters.user.phone,
-            date: this.$store.getters.user.birthday,
-            addres: this.$store.getters.user.address,
-            password: 1234123,
-            oldPassword: '',
-            confPassword: '',
-        }
-    },
-    methods: {
-        change(type){
-            this.$refs['modal-edit'].show();
-            this.showInput = type;
-            console.log(type);
-            console.log(this.showInput);
-        },
-        showPassword() {
-            if(this.type === "password") {
-                this.type = "text"
-                this.icon = "fas fa-eye"
-            } else {
-                this.type = "password"
-                this.icon = "fas fa-eye-slash"
+    export default {
+        name: 'profile',
+        components: {},
+        data: function () {
+            return {
+                myclass: ['modal-profile'],
+                modalEdit: ['modal-edit'],
+                avatar: avatar,
+                back: config.rutaWeb(back),
+                lapiz: config.rutaWeb(lapiz),
+                checkimg: checkimg,
+                myclassAlert: ['alert'],
+                pin: pin,
+                showInput: '',
+                dni: "",
+                name: "",
+                lastname: "",
+                email: "",
+                telephone: "",
+                birthday: "",
+                address: "",
+                updateClt: {
+                    address: "",
+                    birthday: "",
+                    city: "",
+                    country: "",
+                    dni: "",
+                    email: "",
+                    lat: "",
+                    lng: "",
+                    lastname: "",
+                    name: "",
+                    phone: "",
+                }
             }
         },
-        showPassword2() {
-            if(this.type2 === "password") {
-                this.type2 = "text"
-                this.icon2 = "fas fa-eye"
-            } else {
-                this.type2 = "password"
-                this.icon2 = "fas fa-eye-slash"
+        created() {
+            if (this.$store.getters.isLoggedIn === true) {
+                if (this.$store.getters.uid != "" || this.$store.getters.uid != null || this.$store.getters.uid != undefined) {
+                    var _uid = this.$store.getters.uid;
+                    api.post("cliente/info/", {uid: _uid}).then(res => {
+                        var _user = res;
+                        // console.log("Perfil -> ", _user);
+
+                        if (_user) {
+                            this.dni = _user.dni;
+                            this.name = _user.name;
+                            this.lastname = _user.lastname;
+                            this.email = _user.email;
+                            this.telephone = _user.phone;
+                            this.birthday = _user.birthday;
+                            this.address = _user.address;
+                        }
+                    });
+
+                    EventBus.$on("user", res => {
+                        var _user = res;
+                        // console.log("Perfil -> ", _user);
+
+                        if (_user) {
+                            this.dni = _user.dni;
+                            this.name = _user.name;
+                            this.lastname = _user.lastname;
+                            this.email = _user.email;
+                            this.telephone = _user.phone;
+                            this.birthday = _user.birthday;
+                            this.address = _user.address;
+                        }
+                    });
+                }
             }
         },
-        showPassword3() {
-            if(this.type3 === "password") {
-                this.type3 = "text"
-                this.icon3 = "fas fa-eye"
-            } else {
-                this.type3 = "password"
-                this.icon3 = "fas fa-eye-slash"
+        methods: {
+            change(type) {
+                this.$refs['modal-edit'].show();
+                this.showInput = type;
+            },
+            changeText(e) {
+                var _input = e.target;
+                var _id = _input.getAttribute("id");
+                var _btn = document.querySelector("#buttonSave");
+                
+                if (_id === "dni") {
+                    if (_input.value.toLowerCase() != this.$store.getters.user.dni) {
+                        _btn.disabled = false;
+                    } else {
+                        _btn.disabled = true;
+                    }
+                }
+
+                if (_id === "name") {
+                    if (_input.value.toLowerCase() != this.$store.getters.user.name) {
+                        _btn.disabled = false;
+                    } else {
+                        _btn.disabled = true;
+                    }
+                }
+
+                if (_id === "lastname") {
+                    if (_input.value.toLowerCase() != this.$store.getters.user.lastname) {
+                        _btn.disabled = false;
+                    } else {
+                        _btn.disabled = true;
+                    }
+                }
+
+                if (_id === "email") {
+                    if (_input.value.toLowerCase() != this.$store.getters.user.email) {
+                        _btn.disabled = false;
+                    } else {
+                        _btn.disabled = true;
+                    }
+                }
+
+                if (_id === "phone") {
+                    if (_input.value.toLowerCase() != this.$store.getters.user.phone) {
+                        _btn.disabled = false;
+                    } else {
+                        _btn.disabled = true;
+                    }
+                }
+
+                if (_id === "birthday") {
+                    if (_input.value.toLowerCase() != this.$store.getters.user.birthday) {
+                        _btn.disabled = false;
+                    } else {
+                        _btn.disabled = true;
+                    }
+                }
+
+                if (_id === "address") {
+                    if (_input.value.toLowerCase() != this.$store.getters.user.address) {
+                        _btn.disabled = false;
+                    } else {
+                        _btn.disabled = true;
+                    }
+                }
+
+                if (this.dni === this.$store.getters.user.dni && this.name === this.$store.getters.user.name && this.lastname === this.$store.getters.user.lastname && this.email === this.$store.getters.user.email && this.telephone === this.$store.getters.user.phone && this.birthday === this.$store.getters.user.birthday) {
+                    _btn.disabled = true;
+                }
+            },
+            update() {
+                var _btn = document.querySelector("#buttonSave");
+                this.updateClt.uid = this.$store.getters.uid;
+                this.updateClt.dni = this.dni;
+                this.updateClt.name = this.name;
+                this.updateClt.lastname = this.lastname;
+                this.updateClt.email = this.email;
+                this.updateClt.phone = this.telephone;
+                this.updateClt.birthday = this.birthday;
+
+                this.updateClt.address = this.$store.getters.user.address;
+                this.updateClt.city = this.$store.getters.user.city;
+                this.updateClt.country = this.$store.getters.user.country;
+                this.updateClt.lat = this.$store.getters.user.lat;
+                this.updateClt.lng = this.$store.getters.user.lng;
+
+                api.put("cliente/update/", this.updateClt).then(res => {
+                    console.log(res);
+                    _btn.disabled = true;
+
+                    setTimeout(() => {
+                        if (document.querySelector("#guardoFin")) {
+                            document.querySelector("#guardoFin").click();
+                        }
+                    }, 500);
+                }).catch(err => {
+                    console.log("Error -> ", err);
+                });
             }
         }
     }
-}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

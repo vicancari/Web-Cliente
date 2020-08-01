@@ -12,41 +12,48 @@
         </div>
         <div class="bodySection">
             <div class="box">
-                <h5 class="titlePromotions">Promociones</h5>
-                <carousel
-                    :paginationEnabled="false"
-                    :navigationEnabled="true"
-                    :perPageCustom="[[0, 1], [768, 2], [1024, 3], [1250, 4]]"
-                    navigationNextLabel=""
-                    navigationPrevLabel=""
-                >
-                    <slide v-for="promo in this.listProducto.promo" :key="promo.id">
-                       <b-card
-                            :key="promo.id"
-                            :id="promo.id"
-                            :img-src="promo.img"
-                            :img-alt="promo.title"
-                            img-top
-                            tag="article"
-                            class="mb-2 cardStyle"
-                            :data-category="promo.categoria"
-                        >
-                        <div class="body">
-                            <div class="text">
-                                <h5>{{ promo.title }}</h5>
-                                <p>{{ promo.desc }}</p>
-                            </div>
-                            <div class="price">
-                                <div class="number" v-b-tooltip.hover :title="promo.price+',00 €'">
-                                    <p>{{ promo.price }}</p>
-                                    <span>,00€</span>
+                <div v-if="this.listProducto.promo.length != 0">
+                    <h5 class="titlePromotions">Promociones</h5>
+                    <carousel
+                        class="carrousel--promo"
+                        v-if="this.listProducto.promo.length != 0"
+                        :paginationEnabled="false"
+                        :navigationEnabled="true"
+                        :perPageCustom="[[0, 1], [768, 2], [1024, 3], [1250, 4]]"
+                        navigationNextLabel=""
+                        navigationPrevLabel=""
+                    >
+                        <slide v-for="promo in this.listProducto.promo" :key="promo.id">
+                            <b-card
+                                :key="promo.id"
+                                :id="promo.id"
+                                :img-src="promo.img"
+                                :img-alt="promo.title"
+                                img-top
+                                tag="article"
+                                class="mb-2 cardStyle"
+                                :data-category="promo.categoria"
+                            >
+                            <div class="body">
+                                <div class="text">
+                                    <h5>{{ promo.title }}</h5>
+                                    <p>{{ promo.desc }}</p>
                                 </div>
-                                <button class="btn"><img class="img-fluid img-shared" :src="shared" alt=""></button>
+                                <div class="price">
+                                    <div class="number" v-b-tooltip.hover :title="promo.price+',00 €'">
+                                        <p>{{ promo.price }}</p>
+                                        <span>,00€</span>
+                                    </div>
+                                    <button class="btn"><img class="img-fluid img-shared" :src="shared" alt=""></button>
+                                </div>
                             </div>
-                        </div>
-                    </b-card>
-                    </slide>
-                </carousel>
+                        </b-card>
+                        </slide>
+                    </carousel>
+                </div>
+                <div v-else class="sms">
+                    <p class="text">No hay promociones</p>
+                </div>
                 <div class="row navSection">
                     <div class="col-4">
                         <button class="btn btnRestaurantes" @click="showSectionHome(2)" v-bind:class="{ 'active': activeSection == 2, '': activeSection == 1 }">
@@ -233,7 +240,7 @@
                 listBeneficio: [],
                 listIncentivo: [],
                 googleMapApi: "",
-                distancia: "",
+                distancia: "20000.000",
                 rts: {
                     page: 0
                 }
@@ -245,13 +252,12 @@
             this.ubiLng = ubicacion.lon;
 
             // -> Santa marta COLOMBIA.
-            this.ubiLat = 11.24722;
-            this.ubiLng = -74.20167;
-            this.distancia = 20.000;
+            // this.ubiLat = 11.24722;
+            // this.ubiLng = -74.20167;
 
             // -> Madrid ESPAÑA.
-            // this.ubiLat = 40.4893538;
-            // this.ubiLng = -3.6827461;
+            this.ubiLat = 40.4893538;
+            this.ubiLng = -3.6827461;
             // this.distancia = false;
 
             if (this.$store.getters.isLoggedIn === true) {
@@ -372,7 +378,7 @@
                 }
 
                 this.$store.state.myBalance = funciones.numberFormat(parseFloat(total).toFixed(2).replace(".", ","));
-                console.log(this.$store.state.myBalance);
+                EventBus.$emit("user", this.$store.getters.user);
             },
             async geo() {
                 return new Promise((resolve, reject) => {
@@ -400,9 +406,9 @@
             },
             async getRestaurantes(myLat, myLng, distancia, page) {
                 const limit = 20;
-                // this.$store.state.listRestaurantes.all = [];
-                // this.$store.state.listRestaurantes.filter = [];
-                await api.get(`restaurantes/list/${myLat}/${myLng}/${distancia}`).then(res => {
+                this.$store.state.listRestaurantes.all = [];
+                this.$store.state.listRestaurantes.filter = [];
+                api.get(`restaurantes/list/${myLat}/${myLng}/${distancia}`).then(res => {
                     var array = [];
                     var _pArray = [];
 
@@ -418,80 +424,78 @@
 
                     _values = _pArray[page];
                     var _list = [];
-
-                    if (_values.length) {
-                        for (var i = 0; i < _values.length; i++) {
-                            _list.push({
-                                id: _values[i].key,
-                                categorias: Object.values(_values[i].data.categories),
-                                direccion: _values[i].data.direction,
-                                name: _values[i].data.name,
-                                phone: _values[i].data.phone,
-                                photo: _values[i].data.photo
-                                            ? _values[i].data.photo.substr(_values[i].data.photo.length - "generic_business-71.png".length, _values[i].data.photo.length) === "generic_business-71.png"
-                                                ? imgDefault
-                                                : _values[i].data.photo
-                                            : imgDefault,
-                                rating: _values[i].data.rating,
-                                lat: _values[i].data.lat,
-                                lng: _values[i].data.lng,
-                                km: funciones.getKilometros(myLat, myLng, _values[i].data.lat, _values[i].data.lng)
-                            });
-                        }
-    
-                        _list.sort(function(a, b){ 
-                            if (a.km < b.km) {
-                                return -1;
-                            }
+                    
+                    for (var i = 0; i < _values.length; i++) {
+                        _list.push({
+                            id: _values[i].key,
+                            categorias: Object.values(_values[i].data.categories),
+                            direccion: _values[i].data.direction,
+                            name: _values[i].data.name,
+                            phone: _values[i].data.phone,
+                            photo: _values[i].data.photo
+                                        ? _values[i].data.photo.substr(_values[i].data.photo.length - "generic_business-71.png".length, _values[i].data.photo.length) === "generic_business-71.png"
+                                            ? imgDefault
+                                            : _values[i].data.photo
+                                        : imgDefault,
+                            rating: _values[i].data.rating,
+                            lat: _values[i].data.lat,
+                            lng: _values[i].data.lng,
+                            km: funciones.getKilometros(myLat, myLng, _values[i].data.lat, _values[i].data.lng)
                         });
-    
-                        this.$store.state.listRestaurantes.all = _pArray;
-                        this.$store.state.listRestaurantes.filter = _list;
-    
-                        var _lRSearchVAL = res;
-                        var _lRN = [];
-    
-                        for (var k = 0; k < _lRSearchVAL.length; k++) {
-                            _lRN.push({
-                                id: _lRSearchVAL[k].key,
-                                categorias: Object.values(_lRSearchVAL[k].data.categories),
-                                direccion: _lRSearchVAL[k].data.direction,
-                                name: _lRSearchVAL[k].data.name,
-                                phone: _lRSearchVAL[k].data.phone,
-                                photo: _lRSearchVAL[k].data.photo
-                                            ? _lRSearchVAL[k].data.photo.substr(_lRSearchVAL[k].data.photo.length - "generic_business-71.png".length, _lRSearchVAL[k].data.photo.length) === "generic_business-71.png"
-                                                ? imgDefault
-                                                : _lRSearchVAL[k].data.photo
-                                            : imgDefault,
-                                rating: _lRSearchVAL[k].data.rating,
-                                lat: _lRSearchVAL[k].data.lat,
-                                lng: _lRSearchVAL[k].data.lng,
-                                km: funciones.getKilometros(myLat, myLng, _lRSearchVAL[k].data.lat, _lRSearchVAL[k].data.lng)
-                            });
-                        }
-    
-                        _lRN.sort(function(a, b) {
-                            if (a.name < b.name) {
-                                return -1;
-                            }
-                        })
-    
-                        EventBus.$emit("listRestauranteSearch", _lRN);
-                        EventBus.$emit("coordenadas", {lat: this.ubiLat, lng: this.ubiLng});
-    
-                        this.getCategorias();
-                        this.getProductos(res);
-                        this.getProductosPromocionados(res);
-    
-                        this.stopLoader();
-    
-                        setTimeout(() => {
-                            var img = document.querySelectorAll(".card-img-top");
-                            img.forEach(el => {
-                                el.onerror = imgDefault;
-                            });
-                        }, 950);
                     }
+
+                    _list.sort(function(a, b){ 
+                        if (a.km < b.km) {
+                            return -1;
+                        }
+                    });
+
+                    this.$store.state.listRestaurantes.all = _pArray;
+                    this.$store.state.listRestaurantes.filter = _list;
+
+                    var _lRSearchVAL = res;
+                    var _lRN = [];
+
+                    for (var k = 0; k < _lRSearchVAL.length; k++) {
+                        _lRN.push({
+                            id: _lRSearchVAL[k].key,
+                            categorias: Object.values(_lRSearchVAL[k].data.categories),
+                            direccion: _lRSearchVAL[k].data.direction,
+                            name: _lRSearchVAL[k].data.name,
+                            phone: _lRSearchVAL[k].data.phone,
+                            photo: _lRSearchVAL[k].data.photo
+                                        ? _lRSearchVAL[k].data.photo.substr(_lRSearchVAL[k].data.photo.length - "generic_business-71.png".length, _lRSearchVAL[k].data.photo.length) === "generic_business-71.png"
+                                            ? imgDefault
+                                            : _lRSearchVAL[k].data.photo
+                                        : imgDefault,
+                            rating: _lRSearchVAL[k].data.rating,
+                            lat: _lRSearchVAL[k].data.lat,
+                            lng: _lRSearchVAL[k].data.lng,
+                            km: funciones.getKilometros(myLat, myLng, _lRSearchVAL[k].data.lat, _lRSearchVAL[k].data.lng)
+                        });
+                    }
+
+                    _lRN.sort(function(a, b) {
+                        if (a.name < b.name) {
+                            return -1;
+                        }
+                    })
+
+                    EventBus.$emit("listRestauranteSearch", _lRN);
+                    EventBus.$emit("coordenadas", {lat: this.ubiLat, lng: this.ubiLng});
+
+                    this.getCategorias();
+                    this.getProductos(res);
+                    this.getProductosPromocionados(res);
+
+                    this.stopLoader();
+
+                    setTimeout(() => {
+                        var img = document.querySelectorAll(".card-img-top");
+                        img.forEach(el => {
+                            el.onerror = imgDefault;
+                        });
+                    }, 950);
                 }).catch(err => {
                     console.log(err);
                 });
@@ -564,7 +568,7 @@
                     });
                     
                     this.$store.state.listCategorias = _list;
-                    console.log(this.$store.getters.filterCategory);
+                    // console.log(this.$store.getters.filterCategory);
                 }).catch(err => {
                     console.log(err);
                 });
@@ -649,7 +653,7 @@
         mounted() {
             if (this.$store.getters.isLoggedIn === true) {
                 this.$store.commit("loading");
-                console.log("Store -> ", this.$store.getters);
+                // console.log("Store -> ", this.$store.getters);
             }
         }
     }
@@ -705,10 +709,13 @@
             margin: 30px auto;
             align-items: center;
             .btn{
+                display: flex;
+                justify-content: center;
+                align-items: center;
                 color: var(--text-color);
                 font-size: 22px;
+
                 @media (max-width: 576px){
-                    display: flex;
                     margin: auto;
                     font-size: 13px;
                     padding: 4px 0;
@@ -1049,5 +1056,55 @@
 
     .VueCarousel-navigation-button {
         outline: none !important;
+    }
+
+    .carrousel--promo {
+        .VueCarousel-wrapper {
+            width: 98%;
+            margin: 0 auto;
+            
+            .VueCarousel-inner {
+                padding-top: .75rem !important;
+
+                @media only screen and (max-width: 601px) {
+                    padding-top: 1rem !important;
+                }
+
+                .VueCarousel-slide {
+                    max-width: max-content !important;
+                    margin-right: 0 !important;
+
+                    @media only screen and (max-width: 992px) {
+                        margin-right: .5rem !important;
+                    }
+                    
+                    .cardStyle {
+                        width: 250px !important;
+                        margin: 0 auto !important;
+                    }
+                }
+            }
+        }
+
+    }
+
+    .sms {
+        width: 100%;
+        height: max-content;
+        margin-top: 1rem;
+        padding: .25rem;
+
+        p {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 2.5rem;
+            color: #607381;
+
+            @media only screen and (max-width: 992px) {
+                font-size: 1.5rem;
+            }
+        }
     }
 </style>

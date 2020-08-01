@@ -30,7 +30,7 @@
                                 </div>
                                 <div class="col-7 pl-0">
                                     <div class="d-flex justify-content-center">
-                                        <button @click="removeFavory(f.id, f.id_comercio)" class="btn">
+                                        <button @click="removeFavory(f.id, f.id_comercio, f.ind)" class="btn">
                                             <img :src="heartred" alt="">
                                         </button>
                                         <router-link :to="'/restaurante/' + f.id_comercio" class="btn">
@@ -74,15 +74,23 @@
                     this.loadFavory();
                 }
             });
+
+            EventBus.$on("removeFavoryDR", obj => {
+                if (obj.ok === "OK") {
+                    this.loadFavory();
+                }
+            });
         },
         methods: {
             loadFavory() {
                 this.myFavory = [];
+                var _indice = 0;
 
                 api.get('favory/list/' + this.$store.getters.uid).then(res => {
                     res.forEach(item => {
                         api.get('restaurante/' + item.id_comercio).then(res => {
                             this.myFavory.push({
+                                ind: _indice,
                                 id: item._id,
                                 id_comercio: item.id_comercio,
                                 comercio: res,
@@ -91,22 +99,33 @@
                             });
                         });
                     });
+                    _indice++
                 });
 
                 this.myFavory.sort(function(a, b){ 
-                    if (a.date && a.time < b.date && b.time) {
+                    if (a.date && a.time > b.date && b.time) {
                         return -1;
                     }
                 });
             },
-            removeFavory(id, id_restaurante) {
+            removeFavory(id, id_restaurante, ind) {
                 api.post('favory/delete/', {id: id, id_user: this.$store.getters.uid}).then(res => {
                     console.log(res);
                     EventBus.$emit("removeFavory", {id_comercio: id_restaurante});
-                    this.loadFavory();
+                    
+                    this.removeItemFromArr(this.myFavory, ind);
+                    this.myFavory.sort(function(a, b) { 
+                        if (a.date && a.time > b.date && b.time) {
+                            return -1;
+                        }
+                    });
                 }).catch(err => {
                     console.log("Error al eliminar -> ", err);
                 });
+            },
+            removeItemFromArr(arr, item) {
+                var i = arr.indexOf(item);
+                arr.splice(i, 1);
             }
         },
         async beforeMount() {

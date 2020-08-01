@@ -48,7 +48,9 @@ firebase.auth().onAuthStateChanged(user => {
     
     store().state.isLoggedIn = true;
     api.post('auth/isloggin/', {id: _uid, is_loggin: true}).then(res => {
-      console.log(res);
+      if (res.success === true) {
+        console.log("isloggin -> Ok...");
+      }
     }).catch(err => {
       console.log("error: ", err);
     });

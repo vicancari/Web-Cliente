@@ -136,7 +136,7 @@
                             </div>
                         </div>
                     </b-card>
-                    <b-modal :modal-class="prod.title + prod.id" :id="prod.title + prod.id" :ref="prod.title + prod.id" centered hide-footer hide-header class="ModalInfoProd">  
+                    <b-modal :modal-class="'ModalDetallesProductos'" :id="prod.title + prod.id" :ref="prod.title + prod.id" centered hide-footer hide-header class="ModalInfoProd">  
                         <div class="contentCaracteristics">
                             <div class="boxImage">
                                 <carousel class="carouselEdit"
@@ -186,9 +186,9 @@
                                     <div class="groupSelect">
                                         <div class="quality">
                                             <h5>Cantidad</h5>
-                                            <b-button v-on:click="click()">-</b-button>
-                                            <input type="text" class="form-control" v-model="quality">
-                                            <b-button v-on:click="more()">+</b-button>
+                                            <b-button v-on:click="prodMenos()">-</b-button>
+                                            <input type="text" class="form-control" v-model="cantProd">
+                                            <b-button v-on:click="prodMas()">+</b-button>
                                         </div>
                                         <div class="groupRadio">
                                             <div v-if="prod.data.delivery === true" class="form-grou">
@@ -228,8 +228,8 @@
                                                 </label>
                                             </div>
                                         </div>
-                                        <b-button class="btnComprar">
-                                            Comprar
+                                        <b-button type="button" @click="addCarrito(prod.data), $bvModal.hide(prod.title + prod.id)" class="btnComprar">
+                                            <i class="fas fa-cart-plus"></i>
                                         </b-button>
                                     </div>
                                 </div>
@@ -239,6 +239,14 @@
                 </div>
             </div>
         </div>
+        <button type="button" id="alertdr" v-b-modal.modal-alertdr style="display: none;"></button>
+        <b-modal modal-class="modal-alertdr" centered id="modal-alertdr" ref="modal-alertdr"  hide-footer hide-header>  
+            <div class="d-block text-center">
+                <img style="width: 150px; margin-bottom: 1rem;" :src="checkimg" alt="">
+                <h3>¡Éxito!</h3>
+                <p>El producto fue agregado al carrito.</p>
+            </div>
+        </b-modal>
 
         <div id="prevImageID" class="boxPreviewImage">
             <img @click="closePrevImage" class="boxPreviewImage__close" :src="close">
@@ -254,6 +262,7 @@
 import Navbar from '../components/navbar';
 import back from '../assets/img/icons/flechavolver.svg';
 import shared from '../assets/img/icons/share.png';
+import checkimg from "../assets/img/icons/check.svg";
 import imgDefault from '../assets/img/noimage.jpeg';
 import close from '../assets/img/icons/add2.png';
 import corazonBlue from '../assets/iconRestaurant/corazon-blue.svg';
@@ -268,6 +277,7 @@ import { Carousel, Slide } from 'vue-carousel';
 // API + Firebase + funciones
 import api from '../api.js';
 import axios from "axios";
+import moment from "moment";
 import { EventBus } from "../main.js";
 
 export default {
@@ -282,11 +292,12 @@ export default {
             error: "",
             id_restaurante: this.$router.currentRoute.params.id,
             dataRest: "",
+            checkimg: checkimg,
             misProd: {
                 destacado: [],
                 all: []
             },
-            quality: 0,
+            cantProd: 1,
             back: back,
             shared: shared,
             corazonBlue: corazonBlue,
@@ -298,6 +309,15 @@ export default {
             myUbicacion: "",
             is_myFavory: false,
             id_favory: '',
+            pedido: {
+                status: 0,
+                id_comercio: "",
+                id_cliente: "",
+                shippingForms: "",
+                created_at: "",
+                total: "",
+                products: []
+            },
         }
     },
     async created() {
@@ -367,6 +387,118 @@ export default {
         });
     },
     methods: {
+        prodMenos() {
+            if (this.cantProd === 1) {
+                this.cantProd = 1;
+            } else {
+                this.cantProd--;
+            }
+        },
+        prodMas() {
+            this.cantProd++;
+        },
+        addCarrito(obj) {
+            var _shippingFormsDelivery = document.querySelector("#delivery");
+            var _shippingFormsLlevar = document.querySelector("#llevar");
+            var _shippingFormsComer = document.querySelector("#comer");
+
+            if (_shippingFormsDelivery.checked != false || _shippingFormsLlevar.checked != false || _shippingFormsComer.checked != false) {
+                if (_shippingFormsDelivery.checked === true) {
+                    this.pedido.shippingForms = "delivery";
+                }
+    
+                if (_shippingFormsLlevar.checked === true) {
+                    this.pedido.shippingForms = "wear";
+                }
+    
+                if (_shippingFormsComer.checked === true) {
+                    this.pedido.shippingForms = "eat_in_restaurant";
+                }
+
+                this.pedido.id_comercio = obj.id_restaurant;
+                this.pedido.id_cliente = this.$store.getters.uid;
+                this.pedido.created_at = moment(new Date()).format("YYYY-MM-DD HH:mm");
+
+                var _prod = {
+                    id_producto: obj._id,
+                    name: obj.name,
+                    description: obj.description,
+                    category: obj.category_text,
+                    sub_category: obj.sub_category_text,
+                    quantity: this.cantProd,
+                    images: obj.images,
+                    detalles: obj.detalles,
+                    iva: obj.iva,
+                    price_with_iva: obj.price_with_iva
+                }
+                
+                var _trolley = this.$store.getters.trolley;
+                var _set = true;
+
+                for (var i = 0; i < _trolley.length; i++) {
+                    if (_trolley[i].id_comercio === obj.id_restaurant) {
+                        _set = false;
+                        var _idDifrente = true;
+                        var _quantityIgual = 0;
+
+                        for (var z = 0; z < _trolley[i].products.length; z++) {
+                            if (_trolley[i].products[z].id_producto === _prod.id_producto) {
+                                _quantityIgual = _trolley[i].products[z].quantity + this.cantProd;
+                                _prod.quantity = _quantityIgual;
+
+                                this.$store.state.trolley[i].products[z] = _prod;
+                                _idDifrente = false;
+                            }
+                        }
+
+                        if (_idDifrente === true) {
+                            this.$store.state.trolley[i].products.push(_prod);
+                        }
+
+                        var _trolley2 = this.$store.getters.trolley;
+                        var _total = 0;
+
+                        for (var y = 0; y < _trolley2[i].products.length; y++) {
+                            _total = _total = (parseFloat((_trolley2[i].products[y].price_with_iva).toFixed(2)) * parseInt((_trolley2[i].products[y].quantity))) + _total;
+                        }
+
+                        this.$store.state.trolley[i].total = parseFloat(_total.toFixed(2));
+
+                        console.log("ANTES DE ACTUALIZAR -> ", this.$store.state.trolley[i]);
+                        axios.put("https://myraus.com:8282/api/cart/update", this.$store.state.trolley[i]).then(res => {
+                            console.log(res);
+                            EventBus.$emit("NewPushOfTrolley", {ok: "OK"});
+                            var _btnAlert = document.querySelector("#alertdr");
+                            _btnAlert.click();
+                        }).catch(err => {
+                            console.log(err);
+                        });
+                        this.cantProd = 1;
+                    }
+                }
+
+                if (_set === true) {
+                    this.pedido.total = parseFloat((obj.price_with_iva * this.cantProd).toFixed(2));
+                    this.pedido.products.push(_prod);
+
+                    console.log("POST DEL PRIMER CARRITO -> ", this.pedido);
+                    axios.post("https://myraus.com:8282/api/cart/add", this.pedido).then(res => {
+                        this.pedido._id = res.data.cart._id;
+                        this.$store.state.trolley.push(this.pedido);
+                        EventBus.$emit("NewPushOfTrolley", {ok: "OK"});
+                        var _btnAlert = document.querySelector("#alertdr");
+                        _btnAlert.click();
+                    }).catch(err => {
+                        console.log(err);
+                    });
+                    this.cantProd = 1;
+                }
+    
+                console.log("Pedido -> ", this.$store.getters.trolley);
+            } else {
+                console.log("Disculpe debes seleccionar un {{ shippingForms }}");
+            }
+        },
         async geo() {
             return new Promise((resolve, reject) => {
                 navigator.geolocation.getCurrentPosition(
@@ -445,6 +577,7 @@ export default {
             api.post("favory/", {id_user: this.$store.getters.uid, id_comercio: this.id_restaurante}).then(res => {
                 console.log("Is favory ", res);
                 EventBus.$emit("addFavory", {ok: 'OK'});
+                this.id_favory = res.data._id;
             }).catch(err => {
                 console.log("Not Favory ", err);
             });
@@ -452,6 +585,7 @@ export default {
         removeMyFavory(id) {
             api.post('favory/delete/', {id: id, id_user: this.$store.getters.uid}).then(res => {
                 console.log(res);
+                EventBus.$emit("removeFavoryDR", {ok: 'OK'});
             }).catch(err => {
                 console.log("Error al eliminar -> ", err);
             });
@@ -767,7 +901,7 @@ export default {
                 max-height: max-content;
                 overflow-y: initial;
             }
-             @media(min-width: 767px) and (max-width: 992px){
+            @media(min-width: 767px) and (max-width: 992px){
                 width: 60% !important;
             }
             .title{
@@ -911,12 +1045,11 @@ export default {
                     }
                     .btnComprar{
                         background-color: var(--bluePrimary);
-                        margin: auto;
+                        margin: 50px 0 auto auto;
                         display: block;
-                        margin-top: 50px;
-                        border-radius: 0;
-                        padding: 4px 22px;
-                        font-size: 16px;
+                        border-radius: 5px;
+                        padding: .25rem .75rem;
+                        font-size: 22px;
                         border: none;
                     }
                 }
@@ -932,18 +1065,6 @@ export default {
     
     body.modal-open{
         overflow: none;
-    }
-
-    .ModalInfoProd .modal-dialog {
-        width: 100% !important;
-        max-width: 95% !important;
-        max-height: max-content !important;
-    }
-
-    @media only screen and (min-width: 992px) {
-        .ModalInfoProd .modal-dialog {
-            max-width: 70% !important;
-        }
     }
 
     .boxPreviewImage {
@@ -1011,6 +1132,28 @@ export default {
                     padding: 0;
                 }
             }
+        }
+    }
+</style>
+
+<style lang="css">
+    .ModalDetallesProductos .modal-dialog {
+        width: 100% !important;
+        max-width: 85% !important;
+        max-height: max-content !important;
+        margin: 1rem auto !important;
+    }
+
+    @media only screen and (min-width: 640px) {
+        .ModalDetallesProductos .modal-dialog {
+            max-width: 95% !important;
+        }
+    }
+
+    @media only screen and (min-width: 992px) {
+        .ModalDetallesProductos .modal-dialog {
+            width: 70% !important;
+            max-width: 850px !important;
         }
     }
 </style>

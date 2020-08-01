@@ -83,13 +83,14 @@
                     <img class="imgMenu" :src="config" alt="">
                     <p>Config</p>
                 </button>
-                <button class="btn btnMenu" @click="logout">
+                <button class="btn btnMenu" v-b-modal.modalLogout>
                     <img class="imgMenu" :src="salirazul" alt="">
                     <p>Salir</p>
                 </button>
                 <router-link to="/" id="nextLogout" style="display: none;"></router-link>
             </div>
         </b-modal>
+        <logout></logout>
     </div>
 </template>
 
@@ -106,9 +107,7 @@
     import settings from '../assets/img/icons/menu/configuracionazul.svg';
     import salirazul from '../assets/img/icons/menu/salirazul.svg';
     import back from '../assets/img/icons/flechavolver.svg';
-
-    import * as firebase from "firebase";
-    import api from "../api.js";
+    import logout from '../modals/logout';
 
     export default {
         name: 'menu',
@@ -128,21 +127,8 @@
                 next: false
             }
         },
-        methods: {
-            logout() {
-                firebase.auth().signOut().then(() => {
-                    api.post('auth/isloggin/', {id: this.$store.getters.uid, is_loggin: false}).then(res => {
-                        console.log(res);
-                    }).catch(err => {
-                        console.log("error: ", err);
-                    });
-
-                    this.$store.commit("logout");
-                    this.$store.commit("notLoading");
-                    this.$router.push("/");
-                });
-            }
-        }
+        components: {logout},
+        methods: {}
     }
 </script>
 
