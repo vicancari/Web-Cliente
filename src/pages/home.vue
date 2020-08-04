@@ -31,23 +31,24 @@
                                 :img-alt="promo.title"
                                 img-top
                                 tag="article"
-                                class="mb-2 cardStyle"
-                                :data-category="promo.categoria"
+                                class="mb-2 cardStyle CursorPointer"
+                                :data-category="promo.categoria.name"
+                                v-b-modal="promo.title + promo.id"
                             >
-                            <div class="body">
-                                <div class="text">
-                                    <h5>{{ promo.title }}</h5>
-                                    <p>{{ promo.desc }}</p>
-                                </div>
-                                <div class="price">
-                                    <div class="number" v-b-tooltip.hover :title="promo.price+',00 €'">
-                                        <p>{{ promo.price }}</p>
-                                        <span>,00€</span>
+                                <div class="body">
+                                    <div class="text">
+                                        <h5>{{ promo.title }}</h5>
+                                        <p>{{ promo.desc }}</p>
                                     </div>
-                                    <button class="btn"><img class="img-fluid img-shared" :src="shared" alt=""></button>
+                                    <div class="price">
+                                        <div class="number" v-b-tooltip.hover :title="promo.price+',00 €'">
+                                            <p>{{ promo.price }}</p>
+                                            <span>,00€</span>
+                                        </div>
+                                        <button class="btn"><img class="img-fluid img-shared" :src="shared" alt=""></button>
+                                    </div>
                                 </div>
-                            </div>
-                        </b-card>
+                            </b-card>
                         </slide>
                     </carousel>
                 </div>
@@ -77,7 +78,7 @@
                                 :img-alt="rest.name"
                                 img-top
                                 tag="article"
-                                class="card-horizontal"
+                                class="card-horizontal CursorPointer"
                                 @click="restaurante(rest.id)"
                             >
                                 <div class="body">
@@ -140,14 +141,15 @@
                             :key="prod.id"
                             :id="prod.id"
                             class="col-12 col-sm-6 col-md-4 col-lg-3 p-0 mb-4"
-                            :data-category="prod.category"
+                            :data-category="prod.categoria.name"
+                            v-b-modal="prod.title + prod.id"
                         >
                             <b-card
                                 :img-src="prod.img"
                                 :img-alt="prod.title"
                                 img-top
-                                :tag="prod.category"
-                                class="mb-2 cardStyle"
+                                :tag="prod.categoria.name"
+                                class="mb-2 cardStyle CursorPointer"
                             >
                                 <div class="body">
                                     <div class="text">
@@ -168,7 +170,13 @@
                 </div>
             </div>
         </div>
+
         <!-- modals -->
+        <modal-detalles-productos
+            v-for="(prod, i) in this.listProducto.all"
+            :key="i"
+            :GetProd="prod"
+        ></modal-detalles-productos>
         <search></search>
     </div>
 </template>
@@ -203,7 +211,7 @@
     import socket from "../socket.js";
     import { EventBus } from "../main.js";
 
-    // var Jquery = require("jquery");
+    import ModalDetallesProductos from "../modals/modal-detalles-productos.vue";
 
     export default {
         name: 'home',
@@ -211,7 +219,8 @@
             Carousel,
             Slide,
             Navbar,
-            search
+            search,
+            ModalDetallesProductos
         },
         data: function () {
             return {
@@ -240,10 +249,10 @@
                 listBeneficio: [],
                 listIncentivo: [],
                 googleMapApi: "",
-                distancia: "20000.000",
+                distancia: "25000.000",
                 rts: {
                     page: 0
-                }
+                },
             }
         },
         async created() {
@@ -252,13 +261,16 @@
             this.ubiLng = ubicacion.lon;
 
             // -> Santa marta COLOMBIA.
-            // this.ubiLat = 11.24722;
-            // this.ubiLng = -74.20167;
+            this.ubiLat = 11.24722;
+            this.ubiLng = -74.20167;
 
             // -> Madrid ESPAÑA.
-            this.ubiLat = 40.4893538;
-            this.ubiLng = -3.6827461;
+            // this.ubiLat = 40.4893538;
+            // this.ubiLng = -3.6827461;
             // this.distancia = false;
+
+            this.$store.state.coords.lat = this.ubiLat;
+            this.$store.state.coords.lng = this.ubiLng;
 
             if (this.$store.getters.isLoggedIn === true) {
                 await this.getUser();
@@ -511,7 +523,9 @@
                                     title: el.name,
                                     desc: el.description,
                                     price: el.price_with_iva,
-                                    img: el.images[0] ? el.images[0].img : imgDefault
+                                    img: el.images[0] ? el.images[0].img : imgDefault,
+                                    categoria: Object.values(comercios[i].data.categories),
+                                    data: el,
                                 });
                             }
                         }
@@ -524,9 +538,9 @@
                 });
             },
             async getProductos(comercios) {
-                await api.get(`products/`).then(res => {
+                await axios.post(`https://myraus.com:8282/api/products/list/`).then(res => {
                     var _list = [];
-                    res.forEach(el => {
+                    res.data.products.forEach(el => {
                         for (var i = 0; i < comercios.length; i++) {
                             if (el.id_restaurant === comercios[i].key) {
                                 _list.push({
@@ -535,7 +549,8 @@
                                     desc: el.description,
                                     price: el.price_with_iva,
                                     img: el.images[0] ? el.images[0].img : imgDefault,
-                                    category: el.listProductos
+                                    categoria: Object.values(comercios[i].data.categories),
+                                    data: el,
                                 });
                             }
                         }
@@ -658,453 +673,3 @@
         }
     }
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style lang="scss">
-    //search nav
-    .navSearch{
-        display: flex;
-        justify-content: center;
-        position:relative;
-        margin: auto;
-        border-bottom: 1px solid #c1c1c1;
-        padding: 5px 50px;
-        @media (max-width: 576px){
-            padding: 5px 15px;
-            justify-content: space-between;
-            align-items: center;
-        }
-        h5{
-            margin:5px 0;
-            color: var(--bluePrimary);
-        }
-        .btnSearch{
-            border: none;
-            position: absolute;
-            right: 15px;    
-            @media (max-width: 576px){
-                position: initial;
-            }
-            img{
-                width: 25px;
-            }
-        }
-    }
-
-    .bodySection{
-        margin: auto 30px 30px;
-        @media (max-width: 576px){
-            margin: auto 15px;
-        }
-        .titlePromotions{
-            text-align: center;
-            color: var(--bluePrimary);
-            margin: 15px 0 5px;
-        }
-        .carouselEdit{
-            margin: auto;
-            position: relative;
-        }
-        .navSection{
-            margin: 30px auto;
-            align-items: center;
-            .btn{
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                color: var(--text-color);
-                font-size: 22px;
-
-                @media (max-width: 576px){
-                    margin: auto;
-                    font-size: 13px;
-                    padding: 4px 0;
-                }
-                 @media (max-width: 320px){
-                    font-size: 11px;
-                }
-                span{
-                     background-color: #d1d1d1;
-                    display: inline-block;
-                    vertical-align: middle;
-                    margin: -2px 2.5px 0;
-                    height: 20px;
-                    @media (max-width: 576px){
-                        height: 15px;
-                    }
-                }
-            }
-            .btn.active{
-                color: var(--bluePrimary);
-                span{
-                    background-color:  var(--bluePrimary); 
-                }
-            }
-            .btnProductos{
-                span{
-                    width: 20px;
-                    @media (max-width: 576px){
-                        width: 15px;
-                    }
-                }
-            }
-            .btnRestaurantes{
-                 span{
-                    width: 50px;
-                    @media (max-width: 576px){
-                        width: 35px;
-                    }
-                }
-            }
-            .img-fluid{
-                width: 55px;
-                text-align: center;
-                @media (max-width: 576px){
-                    transform: scale(1.5);
-                }
-            }
-        }
-        .alignHorizontal{
-            margin: auto 0px;
-            .card-horizontal{
-                display: flex;
-                flex-direction: row;
-                border-radius: 0;
-                .card-img-top{
-                    width: 50%;
-                    object-fit: cover;
-                    border-radius: 0;
-                    @media (max-width: 992px){
-                        width: 40%
-                    }
-                }
-                .card-body{
-                    padding: 15px;
-                    .body{
-                        .text{
-                            display: flex;
-                            justify-content: space-between;
-                            flex-wrap: wrap;
-                            height: 160px;
-                            align-items: center;
-                             @media (max-width: 992px){
-                                height: 120px;
-                            }
-                            @media (max-width: 576px){
-                                height: 90px;
-                            }
-                            .title{
-                                width: 70%;
-                                font-size: 20px;
-                                color: var(--text-color);
-                                text-align: left;
-                                overflow: hidden;
-                                display: -webkit-box;
-                                -webkit-line-clamp: 2;
-                                -webkit-box-orient: vertical;
-                                max-height: 48px;
-                                 @media (max-width: 992px){
-                                    font-size: 18px;
-                                }
-                                @media (max-width: 576px){
-                                    font-size: 16px;
-                                }
-                            }
-                            .btn{
-                                width: 30%;
-                                display: flex;
-                                align-items: center;
-                                 @media (max-width: 992px){
-                                    font-size: 18px;
-                                }
-                                @media (max-width: 576px){
-                                    font-size: 16px;
-                                }
-                                img{
-                                    width: 20px;
-                                    margin-left: 10px;
-                                }
-                            }
-                            .star-content{
-                                width: 100%;
-                                margin-top: auto;
-                                .box{
-                                    text-align: center;
-                                    color: var(--text-color);
-                                    display: flex;
-                                    flex-direction: column;
-                                    align-items: center;
-                                    img{
-                                        width: 20px;
-                                        height: 20px;
-                                        object-fit: contain;
-                                        margin: auto
-                                    }
-                                    span, h6{
-                                        font-size: 14px;
-                                        margin: 0;
-                                        @media (max-width: 992px){
-                                            font-size: 12px;
-                                        }
-                                        @media (max-width: 576px){
-                                            font-size: 11px;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    .box-mensaje {
-        width: 100%;
-    }
-
-    p.distancia {
-        font-size: .85rem;
-    }
-
-    @media (max-width: 992px) {
-        .bodySection .alignHorizontal .card-horizontal .card-body .body .text .title {
-            font-size: 15px !important;
-        }
-    }
-
-    .carouselEdit .cardStyle {
-        width: 250px !important;
-    }
-
-    .bodySection .alignHorizontal .card-horizontal {
-        height: 200px !important;
-        max-height: 200px !important;
-        overflow: hidden !important;
-    }
-
-    .bodySection .alignHorizontal .card-horizontal .card-body .body .text .title {
-        overflow: hidden !important;
-        white-space: nowrap !important;
-        text-overflow: ellipsis !important;
-        width: 100% !important;
-        display: block !important;
-        padding: .25rem 0 !important;
-    }
-
-    .bodySection .alignHorizontal .card-horizontal .card-img-top {
-        width: 50% !important;
-        height: 100% !important;
-        object-fit: cover !important;
-        object-position: center center !important;
-        border-radius: 0 !important;
-    }
-
-    .bodySection .alignHorizontal .card-horizontal .card-body {
-        width: calc(100% - 50%);
-    }
-
-    @media only screen and (max-width: 992px) {
-        .bodySection .alignHorizontal .card-horizontal {
-            height: 190px !important;
-            max-height: 190px !important;
-        }
-
-        .bodySection .alignHorizontal .card-horizontal .card-img-top {
-            width: 42% !important;
-            height: 100% !important;
-        }
-
-        .bodySection .alignHorizontal .card-horizontal .card-body {
-            width: calc(100% - 42%);
-        }
-    }
-
-    .owl-carousel.owl-loaded {
-        display: flex !important;
-    }
-
-    .btn.btnBack.backModal {
-        background: transparent !important;
-        border: none !important;
-        width: max-content !important;
-        height: max-content !important;
-        padding: 0 !important;
-    }
-
-    .btn.btnBack.backModal img {
-        width: 70px !important;
-    }
-
-    .VueCarousel-navigation-prev{
-        background-image: url('../assets/img/icons/arrow-prev.png');
-        height: 90px;
-        padding: 0 !important;
-        width: 30px;
-        background-size: 100%;
-        background-repeat: no-repeat;
-        background-position: center center;
-        left: 10px !important;
-        outline: none;
-        @media (max-width: 767px){
-            left: 20px !important;
-        }
-    }
-    .VueCarousel-navigation-next{
-        background-image: url('../assets/img/icons/arrow-next.png');
-        height: 90px;
-        padding: 0 !important;
-        width: 30px;
-        background-size: 100%;
-        background-repeat: no-repeat;
-        background-position: center center;
-        right: 10px !important;
-        outline: none;
-        @media (max-width: 767px){
-            right: 20px !important;
-        }
-    }
-    .boxArrows__btn {
-        position: fixed;
-        top: 50%;
-        transform: translate(0, -50%);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 60px;
-        height: 60px;
-        background: rgba(0,0,0,.15);
-        z-index: 100;
-        cursor: pointer;
-    }
-
-    .boxArrows__btn img {
-        display: block;
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        object-position: center center;
-    }
-
-    .boxArrows__btn.left {
-        left: 0;
-        padding: .5rem 0 .5rem .75rem;
-    }
-
-    .boxArrows__btn.right {
-        right: 0;
-        padding: .5rem .75rem .5rem 0;
-    }
-
-    .nodata {
-        width: 100%;
-        height: 120px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .nodata .mensaje {
-        font-size: 1.25rem;
-        text-transform: uppercase;
-        text-align: center;
-        margin: 0;
-        font-weight: bold;
-        color: rgba(0,0,0,.45);
-    }
-
-    .boxPaginator {
-        position: relative;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 100%;
-        height: max-content;
-
-        &__btn {
-            width: 30px;
-            height: 30px;
-            background: #fff;
-            cursor: pointer;
-            
-            img {
-                display: block;
-                width: 100%;
-                height: 100%;
-                margin: 0;
-                padding: 0;
-                object-fit: contain;
-                object-position: center center;
-            }
-        }
-
-        &__page {
-            display: block;
-            width: max-content;
-            height: max-content;
-            padding: .5rem 1rem;
-            margin: 0 .5rem;
-            background: #eee;
-            border: 2px solid var(--bluePrimary);
-            color: var(--bluePrimary);
-            font-weight: bold;
-            user-select: none;
-        }
-    }
-
-    .VueCarousel-navigation-button {
-        outline: none !important;
-    }
-
-    .carrousel--promo {
-        .VueCarousel-wrapper {
-            width: 98%;
-            margin: 0 auto;
-            
-            .VueCarousel-inner {
-                padding-top: .75rem !important;
-
-                @media only screen and (max-width: 601px) {
-                    padding-top: 1rem !important;
-                }
-
-                .VueCarousel-slide {
-                    max-width: max-content !important;
-                    margin-right: 0 !important;
-
-                    @media only screen and (max-width: 992px) {
-                        margin-right: .5rem !important;
-                    }
-                    
-                    .cardStyle {
-                        width: 250px !important;
-                        margin: 0 auto !important;
-                    }
-                }
-            }
-        }
-
-    }
-
-    .sms {
-        width: 100%;
-        height: max-content;
-        margin-top: 1rem;
-        padding: .25rem;
-
-        p {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            text-align: center;
-            font-size: 2.5rem;
-            color: #607381;
-
-            @media only screen and (max-width: 992px) {
-                font-size: 1.5rem;
-            }
-        }
-    }
-</style>

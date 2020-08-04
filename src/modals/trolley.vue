@@ -1,6 +1,6 @@
 <template>
     <div>
-        <b-modal :modal-class="myclass" id="modal-trolley" ref="modal-trolley"  hide-footer hide-header>  
+        <b-modal modal-class="modal-trolley" id="modal-trolley" ref="modal-trolley"  hide-footer hide-header>  
             <button class="btn btnBack" @click="$bvModal.hide('modal-trolley')">
                 <svg version="1.1" class="icono" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 841.89 595.28" enable-background="new 0 0 841.89 595.28" xml:space="preserve">
                     <g>
@@ -15,16 +15,16 @@
                     </g>
                 </svg>
             </button>
-            <h5 class="titleModal">Tu compra</h5>
+            <h5 style="padding-top: 1rem;" class="titleModal">Tu compra</h5>
             <div v-if="this.$store.getters.trolley.length" class="BoxPage">
                 <div v-for="(cart, i) in this.$store.getters.trolley" :key="i" class="comercios">
-                    <p class="comercios__title">{{ getComercio(cart.id_comercio) }}</p>
+                    <p class="comercios__title">{{ getComercio(cart.id_comercio) }} <i :id="'toggle_icon_' + cart.id_comercio" @click="showConfig(cart.id_comercio)" class="fas fa-caret-down"></i></p>
                     <button @click="actualizarTrolley(i, cart._id);" style="display: none;" :id="'GuardarTrolleyCart_' + cart._id" type="button" class="btnSaveEdit">Guardar</button>
 
                     <div v-for="(prod, y) in cart.products" :key="y" class="comercios__prod">
                         <div class="prod--info">
                             <img class="img-prod" :src="prod.images[0].img" :onerror="'this.src = ' + '\'' + imgDefault + '\''" alt="name producto">
-                            <p class="name-prod">{{ prod.name }}<br>{{ cart.shippingForms }}</p>
+                            <p class="name-prod">{{ prod.name }}</p>
                         </div>
                         <div class="prod--cant">
                             <span @click="prodMenos(prod.name + '_' + prod.id_producto, prod._id, cart._id, cart, i, y)" class="cant__menus">-</span>
@@ -32,38 +32,22 @@
                             <span @click="prodMas(prod.name + '_' + prod.id_producto, prod._id, cart._id, cart, i, y)" class="cant__more">+</span>
                         </div>
                         <div class="prod--price">
-                            <p class="price">{{ (prod.price_with_iva * prod.quantity).toFixed(2) }}€</p>
-                            <span @click="deleteProd(i, y)" class="delete-product"><i class="fas fa-times"></i></span>
+                            <p class="price">{{ (prod.price_with_iva * prod.quantity) | money }}€</p>
+                            <span @click="deleteProd(i, y)" class="delete-product"><img :src="EliminarProducto"></span>
                         </div>
                     </div>
 
-                    <div class="comercios__config">
-                        <div v-if="cart.shippingForms === 'delivery'" class="config--item">
-                            <div class="item-left">
-                                <img src="../assets/moto.png" class="imgIconos">
-                                <p class="text">Costo delivery</p>
-                            </div>
-                            <div class="item-right">
-                                <p class="price">0,00</p>
-                            </div>
-                        </div>
-                        <div v-if="cart.shippingForms === 'eat_in_restaurant'" class="config--item">
-                            <div class="item-left">
-                                <img src="../assets/take.png" class="imgIconos">
-                                <p class="text">Costo de envase</p>
-                            </div>
-                            <div class="item-right">
-                                <p class="price">0,00</p>
-                            </div>
-                        </div>
+                    <div :id="'config_' + cart.id_comercio" class="comercios__config">
                         <div class="config--item">
                             <div class="item-left">
                                 <img src="../assets/moto.png" class="imgIconos">
                                 <p class="text">Delivery</p>
                             </div>
                             <div class="item-right">
+                                <p v-if="cart.shippingForms === 'delivery'" class="price">{{ getPriceDelivery(cart) | money }}€</p>
                                 <div class="boxCheckbox">
-                                    <input type="radio" :name="'radiosSelect_' + cart.id_comercio" :id="'delivery_' + cart.id_comercio" :checked="cart.shippingForms === 'delivery' ? 'on' : 'off'">
+                                    <input @change="changeShipping(cart.id_comercio, cart, i)" v-if="cart.shippingForms === 'delivery'" type="radio" :name="'radiosSelect_' + cart.id_comercio" :id="'delivery_' + cart.id_comercio" checked>
+                                    <input @change="changeShipping(cart.id_comercio, cart, i)" v-else type="radio" :name="'radiosSelect_' + cart.id_comercio" :id="'delivery_' + cart.id_comercio">
                                     <label class="boxCheckbox__checked" :for="'delivery_' + cart.id_comercio">
                                         <i class="fas fa-check"></i>
                                     </label>
@@ -73,12 +57,14 @@
                         <div class="config--item">
                             <div class="item-left">
                                 <img src="../assets/recogertienda.svg" class="imgIconos __retienda">
-                                <p class="text">Recoger en tienda</p>
+                                <p class="text">Para llevar</p>
                             </div>
                             <div class="item-right">
+                                <p v-if="cart.shippingForms === 'wear'" class="price">{{ getPriceWear(cart) }}€</p>
                                 <div class="boxCheckbox">
-                                    <input type="radio" :name="'radiosSelect_' + cart.id_comercio" :id="'eat_in_restaurant_' + cart.id_comercio" :checked="cart.shippingForms === 'eat_in_restaurant' ? 'on' : 'off'">
-                                    <label class="boxCheckbox__checked" :for="'eat_in_restaurant_' + cart.id_comercio">
+                                    <input @change="changeShipping(cart.id_comercio, cart, i)" v-if="cart.shippingForms === 'wear'" type="radio" :name="'radiosSelect_' + cart.id_comercio" :id="'wear_' + cart.id_comercio" checked>
+                                    <input @change="changeShipping(cart.id_comercio, cart, i)" v-else type="radio" :name="'radiosSelect_' + cart.id_comercio" :id="'wear_' + cart.id_comercio">
+                                    <label class="boxCheckbox__checked" :for="'wear_' + cart.id_comercio">
                                         <i class="fas fa-check"></i>
                                     </label>
                                 </div>
@@ -90,34 +76,30 @@
                                 <p class="text">Para Regalo</p>
                             </div>
                             <div class="item-right">
-                                <p class="price">2,00 €</p>
+                                <p class="price">2,00€</p>
                                 <div class="boxCheckbox">
-                                    <input type="radio" :name="'radiosSelect_' + cart.id_comercio" :id="'wear_' + cart.id_comercio" :checked="cart.shippingForms === 'wear' ? 'on' : 'off'">
-                                    <label class="boxCheckbox__checked" :for="'wear_'  + cart.id_comercio">
+                                    <input type="checkbox" :name="'regaloSelect_' + cart.id_comercio" :id="'regalo_' + cart.id_comercio">
+                                    <label class="boxCheckbox__checked" :for="'regalo_'  + cart.id_comercio">
                                         <i class="fas fa-check"></i>
                                     </label>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="comercios__total">
-                    <div class="total--item">
-                        <p class="title">Sub total</p>
-                        <span class="mount">{{ this.listPrice.subTotal }}€</span>
-                    </div>
-                    <div v-for="(iva, i) in this.listPrice.iva" :key="i" class="total--item">
-                        <p class="title">IVA {{ iva.porcentaje }}%</p>
-                        <span class="mount">{{ iva.monto }}€</span>
-                    </div>
-                    <div class="total--item">
-                        <p class="title">Total</p>
-                        <span class="mount">{{ this.listPrice.total }}€</span>
+                    <div class="comercios__total">
+                        <div class="total--item">
+                            <p class="title">Sub total</p>
+                            <span class="mount">{{ cart.total | money }}€</span>
+                        </div>
+                        <div v-for="(iva, i) in listPrice.iva" :key="i" class="total--item">
+                            <p v-if="iva.id_c === cart.id_comercio" class="title">IVA {{ iva.porcentaje }}%</p>
+                            <span v-if="iva.id_c === cart.id_comercio" class="mount">{{ iva.monto | money }}€</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="row border-bottom">
+                <div style="margin-top: .5rem; padding: 0 1rem;" class="row border-bottom">
                     <div class="col-12 info">
                         <p>{{ this.$store.getters.user.name }} {{ this.$store.getters.user.lastname }}</p>
                         <div class="d-flex2">
@@ -129,15 +111,17 @@
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-12">
-                        <button type="button" class="btnPago">Enviar pago</button>
-                    </div>
+                <div class="boxTotal">
+                    <p class="title">Total: <span class="mount">{{ (this.listPrice.total + this.shippingPrince.delivery + this.shippingPrince.wear ) | money }}€</span></p>
+                    <button :disabled="this.is_disabled" type="button" class="btnPago">Enviar pago</button>
                 </div>
             </div>
             <div v-if="!this.$store.getters.trolley.length" class="align-center">
                 <div class="col-12">
-                    <p class="mensaje-info">Su carrito se encuentra vacío en este momento</p>
+                    <div class="boxNotTrolley">
+                        <i class="boxNotTrolley__icon fas fa-shopping-cart"></i>
+                        <p class="boxNotTrolley__msj">Carrito vacío</p>
+                    </div>
                 </div>
             </div>
         </b-modal>
@@ -148,10 +132,12 @@
     import config from "../config.js";
     import back from '../assets/img/icons/flechavolver.svg';
     import imgDefault from '../assets/img/noimage.jpeg';
+    import EliminarProducto from "../assets/img/icons/close.svg";
 
     // -> API + EventBus
     import { EventBus } from '../main.js';
     // import api from '../api.js';
+    import funciones from "../funciones.js";
     import axios from "axios";
 
     export default {
@@ -163,6 +149,12 @@
                 back: config.rutaWeb(back),
                 imgDefault: imgDefault,
                 myTrolley: [],
+                EliminarProducto: EliminarProducto,
+                is_disabled: false,
+                shippingPrince: {
+                    delivery: 0,
+                    wear: 0,
+                },
                 listPrice: {
                     iva: [],
                     subTotal: 0.00,
@@ -186,6 +178,53 @@
             }
         },
         methods: {
+            changeShipping(id_comercio, trolley, index) {
+                var _trolley = this.$store.getters.trolley[index];
+                var _shippingFormsDelivery = document.querySelector(`#delivery_${id_comercio}`);
+                var _shippingFormsLlevar = document.querySelector(`#wear_${id_comercio}`);
+
+                if (_shippingFormsDelivery.checked != false || _shippingFormsLlevar.checked != false) {
+                    if (_shippingFormsDelivery.checked === true) {
+                        _trolley.shippingForms = "delivery";
+
+                        axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(res => {
+                            console.log(res);
+                            this.price(this.$store.getters.trolley);
+                            this.getPriceDelivery(this.$store.getters.trolley[index]);
+                        }).catch(err => {
+                            console.log(err);
+                        });
+                    }
+
+                    if (_shippingFormsLlevar.checked === true) {
+                        _trolley.shippingForms = "wear";
+
+                        axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(res => {
+                            console.log(res);
+                            this.price(this.$store.getters.trolley);
+                            this.getPriceWear(this.$store.getters.trolley[index]);
+                        }).catch(err => {
+                            console.log(err);
+                        });
+                    }
+                }
+            },
+            showConfig(id_c) {
+                var _box = document.querySelector(`#config_${id_c}`);
+                var _icon = document.querySelector(`#toggle_icon_${id_c}`);
+
+                if (_box) {
+                    if (!_box.classList.contains("show")) {
+                        _box.classList.add("show");
+                        _icon.classList.remove("fa-caret-down");
+                        _icon.classList.add("fa-caret-up");
+                    } else {
+                        _box.classList.remove("show");
+                        _icon.classList.remove("fa-caret-up");
+                        _icon.classList.add("fa-caret-down");
+                    }
+                }
+            },
             prodMenos(prod, id_producto, id_comercio, arr, index_c, index_p) {
                 var _input = document.querySelector(`[data-quantity='${prod}']`);
                 var _btn = document.querySelector(`#GuardarTrolleyCart_${id_comercio}`);
@@ -200,6 +239,7 @@
                     if (item._id === id_producto) {
                         if (parseInt(_input.value) < parseInt(item.quantity)) {
                             _btn.removeAttribute("style");
+                            this.is_disabled = true;
                         }
                     }
                 });
@@ -215,6 +255,7 @@
                     if (item._id === id_producto) {
                         if (parseInt(_input.value) > parseInt(item.quantity)) {
                             _btn.removeAttribute("style");
+                            this.is_disabled = true;
                         }
                     }
                 });
@@ -253,34 +294,44 @@
             price(arr) {
                 this.listPrice.iva = [];
                 var _agruparIVA = [];
-                var _subTotal = 0;
+                var _subTotalBase = 0;
                 var _total = 0;
 
                 var arrayTemporal = [];
                 arr.forEach(item => {
                     for (var i = 0; i < item.products.length; i++) {
-                        arrayTemporal = _agruparIVA.filter(resp => resp["iva"] == item.products[i]["iva"])
+                        arrayTemporal = _agruparIVA.filter(resp => resp["iva"] == item.products[i]["iva"] && resp["id_c"] == item.id_comercio);
                         if (arrayTemporal.length > 0) {
                             _agruparIVA[_agruparIVA.indexOf(arrayTemporal[0])];
                         } else {
-                            _agruparIVA.push({"iva" : item.products[i]["iva"]});
+                            _agruparIVA.push({
+                                "id_c": item.id_comercio,
+                                "iva" : item.products[i]["iva"]
+                            });
                         }
                     }
 
-                    _subTotal = parseFloat((item.total + _subTotal).toFixed(2));
+                    _subTotalBase = parseFloat((item.total + _subTotalBase).toFixed(2));
                 });
 
-                this.listPrice.subTotal = _subTotal;
+                this.listPrice.subTotal = _subTotalBase;
                 _agruparIVA.forEach(item => {
-                    this.listPrice.iva.push({
-                        porcentaje: item.iva,
-                        monto: parseFloat((_subTotal * parseFloat(`0.${item.iva}`)).toFixed(2))
+                    arr.forEach(item2 => {
+                        if (item.id_c === item2.id_comercio) {
+                            this.listPrice.iva.push({
+                                id_c: item.id_c,
+                                porcentaje: item.iva,
+                                monto: parseFloat((item2.total * parseFloat(`0.${item.iva}`)).toFixed(2))
+                            });
+                        }
                     });
                 });
 
                 this.listPrice.iva.forEach(item => {
-                    _total = parseFloat((_subTotal + item.monto).toFixed(2));
+                    _total = parseFloat((_total + item.monto).toFixed(2));
                 });
+
+                _total = parseFloat((_subTotalBase + _total).toFixed(2))
 
                 this.listPrice.iva.sort(function(a, b) {
                     if (a.porcentaje < b.porcentaje) {
@@ -289,6 +340,7 @@
                 });
 
                 this.listPrice.total = _total;
+                console.log(this.listPrice);
             },
             deleteProd(index_c, index_p) {
                 delete this.$store.getters.trolley[index_c].products[index_p];
@@ -342,11 +394,66 @@
                 axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(res => {
                     console.log(res);
                     this.price(this.$store.getters.trolley);
+                    this.getPriceDelivery(this.$store.getters.trolley[index]);
                     _btn.setAttribute("style", "display: none;");
+                    this.is_disabled = false;
                 }).catch(err => {
                     console.log(err);
                 });
-            }
+            },
+            getPriceWear(obj) {
+                var _cant = 0;
+                obj.products.forEach(item => {
+                    _cant = parseInt(item.quantity) + parseInt(_cant);
+                });
+
+                this.shippingPrince.delivery = 0; 
+                this.shippingPrince.wear = parseFloat(obj.costos_extras.envases) * parseInt(_cant);
+                return parseFloat(obj.costos_extras.envases) * parseInt(_cant);
+            },
+            getPriceDelivery(obj) {
+                var _total = obj.total;
+                var _coords_c = {
+                    lat: obj.lat,
+                    lng: obj.lng
+                }
+
+                var _coords_u = this.$store.getters.coords;
+                var _km = funciones.getKilometros(_coords_u.lat, _coords_u.lng, _coords_c.lat, _coords_c.lng);
+                console.log(_km);
+                var _costos = obj.costos_extras;
+
+                if (_costos.standard.km != 0 && _costos.standard.price != 0 && _costos.km_exta.km != 0 && _costos.km_exta.price != 0 && _costos.minima.price_a != 0 && _costos.minima.price_b != 0) {
+                    var _kmStand = _costos.standard.km;
+                    var _priceExtra = _costos.km_exta.price;
+
+                    if (parseFloat(_total) > parseFloat(_costos.minima.price_a)) {
+                        this.shippingPrince.wear = 0;
+                        this.shippingPrince.delivery = _costos.minima.price_b;
+                        return _costos.minima.price_b;
+                    }
+                    
+                    if (parseFloat(_total) <= parseFloat(_costos.minima.price_a)) {
+                        if (parseInt(_km.split(".")[0]) > parseInt(_kmStand)) {
+                            var _restKM = _km - _kmStand; // Valor para km extra
+                            
+                            var _montoExtra = parseInt(String(_restKM).split(".")[0]) * _priceExtra;
+
+                            this.shippingPrince.wear = 0;
+                            this.shippingPrince.delivery = _costos.standard.price + _montoExtra;
+                            return _costos.standard.price + _montoExtra;
+                        }
+
+                        if (parseInt(_km.split(".")[0]) <= parseInt(_kmStand)) {
+                            this.shippingPrince.wear = 0;
+                            this.shippingPrince.delivery = _costos.standard.price;
+                            return _costos.standard.price;
+                        }
+                    }
+                } else {
+                    return "0.00";
+                }
+            },
         }
     }
 </script>
@@ -399,26 +506,44 @@
             display: block;
             width: 100%;
             height: max-content;
-            margin-bottom: .5rem;
 
             &__title {
-                display: block;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
                 width: 100%;
                 margin: 0;
                 padding: 0;
                 white-space: nowrap;
                 text-overflow: ellipsis;
                 font-size: 1.25rem;
-                color: #31428b;
+                color: var(--bluePrimary);
+                background: #f5f5f5;
                 margin-bottom: .5rem;
+                padding-top: .5rem;
                 padding-bottom: .5rem;
+                padding-left: 1rem;
+                padding-right: 1rem;
+                border-top: 1px solid rgba(0,0,0,.35);
                 border-bottom: 1px solid rgba(0,0,0,.35);
+
+                i {
+                    cursor: pointer;
+                    font-size: 1.85rem;
+                }
+            }
+
+            &:first-child {
+                &__title {
+                    border-top: none;
+                    padding-top: 0;
+                }
             }
 
             .btnSaveEdit {
                 position: absolute;
-                top: 0;
-                right: 0;
+                top: .5rem;
+                right: calc(1rem + 2.1rem);
                 padding: .25rem .5rem;
                 background: var(--bluePrimary);
                 color: #ffffff;
@@ -449,6 +574,8 @@
                 background: #ffffff;
                 margin-bottom: .5rem;
                 padding-bottom: .5rem;
+                padding-left: 1rem;
+                padding-right: 1rem;
                 border-bottom: 1px solid rgba(0,0,0,.35);
 
                 .prod--info {
@@ -503,7 +630,7 @@
 
                     .cant__input {
                         display: block;
-                        width: 30px;
+                        width: 50px;
                         height: 30px;
                         line-height: 30px;
                         text-align: center;
@@ -532,17 +659,28 @@
                     }
 
                     .delete-product {
-                        display: block;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
                         font-size: 2rem;
-                        color: #f03131;
                         font-weight: bold;
-                        width: 30px;
-                        height: 30px;
-                        line-height: 30px;
+                        width: 25px;
+                        height: 25px;
+                        line-height: 25px;
                         text-align: center;
                         margin-left: .5rem;
                         outline: none;
                         cursor: pointer;
+
+                        img {
+                            display: block;
+                            margin: 0;
+                            padding: 0;
+                            width: 15px;
+                            height: 15px;
+                            object-fit: contain;
+                            object-position: center center;
+                        }
                     }
                 }
             }
@@ -550,6 +688,12 @@
             &__config {
                 width: 100%;
                 height: max-content;
+                padding: 0 1rem;
+                display: none;
+
+                &.show {
+                    display: block;
+                }
 
                 .config--item {
                     display: flex;
@@ -631,6 +775,7 @@
             &__total {
                 width: 100%;
                 height: max-content;
+                padding: 0 1rem;
 
                 .total--item {
                     display: flex;
@@ -704,17 +849,21 @@
     }
 
     .btnPago {
-        background: #4e5d6a;
+        background: var(--bluePrimary);
         color: #fff;
-        float: right;
-        margin-top: 10px;
+        margin: 0;
         letter-spacing: 0;
         padding: .5rem 1rem;
         border: none;
         outline: none;
         box-shadow: none;
-        margin-right: 20px;
         font-size: 16px;
+        cursor: pointer;
+
+        &:disabled {
+            background: #bfbfbf;
+            cursor: no-drop;
+        }
     }
 
     .border-bottom{
@@ -731,7 +880,7 @@
         text-align: center;
     }
 
-    .boxCheckbox input[type="radio"] {
+    .boxCheckbox input[type="radio"], .boxCheckbox input[type="checkbox"] {
         display: none;
     }
         
@@ -756,16 +905,65 @@
         }
     }
     
-    .boxCheckbox input[type="radio"]:checked ~ .boxCheckbox__checked {
+    .boxCheckbox input[type="radio"]:checked ~ .boxCheckbox__checked,
+    .boxCheckbox input[type="checkbox"]:checked ~ .boxCheckbox__checked {
         i {
             display: block;
             opacity: 1;
         }
     }
+
+    .boxTotal {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        height: max-content;
+        font-size: 1.5rem;
+        padding: 1rem;
+
+        p {
+            margin: 0;
+
+            span {
+                color: #9d8755;
+            }
+        }
+    }
+
+    .boxNotTrolley {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 450px;
+
+        &__icon {
+            font-size: 3.5rem;
+            color: rgba(0,0,0,.3);
+        }
+
+        &__msj {
+            width: 100%;
+            font-size: 1.25rem;
+            text-transform: uppercase;
+            font-weight: bold !important;
+            color: rgba(0,0,0,.3);
+            margin: 0;
+            padding: 1rem 0;
+            text-align: center;
+        }
+    }
 </style>
 
 <style lang="css">
-    .modal.show .modal-dialog {
+    .modal-trolley .modal-body {
+        padding: 0 !important;
+        overflow-x: hidden !important;
+    }
+
+    .modal-trolley .modal.show .modal-dialog {
         margin-left: auto !important;
         margin-right: auto !important;
     }

@@ -14,6 +14,16 @@ import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue/dist/bootstrap-vue.css';
 import Vuelidate from 'vuelidate';
 import VueToast from 'vue-toast-notification';
+import money from 'v-money';
+Vue.use(money);
+
+var filtermoney = function(text){
+  if(!text) return '0,00';
+  text = parseFloat(text);
+  let value = text.toFixed(2).toString().split('.')
+  return value[0].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")+','+value[1]
+};
+Vue.filter('money', filtermoney);
 
 Vue.use(Vuelidate);
 Vue.use(VueToast, {
