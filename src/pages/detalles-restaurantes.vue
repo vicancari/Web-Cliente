@@ -147,6 +147,8 @@
             <img @click="closePrevImage" class="boxPreviewImage__close" :src="back">
             <img :src="prevImage" class="boxPreviewImage__img">
         </div>
+
+        <Send :GetRest="{searching: false, data: {val: dataRest, key: this.id_restaurante}}"></Send>
     </div>
 </template>
 
@@ -175,6 +177,7 @@ import axios from "axios";
 import { EventBus } from "../main.js";
 
 import ModalDetallesProductos from "../modals/modal-detalles-productos.vue";
+import Send from '../modals/send';
 
 export default {
     name: 'restaurante',
@@ -182,13 +185,14 @@ export default {
         Navbar,
         Carousel,
         Slide,
-        ModalDetallesProductos
+        ModalDetallesProductos,
+        Send
     },
     data: function () {
         return {
             error: "",
             id_restaurante: this.$router.currentRoute.params.id,
-            dataRest: "",
+            dataRest: {},
             misProd: {
                 destacado: [],
                 all: []
@@ -216,11 +220,11 @@ export default {
             },
         }
     },
-    async created() {
-        var _ubi = await this.geo();
+    created() {
+        var _ubi = this.geo();
         this.myUbicacion = `${_ubi.lat},${_ubi.lon}`;
 
-        await api.get("restaurante/" + this.id_restaurante).then(res => {
+        api.get("restaurante/" + this.id_restaurante).then(res => {
             this.dataRest = res;
             console.log("rest -> ", this.dataRest);
         }).catch(err => {

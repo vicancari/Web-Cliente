@@ -63,8 +63,7 @@
             </div>
         </div>
         <!-- Modals -->
-        <Menu></Menu>    
-        <Send></Send> 
+        <Menu></Menu>
         <modalBeneficios></modalBeneficios>
         <modalBIncentivos></modalBIncentivos>
         <modalPropio></modalPropio>
@@ -91,7 +90,6 @@
     import trolleyPlus from "../assets/trolleyPlus.svg";
     /* Components */
     import Menu from '../modals/menu';
-    import Send from '../modals/send';
     import ModalTrolley from '../modals/trolley';
     import modalBeneficios from '../modals/modal-beneficios';
     import modalBIncentivos from '../modals/modal-incentivos';
@@ -122,7 +120,6 @@
         },
         components: {
             Menu,
-            Send,
             modalBeneficios,
             modalBIncentivos,
             modalPropio,

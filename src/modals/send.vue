@@ -1,14 +1,15 @@
 <template>
     <div>
-        <b-modal centered :modal-class="myclass" id="modal-send" ref="modal-send"  hide-footer hide-header @click="closeSearching">  
+        <b-modal v-bind="GetRest" centered :modal-class="myclass" id="modal-send" ref="modal-send"  hide-footer hide-header @click="closeSearching">  
             <div class="boxCalculate" @click="closeSearching">
                 <div class="boxSeach" @click="closeSearching">
                     <div class="input-search">
-                        <input type="text" id="searchRestaurante" v-on:keyup="search" class="form-control search" placeholder="Buscar" v-on:focus="openSearching" autocomplete="off">
+                        <input v-if="this.GetRest.searching === true" type="text" id="searchRestaurante" v-on:keyup="search" class="form-control search" placeholder="Buscar" v-on:focus="openSearching" autocomplete="off">
+                        <p v-else id="searchRestaurante" class="form-control search">{{ this.GetRest.data.val.business_name }}</p>
                         <img class="input-search__icon" src="../assets/img/icons/search.png" alt="search">
                     </div>
-                    <p data-error="searchRestaurante" class="msgError d-none">*msgError</p>
-                    <div @click="selectRestaurante" class="boxSeach__result">
+                    <p v-if="this.GetRest.searching === true" data-error="searchRestaurante" class="msgError d-none">*msgError</p>
+                    <div v-if="this.GetRest.searching === true" @click="selectRestaurante" class="boxSeach__result">
                         <p v-for="res in this.listRestSearch.filters" :key="'result_'+res.id" :id="'result_'+res.id" :data-name="res.name" :data-categoria="res.categorias ? res.categorias[0].name : ''" :data-subcategoria="res.categorias ? res.categorias[0].name_subcategory : ''" class="result">{{ res.name }}</p>
                     </div>
                 </div>
@@ -64,6 +65,9 @@
     export default {
         name: 'send',
         components: {},
+        props: {
+            GetRest: {type: Object}
+        },
         directives: {money: VMoney},
         data: function () {
             return {
@@ -102,6 +106,19 @@
             }
         },
         created() {
+            console.log(this.GetRest);
+            if (this.GetRest.searching === false) {
+                var _cate = Object.values(this.GetRest.data.val.categories);
+                this.selectedRes = {
+                    id: this.GetRest.data.key,
+                    name: this.GetRest.data.val.business_name,
+                    categoria: _cate[0].name,
+                    subcategoria: _cate[0].name_subcategory
+                };
+
+                console.log(this.selectedRes);
+            }
+
             EventBus.$on('listRestauranteSearch', (obj) => {
                 this.listRestSearch.filters = obj;
             });
@@ -160,6 +177,7 @@
 
                     if (_input.value.toLowerCase() === obj.data) {
                         _datas[el].classList.remove('d-none');
+
                         this.selectedRes = {
                             id: _datas[el].getAttribute("id").replace("result_", ""),
                             name: _datas[el].getAttribute("data-name"),
@@ -594,21 +612,23 @@
             },
             Pay() {
                 var _myAccounts = this.$store.getters.user.accounts;
+                console.log(_myAccounts);
                 var _keys = Object.keys(_myAccounts);
                 _myAccounts = Object.values(_myAccounts);
                 var _cate = "";
                 var _myBalanceTotal = 0;
 
-                if (document.querySelector("#searchRestaurante").value != "") {
-                    console.log(this.selectedRes);
-                    _cate = this.selectedRes.categoria.replace("#", "");
+                if (this.GetRest.searching === false) {
+                    if (document.querySelector("#searchRestaurante").innerText != "") {
+                        _cate = this.selectedRes.categoria.replace("#", "");
 
-                    for (var i = 0; i < _myAccounts.length; i++) {
-                        if (_keys[i].toLowerCase() != "propio") {
-                            if (_myAccounts[i].categorias && _myAccounts[i].value > 0) {
-                                for (var y = 0; y < _myAccounts[i].categorias.length; y++) {
-                                    if (_myAccounts[i].categorias[y].nombre.toLowerCase() === _cate.toLowerCase()) {
-                                        _myBalanceTotal = _myBalanceTotal + parseFloat(_myAccounts[i].value);
+                        for (var i2 = 0; i2 < _myAccounts.length; i2++) {
+                            if (_keys[i2].toLowerCase() != "propio") {
+                                if (_myAccounts[i2].categorias && _myAccounts[i2].value > 0) {
+                                    for (var y2 = 0; y2 < _myAccounts[i2].categorias.length; y2++) {
+                                        if (_myAccounts[i2].categorias[y2].nombre.toLowerCase() === _cate.toLowerCase()) {
+                                            _myBalanceTotal = _myBalanceTotal + parseFloat(_myAccounts[i2].value);
+                                        }
                                     }
                                 }
                             }
@@ -616,16 +636,34 @@
                     }
                 }
 
-                if (document.querySelector("#searchRestaurante").value === "") {
-                    document.querySelector("[data-error='searchRestaurante']").innerText = "Debes buscar un restaurante.";
-                    document.querySelector("[data-error='searchRestaurante']").classList.remove("d-none");
+                if (this.GetRest.searching === true) {
+                    if (document.querySelector("#searchRestaurante").value != "") {
+                        _cate = this.selectedRes.categoria.replace("#", "");
 
-                    setTimeout(() => {
-                        document.querySelector("[data-error='searchRestaurante']").innerText = "";
-                        document.querySelector("[data-error='searchRestaurante']").classList.add("d-none");
-                    }, 3500);
+                        for (var i = 0; i < _myAccounts.length; i++) {
+                            if (_keys[i].toLowerCase() != "propio") {
+                                if (_myAccounts[i].categorias && _myAccounts[i].value > 0) {
+                                    for (var y = 0; y < _myAccounts[i].categorias.length; y++) {
+                                        if (_myAccounts[i].categorias[y].nombre.toLowerCase() === _cate.toLowerCase()) {
+                                            _myBalanceTotal = _myBalanceTotal + parseFloat(_myAccounts[i].value);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
 
-                    return false;
+                    if (document.querySelector("#searchRestaurante").value === "") {
+                        document.querySelector("[data-error='searchRestaurante']").innerText = "Debes buscar un restaurante.";
+                        document.querySelector("[data-error='searchRestaurante']").classList.remove("d-none");
+
+                        setTimeout(() => {
+                            document.querySelector("[data-error='searchRestaurante']").innerText = "";
+                            document.querySelector("[data-error='searchRestaurante']").classList.add("d-none");
+                        }, 3500);
+
+                        return false;
+                    }
                 }
 
                 if (document.querySelector("#saldoSend").value === "") {
@@ -653,17 +691,34 @@
                     return false;
                 }
 
-                if (document.querySelector("#searchRestaurante").value != "" && document.querySelector("#saldoSend").value != "" && parseFloat(document.querySelector("#saldoSend").value.replace(",", ".")) <= parseFloat(_myBalanceTotal)) {
-                    this.miSaldoTotal = _myBalanceTotal;
-                    this.saldoSend = document.querySelector("#saldoSend").value;
-                    this.price = 0.00;
+                if (this.GetRest.searching === false) {
+                    if (document.querySelector("#searchRestaurante").innerText != "" && document.querySelector("#saldoSend").value != "" && parseFloat(document.querySelector("#saldoSend").value.replace(",", ".")) <= parseFloat(_myBalanceTotal)) {
+                        this.miSaldoTotal = _myBalanceTotal;
+                        this.saldoSend = document.querySelector("#saldoSend").value;
+                        this.price = 0.00;
+    
+                        this.$refs['modal-send'].hide();
+                        this.$refs['modal-payment'].show();
+    
+                        setTimeout(() => {
+                            this.setAccounts();
+                        }, 950);
+                    }
+                }
 
-                    this.$refs['modal-send'].hide();
-                    this.$refs['modal-payment'].show();
-
-                    setTimeout(() => {
-                        this.setAccounts();
-                    }, 950);
+                if (this.GetRest.searching === true) {
+                    if (document.querySelector("#searchRestaurante").value != "" && document.querySelector("#saldoSend").value != "" && parseFloat(document.querySelector("#saldoSend").value.replace(",", ".")) <= parseFloat(_myBalanceTotal)) {
+                        this.miSaldoTotal = _myBalanceTotal;
+                        this.saldoSend = document.querySelector("#saldoSend").value;
+                        this.price = 0.00;
+    
+                        this.$refs['modal-send'].hide();
+                        this.$refs['modal-payment'].show();
+    
+                        setTimeout(() => {
+                            this.setAccounts();
+                        }, 950);
+                    }
                 }
             },
             stopLoader() { this.$store.commit("notLoading"); },
@@ -715,7 +770,7 @@
         width: 100%;
         height: max-content;
 
-        input[type="text"].form-control.search {
+        .form-control.search {
             border-top-left-radius: 0;
             border-top-right-radius: 0;
             outline: none;
@@ -775,7 +830,7 @@
                 display: block;
             }
 
-            input[type="text"].form-control.search {
+            .form-control.search {
                 border-top-left-radius: 5px;
                 border-top-right-radius: 5px;
 

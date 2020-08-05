@@ -1,13 +1,11 @@
 <template>
     <div>
         <Navbar></Navbar>
-        <div class="navSearch">
-            <h5>Que hay de comer?</h5>
-            <div class="">
-                <button class="btn btnSearch" type="button" v-b-modal.modal-search>
-                    Buscar
-                    <img class="img-fluid" :src="searchImg" alt="">
-                </button>
+        <div class="boxSearch3">
+            <input id="searchRestaurante3" type="text" class="boxSearch3__input" :value="this.searching" placeholder="Buscar" v-on:keyup="search3" v-on:focus="openSearching3" @keypress.enter="search()" autocomplete="off">
+            <button type="button" class="boxSearch3__btn" @click="search()"><img :src="searchImg" :alt="'buscar_'+this.searching"></button>
+            <div @click="selectRestaurante3" class="boxSearch3__result">
+                <p v-for="res in this.refSearch2" :key="'result_'+res.id" :id="'result_'+res.id" :data-name="res.name" :data-categoria="res.categoria" :data-subcategoria="res.subcategoria" class="result">{{ res.name }}</p>
             </div>
         </div>
         <div class="bodySection">
@@ -177,7 +175,7 @@
             :key="i"
             :GetProd="prod"
         ></modal-detalles-productos>
-        <search></search>
+        <Send :GetRest="{searching: true, data: false}"></Send>
     </div>
 </template>
 
@@ -192,7 +190,7 @@
     import { Carousel, Slide } from 'vue-carousel';
     import Navbar from '../components/navbar';
     /* Modals */
-    import search from '../modals/search';
+    import Send from '../modals/send';
     /* Images */
     import searchImg from '../assets/img/search.png';
     import shared from '../assets/img/icons/share.png';
@@ -219,8 +217,8 @@
             Carousel,
             Slide,
             Navbar,
-            search,
-            ModalDetallesProductos
+            ModalDetallesProductos,
+            Send,
         },
         data: function () {
             return {
@@ -249,10 +247,13 @@
                 listBeneficio: [],
                 listIncentivo: [],
                 googleMapApi: "",
-                distancia: "25000.000",
+                distancia: "20.000",
                 rts: {
                     page: 0
                 },
+                searching: "",
+                listRest: {},
+                refSearch2: [],
             }
         },
         async created() {
@@ -280,6 +281,67 @@
             }
         },
         methods: {
+            search() {
+                var _input = document.querySelector("#searchRestaurante3").value;
+                this.searching = _input;
+                var _conv = _input.split(" ").join("-");
+                this.$router.push(`/home/searching=${_conv}`);
+            },
+            selectRestaurante3(e) {
+                var _el = e.target;
+                document.querySelector("#searchRestaurante3").value = _el.getAttribute("data-name");
+                this.search();
+                
+                if (document.querySelector("#searchRestaurante3").parentNode.classList.contains("boxSearch3")) {
+                    document.querySelector("#searchRestaurante3").parentNode.classList.remove("searching3");
+                }
+            },
+            openSearching3() {
+                if (document.querySelector("#searchRestaurante3")) {
+                    if (document.querySelector("#searchRestaurante3").parentNode.classList.contains("boxSearch3")) {
+                        document.querySelector("#searchRestaurante3").parentNode.classList.add("searching3");
+                    }
+                }
+            },
+            search3(e) {
+                var _parent = e.target.parentNode;
+                var _input = e.target;
+                var _boxResult = _parent.children[2];
+                var _datas = _boxResult.children;
+
+                if (_parent.classList.contains("boxSearch3")) {
+                    if (_input.value != "") {
+                        _parent.classList.add("searching3");
+                    }
+                }
+
+                for (var el = 0; el < _datas.length; el++) {
+                    var dataLower = _datas[el].innerText.toLowerCase();
+                    var obj = {data: dataLower};
+
+                    _datas[el].classList.add("d-none");
+
+                    if (_input.value.toLowerCase() === obj.data) {
+                        _datas[el].classList.remove('d-none');
+                    }
+
+                    if (_input.value.toLowerCase() === obj.data.substr(obj.data.indexOf(" ") + 1, _input.value.length)) {
+                        _datas[el].classList.remove('d-none');
+                    }
+                    
+                    if (_input.value.toLowerCase() === obj.data.substr(obj.data.lastIndexOf(" ") + 1, _input.value.length)) {
+                        _datas[el].classList.remove('d-none');
+                    }
+            
+                    if (_input.value.toLowerCase() === obj.data.substr(0, _input.value.length)) {
+                        _datas[el].classList.remove('d-none');
+                    }
+                    
+                    if (_input.value.toLowerCase() === '') {
+                        _datas[el].classList.remove('d-none');
+                    }
+                }
+            },
             onSlideStart() {
                 this.sliding = true;
             },
@@ -491,8 +553,9 @@
                         if (a.name < b.name) {
                             return -1;
                         }
-                    })
-
+                    });
+                    
+                    this.refSearch2 = _lRN;
                     EventBus.$emit("listRestauranteSearch", _lRN);
                     EventBus.$emit("coordenadas", {lat: this.ubiLat, lng: this.ubiLng});
 
@@ -673,3 +736,103 @@
         }
     }
 </script>
+
+<style scope lang="scss">
+    .boxSearch3 {
+        --width: 250px;
+        position: relative;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        width: 100%;
+        height: max-content;
+        margin: 1rem 0 0;
+        padding: 0;
+
+        &__input {
+            display: block;
+            width: var(--width);
+            height: 40px;
+            line-height: 40px;
+            padding: 0;
+            background: #fff;
+            border: 0;
+            border-bottom: 1px solid #888;
+            box-shadow: none;
+            outline: none;
+            text-transform: uppercase;
+            border-radius: 0;
+        }
+
+        &__btn {
+            width: 40px;
+            height: 40px;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            border-radius: 0;
+            background: transparent;
+            margin: 0 0 0 .5rem;
+            cursor: pointer;
+
+            img {
+                display: block;
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                object-position: center center;
+                outline: none !important;
+            }
+        }
+
+        &__result {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 3rem;
+            width: var(--width);
+            background: #fff;
+            z-index: 100;
+            height: max-content;
+            max-height: 292px;
+            padding: 0;
+            border-bottom-left-radius: 5px;
+            border-bottom-right-radius: 5px;
+            overflow: hidden;
+            overflow-y: auto;
+            box-shadow: 1px 1px 10px 0 rgba(0,0,0,.45);
+            border-left: 1px solid #666666;
+            border-right: 1px solid #666666;
+            border-bottom: 1px solid #666666;
+
+            p.result {
+                display: block;
+                margin: 0;
+                width: 100%;
+                height: max-content;
+                padding: .5rem 1rem;
+                border-bottom: 1px solid rgba(0,0,0,.25);
+                text-transform: uppercase !important;
+                transition: all .15s ease-in-out;
+                text-align: left;
+                cursor: pointer;
+
+                &:hover {
+                    background: rgba(0,0,0,.15);
+                }
+
+                &:last-child {
+                    border-bottom: none;
+                }
+            }
+        }
+
+        &.searching3 {
+            .boxSearch3__result {
+                display: block !important;
+            }
+        }
+    }
+</style>

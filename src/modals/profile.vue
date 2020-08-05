@@ -37,14 +37,6 @@
                         <button class="btn btn-outline-secondary" type="button" @click="change('lastname')"><img class="img-fluid" :src="lapiz" alt=""></button>
                     </div>
                     <div class="form-group">
-                        <h5 class="text-truncate m-0">{{email}}</h5>
-                        <button class="btn btn-outline-secondary" type="button"  @click="change('email')"><img class="img-fluid" :src="lapiz" alt=""></button>
-                    </div>
-                    <div class="form-group">
-                        <h5 class="text-truncate m-0">{{telephone}}</h5>
-                        <button class="btn btn-outline-secondary" type="button"  @click="change('telephone')"><img class="img-fluid" :src="lapiz" alt=""></button>
-                    </div>
-                    <div class="form-group">
                         <h5 class="text-truncate m-0">{{birthday}}</h5>
                         <button class="btn btn-outline-secondary" type="button"  @click="change('birthday')"><img class="img-fluid" :src="lapiz" alt=""></button>
                     </div>
@@ -77,18 +69,6 @@
             <div class="form-group a"  v-if="showInput == 'lastname'">
                 <label class="form-control-placeholder" for="lastname">Ingrese apellido</label>
                 <input @change="changeText" type="text" id="lastname" autocomplete="off" class="form-control" v-model="lastname">
-                <p class="msgError d-none">*msgError</p>
-            </div>
-            <!-- email -->
-                <div class="form-group a"  v-if="showInput == 'email'">
-                <label class="form-control-placeholder" for="email">Ingrese email</label>
-                <input @change="changeText" type="email" id="email" autocomplete="off" v-model="email" class="form-control">
-                <p class="msgError d-none">*msgError</p>
-            </div>
-            <!-- telephone -->
-            <div class="form-group a"  v-if="showInput == 'telephone'">
-                <label class="form-control-placeholder" for="phone">Ingrese Teléfono</label>
-                <input @change="changeText" type="number" id="phone" autocomplete="off" v-model="telephone" class="form-control">
                 <p class="msgError d-none">*msgError</p>
             </div>
             <!-- date -->
@@ -146,8 +126,6 @@
                 dni: "",
                 name: "",
                 lastname: "",
-                email: "",
-                telephone: "",
                 birthday: "",
                 address: "",
                 updateClt: {
@@ -177,8 +155,6 @@
                             this.dni = _user.dni;
                             this.name = _user.name;
                             this.lastname = _user.lastname;
-                            this.email = _user.email;
-                            this.telephone = _user.phone;
                             this.birthday = _user.birthday;
                             this.address = _user.address;
                         }
@@ -192,8 +168,6 @@
                             this.dni = _user.dni;
                             this.name = _user.name;
                             this.lastname = _user.lastname;
-                            this.email = _user.email;
-                            this.telephone = _user.phone;
                             this.birthday = _user.birthday;
                             this.address = _user.address;
                         }
@@ -235,22 +209,6 @@
                     }
                 }
 
-                if (_id === "email") {
-                    if (_input.value.toLowerCase() != this.$store.getters.user.email) {
-                        _btn.disabled = false;
-                    } else {
-                        _btn.disabled = true;
-                    }
-                }
-
-                if (_id === "phone") {
-                    if (_input.value.toLowerCase() != this.$store.getters.user.phone) {
-                        _btn.disabled = false;
-                    } else {
-                        _btn.disabled = true;
-                    }
-                }
-
                 if (_id === "birthday") {
                     if (_input.value.toLowerCase() != this.$store.getters.user.birthday) {
                         _btn.disabled = false;
@@ -267,7 +225,7 @@
                     }
                 }
 
-                if (this.dni === this.$store.getters.user.dni && this.name === this.$store.getters.user.name && this.lastname === this.$store.getters.user.lastname && this.email === this.$store.getters.user.email && this.telephone === this.$store.getters.user.phone && this.birthday === this.$store.getters.user.birthday) {
+                if (this.dni === this.$store.getters.user.dni && this.name === this.$store.getters.user.name && this.lastname === this.$store.getters.user.lastname && this.birthday === this.$store.getters.user.birthday) {
                     _btn.disabled = true;
                 }
             },
@@ -277,8 +235,6 @@
                 this.updateClt.dni = this.dni;
                 this.updateClt.name = this.name;
                 this.updateClt.lastname = this.lastname;
-                this.updateClt.email = this.email;
-                this.updateClt.phone = this.telephone;
                 this.updateClt.birthday = this.birthday;
 
                 this.updateClt.address = this.$store.getters.user.address;
@@ -286,6 +242,8 @@
                 this.updateClt.country = this.$store.getters.user.country;
                 this.updateClt.lat = this.$store.getters.user.lat;
                 this.updateClt.lng = this.$store.getters.user.lng;
+                this.updateClt.email = this.$store.getters.user.email;
+                this.updateClt.phone = this.$store.getters.user.phone;
 
                 api.put("cliente/update/", this.updateClt).then(res => {
                     console.log(res);

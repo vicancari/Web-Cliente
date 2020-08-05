@@ -73,7 +73,7 @@
             </div>
         </div>
         <!-- modals -->
-        <search></search>
+        <Send :GetRest="{searching: true, data: false}"></Send>
     </div>
 </template>
 
@@ -86,7 +86,7 @@
     /* import carousel from 'vue-owl-carousel' */
     import Navbar from '../components/navbar';
     /* Modals */
-    import search from '../modals/search';
+    import Send from '../modals/send';
     /* Images */
     import back from '../assets/img/icons/flechavolver.svg';
     import searchImg from '../assets/img/search.png';
@@ -107,7 +107,7 @@
         name: 'home',
         components: {
             Navbar,
-            search
+            Send,
         },
         data: function () {
             return {

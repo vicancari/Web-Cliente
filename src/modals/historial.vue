@@ -34,7 +34,7 @@
                         <div class="scroll">
                             <div v-for="(egre, i) in this.listTransacciones.e.filter" :key="i" class="boxcontent">
                                 <button type="button" v-if="egre.typeTransaccion === 'envio'" block class="btn title" v-b-toggle="egre._id" :name="egre._id">
-                                    {{ getComercio(egre.comercio != undefined ? egre.comercio.id : egre.id_comercio != undefined ? egre.id_comercio : 'Envio') }}
+                                    <p class="text">{{ getComercio(egre.comercio != undefined ? egre.comercio.id : egre.id_comercio != undefined ? egre.id_comercio : 'Envio') }} <span class="time">{{ dateNow(egre.date + " " + egre.time) }}</span></p>
                                     <img class="img-fluid" :src="arrow">
                                 </button>
                                 <b-collapse :id="egre._id" :accordion="egre._id">
@@ -86,11 +86,11 @@
                         <div class="scroll">
                             <div v-for="(ingre, i) in listTransacciones.i.filter" :key="i" class="boxcontent">
                                 <button type="button" v-if="ingre.typeTransaccion === 'envio'" block class="btn title" v-b-toggle="ingre._id" :name="ingre._id">
-                                    {{ getComercio(ingre.comercio != undefined ? ingre.comercio.id : ingre.id_comercio != undefined ? ingre.id_comercio : 'Envio') }}
+                                    <p class="text">{{ getComercio(ingre.comercio != undefined ? ingre.comercio.id : ingre.id_comercio != undefined ? ingre.id_comercio : 'Envio') }} <span class="time">{{ dateNow(ingre.date + " " + ingre.time) }}</span></p>
                                     <img class="img-fluid" :src="arrow">
                                 </button>
                                 <button type="button" v-if="ingre.typeTransaccion === 'recarga-saldo'" block class="btn title" v-b-toggle="ingre._id" :name="ingre._id">
-                                    Recarga saldo
+                                    <p class="text">Recarga de saldo <span class="time">{{ dateNow(ingre.date + " " + ingre.time) }}</span></p>
                                     <img class="img-fluid" :src="arrow">
                                 </button>
                                 <b-collapse :id="ingre._id" :accordion="ingre._id">
@@ -133,6 +133,7 @@
 </template>
 
 <script>
+    // import Vue from 'vue';
     import config from "../config.js";
     import reloj from '../assets/img/icons/reloj.svg';
     import back from '../assets/img/icons/flechavolver.svg';
@@ -142,6 +143,8 @@
     import { EventBus } from '../main.js';
 
     import api from '../api.js';
+    import moment from "moment";
+    require('moment/locale/es');
 
     export default {
         name: 'historial',
@@ -418,6 +421,15 @@
                 this.is_fEsteMesI = false;
                 this.is_fOtroMesI = true;
             },
+            dateNow(date) {
+                var _r = moment(date).fromNow();
+
+                if (_r.substr(0, 2).toLowerCase() === "en") {
+                    _r = _r.replace("en", "hace", _r);
+                }
+                
+                return _r;
+            },
             resetFilterSelect() {
                 var _s1 = document.querySelector("#select_ingreso");
                 var _s2 = document.querySelector("#select_egreso");
@@ -684,6 +696,16 @@
                     @media (max-width: 576px){
                         font-size: 14px;
                     }
+
+                    .text {
+                        margin: 0;
+
+                        span.time {
+                            font-size: .75rem;
+                            color: rgba(0,0,0,.45);
+                        }
+                    }
+
                     img{
                         width: 25px;
                         height: 25px;
