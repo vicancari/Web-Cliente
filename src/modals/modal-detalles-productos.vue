@@ -2,14 +2,14 @@
     <div>
         <b-modal v-bind="GetProd" :modal-class="'ModalDetallesProductos'" :id="prod.title + prod.id" :ref="prod.title + prod.id" centered hide-footer hide-header class="ModalInfoProd">  
             <div class="contentCaracteristics">
-                <div class="boxImage">
+                <div v-if="prod.data.images.length" class="boxImage">
                     <carousel class="carouselEdit"
                         :paginationEnabled="true"
                         :navigationEnabled="false"
                         :perPage="1"
                         navigationNextLabel=""
                         navigationPrevLabel=""
-                    >
+                    >   
                         <slide v-for="imgProd in prod.data.images" :key="imgProd.id">
                             <img class="img-fluid imgEdit" :src="imgProd.img" :alt="prod.data.name">
                         </slide>
@@ -25,13 +25,13 @@
                     </div>
                     <div class="carac">
                         <div class="info">
-                            <div v-if="prod.data.ingredients" class="box">
+                            <div v-if="prod.data.ingredients.length" class="box">
                                 <p class="title">Ingredientes:</p>
                                 <b-list-group>
                                     <b-list-group-item v-for="(ingreProd, i) in prod.data.ingredients" :key="i">{{ ingreProd.name }}</b-list-group-item>
                                 </b-list-group>
                             </div>
-                            <div v-if="prod.data.no_ingredients" class="box">
+                            <div v-if="prod.data.no_ingredients.length" class="box">
                                 <p class="title">Alergenos:</p>
                                 <b-list-group>
                                     <b-list-group-item v-for="(noingreProd, i) in prod.data.no_ingredients" :key="i" class="d-flex justify-content-between align-items-center">{{ noingreProd.name }}</b-list-group-item>
@@ -79,8 +79,8 @@
                                         </div>
                                     </label>
                                 </div>
-                                <div v-if="prod.data.eat_in_restaurant === true" disabled class="form-grou">
-                                    <input type="radio" :name="'radiosSelect_' + prod.data._id" :id="'comer_' + prod.data._id">
+                                <div v-if="this.eatinrest" class="form-grou">
+                                    <input @change="ChangeComer(prod.data._id, prod.data.id_restaurant)" type="radio" :name="'radiosSelect_' + prod.data._id" :id="'comer_' + prod.data._id">
                                     <label :for="'comer_' + prod.data._id">
                                         <div class="a">
                                             <img src="../assets/dinner.png" alt="">
@@ -97,6 +97,51 @@
                             </b-button>
                         </div>
                     </div>
+                </div>
+            </div>
+        </b-modal>
+
+        <button type="button" id="btn_comer" v-b-modal="'modal-comer_' + prod.data._id" style="display: none;"></button>
+        <b-modal modal-class="modal-comer" centered :id="'modal-comer_' + prod.data._id" :ref="'modal-comer_' + prod.data._id"  hide-footer hide-header>  
+            <div class="d-block text-center">
+                <div class="boxMesa">
+                    <h3>Unirse a mesa</h3>
+
+                    <div class="boxSelectMesa">
+                        <select :name="'selectMesa_' + prod.data._id" :id="'selectMesa_' + prod.data._id" class="form-control select-mesa">
+                            <option v-for="(m, i) in this.getMesa" :key="i" :value="m._id">{{ m.mesa }}</option>
+                        </select>
+                        <span class="cubo"></span>
+                    </div>
+                    
+                    <div class="checboxs">
+                        <div class="form-group">
+                            <input type="radio" :name="'radiosSelectMesa_' + prod.data._id" :id="'pago-unico_' + prod.data._id">
+                            <label :for="'pago-unico_' + prod.data._id">
+                                <div class="a">
+                                    <span>Pago único</span>
+                                </div>
+                                <div class="box">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <input type="radio" :name="'radiosSelectMesa_' + prod.data._id" :id="'pago-separado_' + prod.data._id">
+                            <label :for="'pago-separado_' + prod.data._id">
+                                <div class="a">
+                                    <span>Pago por separado</span>
+                                </div>
+                                <div class="box">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button class="btn btnConfirmar" @click="$bvModal.hide(`modal-comer_${prod.data._id}`)">
+                        Confirmar
+                    </button>
                 </div>
             </div>
         </b-modal>
@@ -135,9 +180,6 @@
             Carousel,
             Slide,
         },
-        created() {
-            this.prod = this.GetProd;
-        },
         data: function () {
             return {
                 myclass: ['detalles-productos'],
@@ -145,6 +187,8 @@
                 cantProd: 1,
                 checkimg: checkimg,
                 prod: {},
+                getMesa: "",
+                eatinrest: false,
                 pedido: {
                     status: 0,
                     id_comercio: "",
@@ -159,6 +203,16 @@
                 },
             }
         },
+        created() {
+            this.prod = this.GetProd;
+
+            this.eatinrest = this.EatInRestaurant(this.prod.data.eat_in_restaurant, this.prod.data.id_restaurant);
+            EventBus.$on("NewPushOfTrolleyChangeComer", obj => {
+                if (obj.ok === "OK") {
+                    this.eatinrest = this.EatInRestaurant(this.prod.data.eat_in_restaurant, this.prod.data.id_restaurant);
+                }
+            });
+        },
         methods: {
             prodMenos() {
                 if (this.cantProd === 1) {
@@ -170,113 +224,170 @@
             prodMas() {
                 this.cantProd++;
             },
+            ChangeComer(_id, id_comercio) {
+                var _shippingFormsComer = document.querySelector(`#comer_${_id}`);
+
+                if (_shippingFormsComer) {
+                    var _btn = document.querySelector("#btn_comer");
+                    if (_shippingFormsComer.checked === true) {
+                        if (_btn) {
+                            _btn.click();
+                            this.getMesas(id_comercio);
+                        }
+                    }
+                }
+            },
+            getMesas(id_comercio) {
+                axios.get(`https://myraus.com:8282/api/mesas/get/${id_comercio}`).then(res => {
+                    this.getMesa = res.data.data;
+                    this.getMesa.sort(function(a, b) {
+                        if (a.mesa < b.mesa) {
+                            return -1;
+                        }
+                    });
+                }).catch(err => {
+                    console.log(err);
+                });
+            },
+            EatInRestaurant(comer, id_comercio) {
+                this.getMesas(id_comercio);
+                var _trolley = this.$store.getters.trolley;
+                if (comer === true) {
+                    if (_trolley.length <= 1) {
+                        for (var i = 0; i < _trolley.length; i++) {
+                            if (_trolley[i].id_comercio === id_comercio) {
+                                if (this.getMesa.length) {
+                                    return true;
+                                } else {
+                                    return false;
+                                }
+                            } else {
+                                return false;
+                            }
+                        }
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            },
             addCarrito(obj) {
                 var _shippingFormsDelivery = document.querySelector(`#delivery_${obj._id}`);
                 var _shippingFormsLlevar = document.querySelector(`#llevar_${obj._id}`);
                 var _shippingFormsComer = document.querySelector(`#comer_${obj._id}`);
+                var _btnAlert = document.querySelector(`#modal-alertdr_${obj._id}`);
 
-                if (_shippingFormsDelivery.checked != false || _shippingFormsLlevar.checked != false || _shippingFormsComer.checked != false) {
-                    if (_shippingFormsDelivery.checked === true || _shippingFormsLlevar.checked === true) {
-                        if (_shippingFormsDelivery.checked === true) {
-                            this.pedido.shippingForms = "delivery";
-                        }
-            
-                        if (_shippingFormsLlevar.checked === true) {
-                            this.pedido.shippingForms = "wear";
-                        }
+                if (_shippingFormsDelivery || _shippingFormsLlevar || _shippingFormsComer) {
+                    if (_shippingFormsDelivery.checked != false || _shippingFormsLlevar.checked != false || _shippingFormsComer.checked != false) {
+                        if (_shippingFormsDelivery.checked === true || _shippingFormsLlevar.checked === true) {
+                            if (_shippingFormsDelivery.checked === true) {
+                                this.pedido.shippingForms = "delivery";
+                            }
+                
+                            if (_shippingFormsLlevar.checked === true) {
+                                this.pedido.shippingForms = "wear";
+                            }
 
-                        this.pedido.id_comercio = obj.id_restaurant;
-                        this.pedido.lat = obj.lat;
-                        this.pedido.lng = obj.lng;
-                        this.pedido.id_cliente = this.$store.getters.uid;
-                        this.pedido.created_at = moment(new Date()).format("YYYY-MM-DD HH:mm");
+                            this.pedido.id_comercio = obj.id_restaurant;
+                            this.pedido.lat = obj.lat;
+                            this.pedido.lng = obj.lng;
+                            this.pedido.id_cliente = this.$store.getters.uid;
+                            this.pedido.created_at = moment(new Date()).format("YYYY-MM-DD HH:mm");
 
-                        this.pedido.costos_extras = obj.costos;
+                            this.pedido.costos_extras = obj.costos;
 
-                        var _prod = {
-                            id_producto: obj._id,
-                            name: obj.name,
-                            description: obj.description,
-                            category: obj.category_text,
-                            sub_category: obj.sub_category_text,
-                            quantity: this.cantProd,
-                            images: obj.images,
-                            detalles: obj.detalles,
-                            iva: obj.iva,
-                            price_with_iva: obj.price_with_iva
-                        }
-                        
-                        var _trolley = this.$store.getters.trolley;
-                        var _set = true;
+                            var _prod = {
+                                id_producto: obj._id,
+                                name: obj.name,
+                                description: obj.description,
+                                category: obj.category_text,
+                                sub_category: obj.sub_category_text,
+                                quantity: this.cantProd,
+                                images: obj.images,
+                                detalles: obj.detalles,
+                                iva: obj.iva,
+                                price_with_iva: obj.price_with_iva
+                            }
+                            
+                            var _trolley = this.$store.getters.trolley;
+                            var _set = true;
 
-                        for (var i = 0; i < _trolley.length; i++) {
-                            if (_trolley[i].id_comercio === obj.id_restaurant) {
-                                _set = false;
-                                var _idDifrente = true;
-                                var _quantityIgual = 0;
+                            for (var i = 0; i < _trolley.length; i++) {
+                                if (_trolley[i].id_comercio === obj.id_restaurant) {
+                                    _set = false;
+                                    var _idDifrente = true;
+                                    var _quantityIgual = 0;
 
-                                for (var z = 0; z < _trolley[i].products.length; z++) {
-                                    if (_trolley[i].products[z].id_producto === _prod.id_producto) {
-                                        _quantityIgual = _trolley[i].products[z].quantity + this.cantProd;
-                                        _prod.quantity = _quantityIgual;
+                                    for (var z = 0; z < _trolley[i].products.length; z++) {
+                                        if (_trolley[i].products[z].id_producto === _prod.id_producto) {
+                                            _quantityIgual = _trolley[i].products[z].quantity + this.cantProd;
+                                            _prod.quantity = _quantityIgual;
 
-                                        this.$store.state.trolley[i].products[z] = _prod;
-                                        _idDifrente = false;
+                                            this.$store.state.trolley[i].products[z] = _prod;
+                                            _idDifrente = false;
+                                        }
                                     }
+
+                                    if (_idDifrente === true) {
+                                        this.$store.state.trolley[i].products.push(_prod);
+                                    }
+
+                                    var _trolley2 = this.$store.getters.trolley;
+                                    var _total = 0;
+
+                                    for (var y = 0; y < _trolley2[i].products.length; y++) {
+                                        _total = _total = (parseFloat((_trolley2[i].products[y].price_with_iva).toFixed(2)) * parseInt((_trolley2[i].products[y].quantity))) + _total;
+                                    }
+
+                                    this.$store.state.trolley[i].total = parseFloat(_total.toFixed(2));
+
+                                    console.log("ANTES DE ACTUALIZAR -> ", this.$store.state.trolley[i]);
+                                    axios.put("https://myraus.com:8282/api/cart/update", this.$store.state.trolley[i]).then(res => {
+                                        console.log(res);
+                                        EventBus.$emit("NewPushOfTrolley", {ok: "OK"});
+                                        EventBus.$emit("NewPushOfTrolleyChangeComer", {ok: "OK"});
+                                        if (_btnAlert) {
+                                            _btnAlert.click();
+                                        }
+                                    }).catch(err => {
+                                        console.log(err);
+                                    });
+                                    this.cantProd = 1;
                                 }
+                            }
 
-                                if (_idDifrente === true) {
-                                    this.$store.state.trolley[i].products.push(_prod);
-                                }
+                            if (_set === true) {
+                                this.pedido.total = parseFloat((obj.price_with_iva * this.cantProd).toFixed(2));
+                                this.pedido.products.push(_prod);
 
-                                var _trolley2 = this.$store.getters.trolley;
-                                var _total = 0;
-
-                                for (var y = 0; y < _trolley2[i].products.length; y++) {
-                                    _total = _total = (parseFloat((_trolley2[i].products[y].price_with_iva).toFixed(2)) * parseInt((_trolley2[i].products[y].quantity))) + _total;
-                                }
-
-                                this.$store.state.trolley[i].total = parseFloat(_total.toFixed(2));
-
-                                console.log("ANTES DE ACTUALIZAR -> ", this.$store.state.trolley[i]);
-                                axios.put("https://myraus.com:8282/api/cart/update", this.$store.state.trolley[i]).then(res => {
-                                    console.log(res);
+                                console.log("POST DEL PRIMER CARRITO -> ", this.pedido);
+                                axios.post("https://myraus.com:8282/api/cart/add", this.pedido).then(res => {
+                                    this.pedido._id = res.data.cart._id;
+                                    this.$store.state.trolley.push(this.pedido);
                                     EventBus.$emit("NewPushOfTrolley", {ok: "OK"});
-                                    var _btnAlert = document.querySelector('#modal-alertdr_' + obj._id);
-                                    _btnAlert.click();
+                                    EventBus.$emit("NewPushOfTrolleyChangeComer", {ok: "OK"});
+                                    if (_btnAlert) {
+                                        _btnAlert.click();
+                                    }
                                 }).catch(err => {
                                     console.log(err);
                                 });
                                 this.cantProd = 1;
                             }
-                        }
+                
+                            console.log("Pedido -> ", this.$store.getters.trolley);
+                        } else {
+                            if (_shippingFormsComer.checked === true) {
+                                this.pedido.shippingForms = "eat_in_restaurant";
+                            }
 
-                        if (_set === true) {
-                            this.pedido.total = parseFloat((obj.price_with_iva * this.cantProd).toFixed(2));
-                            this.pedido.products.push(_prod);
-
-                            console.log("POST DEL PRIMER CARRITO -> ", this.pedido);
-                            axios.post("https://myraus.com:8282/api/cart/add", this.pedido).then(res => {
-                                this.pedido._id = res.data.cart._id;
-                                this.$store.state.trolley.push(this.pedido);
-                                EventBus.$emit("NewPushOfTrolley", {ok: "OK"});
-                                var _btnAlert = document.querySelector('#modal-alertdr_' + obj._id);
-                                _btnAlert.click();
-                            }).catch(err => {
-                                console.log(err);
-                            });
-                            this.cantProd = 1;
+                            console.log("Comer en restaurante no esta habilitado aun.");
                         }
-            
-                        console.log("Pedido -> ", this.$store.getters.trolley);
+                        
                     } else {
-                        if (_shippingFormsComer.checked === true) {
-                            this.pedido.shippingForms = "eat_in_restaurant";
-                        }
-
-                        console.log("Comer en restaurante no esta habilitado aun.");
+                        console.log("Disculpe debes seleccionar un {{ shippingForms }}");
                     }
-                    
                 } else {
                     console.log("Disculpe debes seleccionar un {{ shippingForms }}");
                 }
@@ -344,7 +455,7 @@
                 flex-wrap: wrap;
                 h4{
                     margin-top: 17.5px;    
-                    color: var(--bluePrimary);
+                    color: var(--blue);
                     width: 65%; 
                     overflow: hidden;
                     font-size: 20px;
@@ -377,7 +488,7 @@
                         width: 100%;
                         .title{
                             padding-right: 12px;
-                            color: var(--bluePrimary);
+                            color: var(--blue);
                             margin-bottom: 0;
                         }
                         .text{
@@ -399,13 +510,13 @@
                             flex-grow: 1;
                             margin:0;
                             font-size: 16px;
-                            color: var(--bluePrimary);
+                            color: var(--blue);
                         }
                         button{
                             border:none;
                             box-shadow: none;
                             background-color: transparent;
-                            color: var(--bluePrimary);
+                            color: var(--blue);
                         }
                         input{
                             outline: none;
@@ -459,7 +570,7 @@
                                 align-items: center;
                                 justify-content: center;
                                 i{
-                                    color: var(--bluePrimary);
+                                    color: var(--blue);
                                     font-size: 20px;
                                     display: none;
                                     opacity: 0;
@@ -477,7 +588,7 @@
                         }
                     }
                     .btnComprar{
-                        background-color: var(--bluePrimary);
+                        background-color: var(--blue);
                         margin: auto;
                         display: block;
                         margin-top: 50px;
@@ -500,6 +611,140 @@
     body.modal-open{
         overflow: none;
     }
+
+    .boxMesa {
+        padding: 1.5rem;
+
+        h3 {
+            display: block;
+            width: 100%;
+            font-size: 1.5rem;
+            color: var(--blue);
+            margin: 0 0 1rem;
+            text-align: center;
+        }
+
+        .boxSelectMesa {
+            position: relative;
+            display: block;
+            width: 70%;
+            margin: 0 auto;
+            
+            .select-mesa {
+                position: relative;
+                width: 100%;
+                margin: 0;
+                border-radius: 0;
+                color: var(--blue);
+                background: transparent;
+                outline: none;
+                appearance: none;
+                box-shadow: none;
+                font-weight: bold;
+                font-size: 1.5rem;
+                height: 37px;
+                line-height: 37px;
+                padding: 0 36px 0 7px;
+                padding-bottom: 2px;
+                cursor: pointer;
+                z-index: 1;
+            }
+
+            .cubo {
+                display: block;
+                position: absolute;
+                top: 50%;
+                right: 7px;
+                transform: translate(0, -50%);
+                width: 22px;
+                height: 22px;
+                background: var(--blue);
+                cursor: pointer;
+            }
+        }
+
+        .checboxs {
+            .form-group {
+                margin: 2rem auto;
+
+                &:first-child {
+                    margin-bottom: 1rem;
+                }
+
+                &:last-child {
+                    margin-top: 0;
+                }
+
+                input[type=radio] {
+                    display: none;
+                }
+
+                label {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    cursor: pointer;
+
+                    .a {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+
+                        img {
+                            width: 50px;
+                            height: 50px;
+                            object-fit: contain;
+                        }
+
+                        span {
+                            color: var(--blue);
+                        }
+                    }
+
+                    .box {
+                        width: 25px;
+                        min-width: 25px;
+                        height: 25px;
+                        border: 1px solid #d1d1d1;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+
+                        i {
+                            color: var(--blue);
+                            font-size: 20px;
+                            display: none;
+                            opacity: 0;
+                            transition: .3s ease all;
+                        }
+                    }
+                }
+
+                input[type=radio]:checked + label {
+                    .box {
+                        background: var(--blue);
+                        border: 1px solid var(--blue);
+
+                        i {
+                            display: block;
+                            opacity: 1;
+                        }
+                    }
+                }
+            }
+        }
+
+        .btnConfirmar {
+            display: block;
+            font-size: 16px;
+            background-color: var(--blue);
+            color: #fff;
+            border-radius: 0;
+            padding: 4px 22px;
+            margin: 0 auto;
+            border: none;
+        }
+    }
 </style>
 
 <style lang="css">
@@ -508,6 +753,11 @@
         max-width: 85% !important;
         max-height: max-content !important;
         margin: 1rem auto !important;
+    }
+
+    .modal-comer .modal-dialog {
+        width: 350px !important;
+        max-width: 85% !important;
     }
 
     @media only screen and (min-width: 640px) {

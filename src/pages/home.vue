@@ -247,7 +247,7 @@
                 listBeneficio: [],
                 listIncentivo: [],
                 googleMapApi: "",
-                distancia: "20.000",
+                distancia: "20000.000",
                 rts: {
                     page: 0
                 },
@@ -586,7 +586,7 @@
                                     title: el.name,
                                     desc: el.description,
                                     price: el.price_with_iva,
-                                    img: el.images[0] ? el.images[0].img : imgDefault,
+                                    img: el.images.length ? el.images[0].img : imgDefault,
                                     categoria: Object.values(comercios[i].data.categories),
                                     data: el,
                                 });
@@ -611,7 +611,7 @@
                                     title: el.name,
                                     desc: el.description,
                                     price: el.price_with_iva,
-                                    img: el.images[0] ? el.images[0].img : imgDefault,
+                                    img: el.images.length ? el.images[0].img : imgDefault,
                                     categoria: Object.values(comercios[i].data.categories),
                                     data: el,
                                 });

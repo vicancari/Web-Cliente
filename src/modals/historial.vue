@@ -37,9 +37,16 @@
                                     <p class="text">{{ getComercio(egre.comercio != undefined ? egre.comercio.id : egre.id_comercio != undefined ? egre.id_comercio : 'Envio') }} <span class="time">{{ dateNow(egre.date + " " + egre.time) }}</span></p>
                                     <img class="img-fluid" :src="arrow">
                                 </button>
+                                <button type="button" v-if="egre.typeTransaccion === 'trolley'" block class="btn title" v-b-toggle="egre._id" :name="egre._id">
+                                    <p class="text">{{ getComercio(egre.comercio != undefined ? egre.comercio.id : egre.id_comercio != undefined ? egre.id_comercio : 'Carrito') }} <span class="time">{{ dateNow(egre.date + " " + egre.time) }}</span></p>
+                                    <img class="img-fluid" :src="arrow">
+                                </button>
                                 <b-collapse :id="egre._id" :accordion="egre._id">
                                     <ul>
                                         <li v-if="egre.typeTransaccion === 'envio'">
+                                            Tipo de transacción: {{ egre.typeTransaccion }}
+                                        </li>
+                                        <li v-if="egre.typeTransaccion === 'trolley'">
                                             Tipo de transacción: {{ egre.typeTransaccion }}
                                         </li>
                                         <li>
@@ -284,6 +291,7 @@
                 this.is_fSemanaE = true;
                 this.is_fEsteMesE = false;
                 this.is_fOtroMesE = false;
+                console.log("historial -> ", this.listTransacciones);
             },
             getEstaSemanaIngresos() {
                 this.resetFilterSelect();

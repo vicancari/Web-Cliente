@@ -23,7 +23,7 @@
 
                     <div v-for="(prod, y) in cart.products" :key="y" class="comercios__prod">
                         <div class="prod--info">
-                            <img class="img-prod" :src="prod.images[0].img" :onerror="'this.src = ' + '\'' + imgDefault + '\''" alt="name producto">
+                            <img class="img-prod" :src="prod.images.length ? prod.images[0].img : imgDefault" :onerror="'this.src = ' + '\'' + imgDefault + '\''" alt="name producto">
                             <p class="name-prod">{{ prod.name }}</p>
                         </div>
                         <div class="prod--cant">
@@ -112,8 +112,8 @@
                 </div>
 
                 <div class="boxTotal">
-                    <p class="title">Total: <span class="mount">{{ (this.listPrice.total + this.shippingPrince.delivery + this.shippingPrince.wear ) | money }}€</span></p>
-                    <button :disabled="this.is_disabled" type="button" class="btnPago">Enviar pago</button>
+                    <p class="title">Total: <span class="mount">{{ this.listPrice.total | money }}€</span></p>
+                    <button :disabled="this.is_disabled" type="button" class="btnPago" v-b-modal.modal-send-2>Enviar pago</button>
                 </div>
             </div>
             <div v-if="!this.$store.getters.trolley.length" class="align-center">
@@ -125,6 +125,10 @@
                 </div>
             </div>
         </b-modal>
+
+        <pagar-trolley
+            :GetTrolley="{data: this.$store.getters.trolley, price: listPrice}"
+        ></pagar-trolley>
     </div>
 </template>
 
@@ -134,6 +138,9 @@
     import imgDefault from '../assets/img/noimage.jpeg';
     import EliminarProducto from "../assets/img/icons/close.svg";
 
+    // -> components
+    import PagarTrolley from "../modals/pagar-trolley.vue";
+
     // -> API + EventBus
     import { EventBus } from '../main.js';
     // import api from '../api.js';
@@ -142,7 +149,9 @@
 
     export default {
         name: 'historial',
-        components: {},
+        components: {
+            PagarTrolley
+        },
         data: function () {
             return {
                 myclass: ['modal-trolley'],
@@ -340,6 +349,7 @@
                 });
 
                 this.listPrice.total = _total;
+                this.listPrice.total = parseFloat(this.listPrice.total) + parseFloat(this.shippingPrince.delivery) + parseFloat(this.shippingPrince.wear);
                 console.log(this.listPrice);
             },
             deleteProd(index_c, index_p) {
@@ -354,6 +364,7 @@
                     axios.post("https://myraus.com:8282/api/cart/delete", {_id: id_comercio}).then(res => {
                         console.log(res);
                         this.price(this.$store.getters.trolley);
+                        EventBus.$emit("NewPushOfTrolleyChangeComer", {ok: "OK"});
                     }).catch(err => {
                         console.log(err);
                     });
@@ -371,6 +382,7 @@
                     axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index_c]).then(res => {
                         console.log(res);
                         this.price(this.$store.getters.trolley);
+                        EventBus.$emit("NewPushOfTrolleyChangeComer", {ok: "OK"});
                     }).catch(err => {
                         console.log(err);
                     });
@@ -408,7 +420,7 @@
                 });
 
                 this.shippingPrince.delivery = 0; 
-                this.shippingPrince.wear = parseFloat(obj.costos_extras.envases) * parseInt(_cant);
+                this.shippingPrince.wear = parseFloat(obj.costos_extras.envases) * parseInt(_cant)
                 return parseFloat(obj.costos_extras.envases) * parseInt(_cant);
             },
             getPriceDelivery(obj) {
@@ -450,6 +462,8 @@
                             return _costos.standard.price;
                         }
                     }
+
+                    this.listPrice.total = parseFloat(this.listPrice.total) + parseFloat(this.shippingPrince.delivery) + parseFloat(this.shippingPrince.wear);
                 } else {
                     return "0.00";
                 }
