@@ -53,7 +53,7 @@
                                             Id de operación: {{ egre.key }}
                                         </li>
                                         <li>
-                                            Monto: {{ egre.price }}€ 
+                                            Monto: {{ egre.price | money }}€ 
                                         </li>
                                         <li>
                                             Enviado de: {{ egre.nameAccount }}
@@ -109,7 +109,7 @@
                                             Id de operación: {{ ingre.key }}
                                         </li>
                                         <li>
-                                            Monto: {{ ingre.price }}€ 
+                                            Monto: {{ ingre.price | money }}€ 
                                         </li>
                                         <li>
                                             Recivido en: {{ ingre.nameAccount }}

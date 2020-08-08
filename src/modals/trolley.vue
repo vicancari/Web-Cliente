@@ -76,9 +76,10 @@
                                 <p class="text">Para Regalo</p>
                             </div>
                             <div class="item-right">
-                                <p class="price">2,00€</p>
+                                <p class="price">{{ cart.costos_extras.papel_regalo | money }}€</p>
                                 <div class="boxCheckbox">
-                                    <input type="checkbox" :name="'regaloSelect_' + cart.id_comercio" :id="'regalo_' + cart.id_comercio">
+                                    <input v-if="cart.papel_of_regalo === true" @change="papelRegalo(cart.id_comercio, i)" type="checkbox" :name="'regaloSelect_' + cart.id_comercio" :id="'regalo_' + cart.id_comercio" checked>
+                                    <input v-if="cart.papel_of_regalo === false" @change="papelRegalo(cart.id_comercio, i)" type="checkbox" :name="'regaloSelect_' + cart.id_comercio" :id="'regalo_' + cart.id_comercio">
                                     <label class="boxCheckbox__checked" :for="'regalo_'  + cart.id_comercio">
                                         <i class="fas fa-check"></i>
                                     </label>
@@ -97,17 +98,15 @@
                             <span v-if="iva.id_c === cart.id_comercio" class="mount">{{ iva.monto | money }}€</span>
                         </div>
                     </div>
-                </div>
 
-                <div style="margin-top: .5rem; padding: 0 1rem;" class="row border-bottom">
-                    <div class="col-12 info">
-                        <p>{{ this.$store.getters.user.name }} {{ this.$store.getters.user.lastname }}</p>
-                        <div class="d-flex2">
-                            <p>{{ this.$store.getters.user.address }}</p>
-                            <button type="button">
-                                <img src="../assets/lapiz.svg">
-                            </button>
-                        </div>
+                    <div class="comercios__address">
+                        <input type="text" :data-address="'input_address_' + cart.id_comercio" :value="cart.address" disabled class="form-control">
+                        <button @click="editAddress(cart.id_comercio);" class="edit" type="button">
+                            <img src="../assets/lapiz.svg">
+                        </button>
+                        <button @click="saveNewAddress(cart.id_comercio, i);" class="save" type="button">
+                            Guardar
+                        </button>
                     </div>
                 </div>
 
@@ -182,11 +181,74 @@
                         }
                     });
 
+                    EventBus.$on("TrolleyPagado", obj => {
+                        if (obj.ok === "OK") {
+                            this.getTrolley();
+                        }
+                    });
+
                     console.log(this.$store.getters.trolley);
                 }
             }
         },
         methods: {
+            papelRegalo(id_c, index) {
+                var _checked = document.querySelector(`#regalo_${id_c}`);
+                var _trolley = this.$store.getters.trolley[index];
+
+                if (_checked) {
+                    if (_checked.checked === true) {
+                        _trolley.total = parseFloat(_trolley.total) + parseFloat(_trolley.costos_extras.papel_regalo);
+                        _trolley.papel_of_regalo = true;
+
+                        axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(res => {
+                            console.log(res);
+                            this.price(this.$store.getters.trolley);
+                        }).catch(err => {
+                            console.log(err);
+                        });
+                    } else {
+                        _trolley.total = parseFloat(_trolley.total) - parseFloat(_trolley.costos_extras.papel_regalo);
+                        _trolley.papel_of_regalo = false;
+
+                        axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(res => {
+                            console.log(res);
+                            this.price(this.$store.getters.trolley);
+                        }).catch(err => {
+                            console.log(err);
+                        });
+                    }
+                }
+            },
+            editAddress(id_c) {
+                var _input = document.querySelector(`[data-address="input_address_${id_c}"]`);
+
+                if (_input) {
+                    if (_input.disabled === true) {
+                        _input.disabled = false;
+                        _input.focus();
+                    }
+                }
+            },
+            saveNewAddress(id_c, index) {
+                var _input = document.querySelector(`[data-address="input_address_${id_c}"]`);
+                var _trolley = this.$store.getters.trolley[index];
+                var _nAddress = "";
+
+                if (_input) {
+                    if (_input.disabled === false) {
+                        _nAddress = _input.value;
+                        _trolley.address = _nAddress;
+
+                        axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(res => {
+                            console.log(res);
+                            _input.disabled = true;
+                        }).catch(err => {
+                            console.log(err);
+                        });
+                    }
+                }
+            },
             changeShipping(id_comercio, trolley, index) {
                 var _trolley = this.$store.getters.trolley[index];
                 var _shippingFormsDelivery = document.querySelector(`#delivery_${id_comercio}`);
@@ -804,6 +866,63 @@
                         margin: 0;
                         font-size: 1.05rem;
                         color: #444;
+                    }
+                }
+            }
+
+            &__address {
+                position: relative;
+                width: 100%;
+                padding: 0 1rem;
+                margin: .5rem 0;
+
+                button {
+                    display: none;
+                    position: absolute;
+                    top: 0;
+                    right: 10px;
+                    border: none;
+                    background: transparent;
+                    outline: none;
+                    box-shadow: none;
+                    width: 50px;
+
+                    img {
+                        display: block;
+                        width: 100%;
+                        margin: 0;
+                        padding: 0;
+                    }
+
+                    &.save {
+                        display: block;
+                        width: max-content;
+                        background: var(--bluePrimary);
+                        color: #fff;
+                        padding: .25rem .5rem;
+                    }
+                }
+
+                input {
+                    background: transparent;
+                    border: none;
+                    border-bottom: 1px solid rgba(0,0,0,.25);
+                    border-radius: 0;
+                    outline: none;
+                    box-shadow: none;
+                    padding: .5rem 2.5rem .5rem 0;
+                    color: var(--blue);
+
+                    &:disabled {
+                        color: #777;
+                    }
+
+                    &:disabled ~ .edit {
+                        display: block;
+                    }
+
+                    &:disabled ~ .save {
+                        display: none;
                     }
                 }
             }

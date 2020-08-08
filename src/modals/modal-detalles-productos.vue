@@ -146,7 +146,7 @@
             </div>
         </b-modal>
 
-        <button type="button" id="alertdr" v-b-modal="'modal-alertdr_' + prod.data._id" style="display: none;"></button>
+        <button type="button" :id="'alertdr_' + prod.data._id" v-b-modal="'modal-alertdr_' + prod.data._id" style="display: none;"></button>
         <b-modal modal-class="modal-alertdr" centered :id="'modal-alertdr_' + prod.data._id" :ref="'modal-alertdr_' + prod.data._id"  hide-footer hide-header>  
             <div class="d-block text-center">
                 <img style="width: 150px; margin-bottom: 1rem;" :src="checkimg" alt="">
@@ -198,6 +198,8 @@
                     shippingForms: "",
                     created_at: "",
                     total: "",
+                    papel_of_regalo: false,
+                    address: "",
                     costos_extras: {},
                     products: []
                 },
@@ -245,28 +247,35 @@
                             return -1;
                         }
                     });
+
+                    // console.log("Mis mesas -> ", this.getMesa);
                 }).catch(err => {
                     console.log(err);
                 });
             },
             EatInRestaurant(comer, id_comercio) {
                 this.getMesas(id_comercio);
+
                 var _trolley = this.$store.getters.trolley;
                 if (comer === true) {
-                    if (_trolley.length <= 1) {
-                        for (var i = 0; i < _trolley.length; i++) {
-                            if (_trolley[i].id_comercio === id_comercio) {
-                                if (this.getMesa.length) {
-                                    return true;
+                    if (_trolley.length) {
+                        if (_trolley.length <= 1) {
+                            for (var i = 0; i < _trolley.length; i++) {
+                                if (_trolley[i].id_comercio === id_comercio) {
+                                    if (this.getMesa.length) {
+                                        return true;
+                                    } else {
+                                        return false;
+                                    }
                                 } else {
                                     return false;
                                 }
-                            } else {
-                                return false;
                             }
+                        } else {
+                            return false;
                         }
                     } else {
-                        return false;
+                        return true;
                     }
                 } else {
                     return false;
@@ -276,7 +285,7 @@
                 var _shippingFormsDelivery = document.querySelector(`#delivery_${obj._id}`);
                 var _shippingFormsLlevar = document.querySelector(`#llevar_${obj._id}`);
                 var _shippingFormsComer = document.querySelector(`#comer_${obj._id}`);
-                var _btnAlert = document.querySelector(`#modal-alertdr_${obj._id}`);
+                var _btnAlert = document.querySelector(`#alertdr__${obj._id}`);
 
                 if (_shippingFormsDelivery || _shippingFormsLlevar || _shippingFormsComer) {
                     if (_shippingFormsDelivery.checked != false || _shippingFormsLlevar.checked != false || _shippingFormsComer.checked != false) {
@@ -293,6 +302,7 @@
                             this.pedido.lat = obj.lat;
                             this.pedido.lng = obj.lng;
                             this.pedido.id_cliente = this.$store.getters.uid;
+                            this.pedido.address = this.$store.getters.user.address;
                             this.pedido.created_at = moment(new Date()).format("YYYY-MM-DD HH:mm");
 
                             this.pedido.costos_extras = obj.costos;

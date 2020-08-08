@@ -11,7 +11,7 @@
             </div>
         </b-modal>
         
-         <b-modal centered :modal-class="payment" id="modal-payment-2" ref="modal-payment-2"  hide-footer hide-header>  
+        <b-modal centered :modal-class="payment" id="modal-payment-2" ref="modal-payment-2"  hide-footer hide-header>  
             <div class="boxPago2">
                 <div class="x" v-for="(t, i) in this.GetTrolley.data" :key="i">
                     <h5 class="title">Selecciona un tipo de pago</h5>
@@ -26,8 +26,16 @@
                 <div class="footer">
                     <button class="btn btn-confirmar" @click="enviarSaldo">Confirmar</button>
                     <button class="btn btn-cancelar" @click="$bvModal.hide('modal-payment-2')">Cancelar</button>
-                    <button type="button" @click="$bvModal.hide('modal-payment-2')" id="pagoExitoso" style="display: none;"></button>
                 </div>
+            </div>
+        </b-modal>
+
+        <button type="button" :id="'successPago_'" @click="$bvModal.hide('modal-payment-2'), $bvModal.hide('modal-trolley')" v-b-modal="'modal-successPago_'" style="display: none;"></button>
+        <b-modal modal-class="modal-alertdr" centered :id="'modal-successPago_'" :ref="'modal-successPago_'"  hide-footer hide-header>  
+            <div class="d-block text-center">
+                <img style="width: 150px; margin-bottom: 1rem;" :src="checkimg" alt="">
+                <h3>¡Éxito!</h3>
+                <p>El pago fue elavorado éxitosamente.</p>
             </div>
         </b-modal>
     </div>
@@ -36,9 +44,9 @@
 <script>
     import config from "../config.js";
     import check from '../assets/img/icons/check-blanco.svg';
-    // import api from "../api.js";
-    // import funciones from "../funciones.js";
-    // import { EventBus } from "../main.js";
+    // -> IMAGE STATIC
+    import checkimg from "../assets/img/icons/check.svg";
+    import { EventBus } from "../main.js";
     import moment from "moment";
     import axios from "axios";
 
@@ -55,6 +63,7 @@
                 check: config.rutaWeb(check),
                 selectedRes: [],
                 pagoMix: [],
+                checkimg: checkimg,
                 saldoSend: 0,
                 miSaldoTotal: [],
                 pxT: 52,
@@ -264,6 +273,7 @@
             },
             enviarSaldo() {
                 this.$store.commit("loading");
+                var _btn = document.querySelector("#successPago_");
                 var accountActual = this.$store.getters.user.accounts;
                 var _myAccounts, _myAccountsKeys;
                 var _pago = {
@@ -277,26 +287,29 @@
                 var _allRadiosTypePago = document.querySelectorAll(`[name*='tipoPago_']`);
                 var _idActual = [];
                 var _dataradio = [];
+
+                _allRadiosTypePago.forEach(el => {
+                    if (el.checked === true) {
+                        _dataradio.push(el.getAttribute("data-radio"));
+                        _idActual.push(el.getAttribute("data-idcomercio"));
+                    }
+                });
+
                 for (var i = 0; i < _pago.carritos.length; i++) {
-                    _allRadiosTypePago.forEach(el => {
-                        if (el.checked === true) {
-                            _dataradio.push(el.getAttribute("data-radio").replace(`_${_pago.carritos[i].id_comercio}`, ""));
-                            _idActual.push(el.getAttribute("data-idcomercio"));
-                        }
-                    });
+                    console.log(_dataradio[i].replace(`_${_pago.carritos[i].id_comercio}`, ""), _idActual[i], _pago.carritos[i].id_comercio);
 
                     if (_idActual[i] === _pago.carritos[i].id_comercio) {
-                        if (_dataradio[i] === "propio") {
-                            _pago.carritos[i].typeAccount = String(accountActual[_dataradio[i]].type);
-                            _pago.carritos[i].nameAccount = accountActual[_dataradio[i]].name;
+                        if (_dataradio[i].replace(`_${_pago.carritos[i].id_comercio}`, "") === "propio") {
+                            _pago.carritos[i].typeAccount = String(accountActual[_dataradio[i].replace(`_${_pago.carritos[i].id_comercio}`, "")].type);
+                            _pago.carritos[i].nameAccount = accountActual[_dataradio[i].replace(`_${_pago.carritos[i].id_comercio}`, "")].name;
                         }
     
-                        if (_dataradio[i] != "propio" && _dataradio[i] != "mix_" + _pago.carritos[i].id_comercio) {
+                        if (_dataradio[i].replace(`_${_pago.carritos[i].id_comercio}`, "") != "propio" && _dataradio[i].replace(`_${_pago.carritos[i].id_comercio}`, "") != "mix") {
                             _myAccountsKeys = Object.keys(accountActual);
                             _myAccounts = Object.values(accountActual);
                             for (var i2 = 0; i2 < _myAccounts.length; i2++) {
                                 if (_myAccountsKeys[i2].toLowerCase() != "propio") {
-                                    if (_myAccounts[i2].id_plan === _dataradio[i]) {
+                                    if (_myAccounts[i2].id_plan === _dataradio[i].replace(`_${_pago.carritos[i].id_comercio}`, "")) {
                                         _pago.carritos[i].typeAccount = String(accountActual[`${_myAccountsKeys[i2]}`].type);
                                         _pago.carritos[i].nameAccount = accountActual[`${_myAccountsKeys[i2]}`].name;
                                     }
@@ -304,7 +317,7 @@
                             }
                         }
 
-                        if (_dataradio[i] === "mix_" + _pago.carritos[i].id_comercio) {
+                        if (_dataradio[i].replace(`_${_pago.carritos[i].id_comercio}`, "") === "mix") {
                             _pago.carritos[i].typeAccount = "0";
                             _pago.carritos[i].nameAccount = "mix";
                         }
@@ -315,6 +328,10 @@
                 axios.post("https://myraus.com:8282/api/orders/add-y-pago", _pago).then(res => {
                     console.log(res);
                     this.stopLoader();
+                    if (_btn) {
+                        EventBus.$emit("TrolleyPagado", {ok: "OK"});
+                        _btn.click();
+                    }
                 }).catch(err => {
                     console.log(err);
                     this.stopLoader();
