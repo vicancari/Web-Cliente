@@ -247,7 +247,7 @@
                 listBeneficio: [],
                 listIncentivo: [],
                 googleMapApi: "",
-                distancia: "20000.000",
+                distancia: "20.000",
                 rts: {
                     page: 0
                 },
@@ -564,13 +564,6 @@
                     this.getProductosPromocionados(res);
 
                     this.stopLoader();
-
-                    setTimeout(() => {
-                        var img = document.querySelectorAll(".card-img-top");
-                        img.forEach(el => {
-                            el.onerror = imgDefault;
-                        });
-                    }, 950);
                 }).catch(err => {
                     console.log(err);
                 });
@@ -595,7 +588,6 @@
                     });
 
                     this.listProducto.promo = _list;
-                    this.stopLoader();
                 }).catch(err => {
                     console.log(err);
                 });

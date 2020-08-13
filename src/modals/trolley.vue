@@ -187,6 +187,12 @@
                         }
                     });
 
+                    EventBus.$on("NewPushOfTrolleyChangeComer", obj => {
+                        if (obj.ok === "OK") {
+                            this.getTrolley();
+                        }
+                    });
+
                     console.log(this.$store.getters.trolley);
                 }
             }
@@ -425,7 +431,6 @@
 
                     axios.post("https://myraus.com:8282/api/cart/delete", {_id: id_comercio}).then(res => {
                         console.log(res);
-                        this.price(this.$store.getters.trolley);
                         EventBus.$emit("NewPushOfTrolleyChangeComer", {ok: "OK"});
                     }).catch(err => {
                         console.log(err);

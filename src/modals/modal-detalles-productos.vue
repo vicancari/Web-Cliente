@@ -79,7 +79,7 @@
                                         </div>
                                     </label>
                                 </div>
-                                <div v-if="this.eatinrest" class="form-grou">
+                                <div v-if="prod.data.eat_in_restaurant === true" class="form-grou">
                                     <input @change="ChangeComer(prod.data._id, prod.data.id_restaurant)" type="radio" :name="'radiosSelect_' + prod.data._id" :id="'comer_' + prod.data._id">
                                     <label :for="'comer_' + prod.data._id">
                                         <div class="a">
@@ -116,7 +116,8 @@
                     
                     <div class="checboxs">
                         <div class="form-group">
-                            <input type="radio" :name="'radiosSelectMesa_' + prod.data._id" :id="'pago-unico_' + prod.data._id">
+                            <input v-if="this.is_pago_unico === true" @change="SelectedMesa(prod.data._id)" type="radio" checked :name="'radiosSelectMesa_' + prod.data._id" data-name="pago-unico" :id="'pago-unico_' + prod.data._id">
+                            <input v-else @change="SelectedMesa(prod.data._id)" type="radio" :name="'radiosSelectMesa_' + prod.data._id" data-name="pago-unico" :id="'pago-unico_' + prod.data._id">
                             <label :for="'pago-unico_' + prod.data._id">
                                 <div class="a">
                                     <span>Pago único</span>
@@ -126,8 +127,25 @@
                                 </div>
                             </label>
                         </div>
+                        <div v-if="this.is_pago_unico === true" class="boxListInvite">
+                            <div class="boxListInvite__title">
+                                <p>Lista de invitados</p>
+                            </div>
+                            <div class="boxListInvite__searchinvitado">
+                                <input id="searchinvitado" type="text" v-on:keyup="searchinvitado" v-on:focus="opensearchinvitado" class="from-control" placeholder="Buscar invitado">
+                                <div @click="selectUserComoInvitado" class="searchinvitado__result">
+                                    <p v-for="res in this.listSearchUser" :key="'result_'+res.id" :id="'result_'+res.id" :data-obj="JSON.stringify(res)" class="result"><img :src="res.photo" :onerror="'this.src = ' + '\'' + imgDefaultUser + '\''"> {{ res.name }}</p>
+                                </div>
+                            </div>
+                            <ul class="boxListInvite__nav">
+                                <li v-for="(inv, i) in this.mysInvitados" :key="i">
+                                    <p><img :src="inv.photo ? inv.photo : ''" :onerror="'this.src = ' + '\'' + imgDefaultUser + '\''"> {{ inv.name }}</p>
+                                    <span @click="deleteInvitado(i)" class="delete-product"><img :src="EliminarProducto"></span>
+                                </li>
+                            </ul>
+                        </div>
                         <div class="form-group">
-                            <input type="radio" :name="'radiosSelectMesa_' + prod.data._id" :id="'pago-separado_' + prod.data._id">
+                            <input @change="SelectedMesa(prod.data._id)" type="radio" :name="'radiosSelectMesa_' + prod.data._id" data-name="pago-separado" :id="'pago-separado_' + prod.data._id">
                             <label :for="'pago-separado_' + prod.data._id">
                                 <div class="a">
                                     <span>Pago por separado</span>
@@ -139,7 +157,7 @@
                         </div>
                     </div>
 
-                    <button class="btn btnConfirmar" @click="$bvModal.hide(`modal-comer_${prod.data._id}`)">
+                    <button class="btn btnConfirmar" @click="addCarrito(prod.data), $bvModal.hide(`modal-comer_${prod.data._id}`)">
                         Confirmar
                     </button>
                 </div>
@@ -165,9 +183,12 @@
 
     // -> IMAGE STATIC
     import checkimg from "../assets/img/icons/check.svg";
+    import imgDefaultUser from "../assets/avatar.png";
+    import EliminarProducto from "../assets/img/icons/close.svg";
 
     // -> API + Firebase + funciones
     import axios from "axios";
+    import api from "../api.js";
     import { EventBus } from "../main.js";
     import moment from "moment";
 
@@ -187,8 +208,26 @@
                 cantProd: 1,
                 checkimg: checkimg,
                 prod: {},
+                imgDefaultUser: imgDefaultUser,
+                EliminarProducto: EliminarProducto,
                 getMesa: "",
                 eatinrest: false,
+                listSearchUser: [],
+                mysInvitados: [],
+                invitado: {
+                    id_invitante: this.$store.getters.uid,
+                    id_invitado: "",
+                    name_invitado: "",
+                    phone_invitado: "",
+                    email_invitado: "",
+                    photo_invitado: "",
+                },
+                horus: {
+                    start: "",
+                    end: "",
+                },
+                is_pago_unico: false,
+                type_mesa: "",
                 pedido: {
                     status: 0,
                     id_comercio: "",
@@ -199,16 +238,40 @@
                     created_at: "",
                     total: "",
                     papel_of_regalo: false,
+                    is_type_mesa: false,
                     address: "",
                     costos_extras: {},
                     products: []
                 },
             }
         },
-        created() {
+        async created() {
             this.prod = this.GetProd;
+            await this.getMesas(this.prod.data.id_restaurant);
 
-            this.eatinrest = this.EatInRestaurant(this.prod.data.eat_in_restaurant, this.prod.data.id_restaurant);
+            await api.get("cliente/list/").then(res => {
+                var _values = Object.values(res);
+                var _uid = this.$store.getters.uid;
+
+                _values.forEach(item => {
+                    if (item.key != undefined) {
+                        if (item.key != _uid) {
+                            this.listSearchUser.push({
+                                id: item.key,
+                                name: `${item.name} ${item.lastname}`,
+                                phone: item.phone,
+                                email: item.email,
+                                photo: item.avatar ? item.avatar : ""
+                            });
+                        }
+                    }
+                });
+
+                console.log("Lista de usuarios -> ", this.listSearchUser);
+            }).catch(err => {
+                console.log(err);
+            });
+
             EventBus.$on("NewPushOfTrolleyChangeComer", obj => {
                 if (obj.ok === "OK") {
                     this.eatinrest = this.EatInRestaurant(this.prod.data.eat_in_restaurant, this.prod.data.id_restaurant);
@@ -216,6 +279,89 @@
             });
         },
         methods: {
+            SelectedMesa(id_p) {
+                var _check = document.querySelectorAll(`[name="radiosSelectMesa_${id_p}"]`);
+                var _checked = "";
+
+                _check.forEach(el => {
+                    if (el.checked === true) {
+                        _checked = el;
+                    }
+                });
+
+                if (_checked) {
+                    if (_checked.getAttribute("data-name").toLowerCase() === "pago-unico") {
+                        this.is_pago_unico = true;
+                        this.type_mesa = 1;
+                    }
+    
+                    if (_checked.getAttribute("data-name").toLowerCase() === "pago-separado") {
+                        this.is_pago_unico = false;
+                        this.type_mesa = 2;
+                    }
+                }
+            },
+            deleteInvitado(index) {
+                delete this.mysInvitados[index];
+                this.mysInvitados.splice(index, 1);
+            },
+            selectUserComoInvitado(e) {
+                var _el = e.target;
+                var obj = JSON.parse(_el.getAttribute("data-obj"));
+                document.querySelector("#searchinvitado").value = "";
+                this.mysInvitados.push(obj);
+                
+                if (document.querySelector("#searchinvitado").parentNode.classList.contains("boxListInvite__searchinvitado")) {
+                    document.querySelector("#searchinvitado").parentNode.classList.remove("searching");
+                }
+            },
+            opensearchinvitado() {
+                if (document.querySelector("#searchinvitado")) {
+                    if (document.querySelector("#searchinvitado").parentNode.classList.contains("boxListInvite__searchinvitado")) {
+                        document.querySelector("#searchinvitado").parentNode.classList.add("searching");
+                    }
+                }
+            },
+            searchinvitado(e) {
+                var _parent = e.target.parentNode;
+                var _input = e.target;
+                var _boxResult = _parent.children[1];
+                var _datas = _boxResult.children;
+
+                if (_parent.classList.contains("boxListInvite__searchinvitado")) {
+                    if (_input.value != "") {
+                        _parent.classList.add("searching");
+                    }
+                }
+
+                for (var el = 0; el < _datas.length; el++) {
+                    var filterEmail = JSON.parse(_datas[el].getAttribute("data-obj")).name.toLowerCase();
+                    var filterName = JSON.parse(_datas[el].getAttribute("data-obj")).email.toLowerCase();
+                    var obj = {data: filterEmail, data2: filterName};
+
+                    _datas[el].classList.add("d-none");
+
+                    if (_input.value.toLowerCase() === obj.data || _input.value.toLowerCase() === obj.data2) {
+                        _datas[el].classList.remove('d-none');
+                    }
+
+                    if (_input.value.toLowerCase() === obj.data.substr(obj.data.indexOf(" ") + 1, _input.value.length) || _input.value.toLowerCase() === obj.data2.substr(obj.data2.indexOf(" ") + 1, _input.value.length)) {
+                        _datas[el].classList.remove('d-none');
+                    }
+                    
+                    if (_input.value.toLowerCase() === obj.data.substr(obj.data.lastIndexOf(" ") + 1, _input.value.length) || _input.value.toLowerCase() === obj.data2.substr(obj.data2.lastIndexOf(" ") + 1, _input.value.length)) {
+                        _datas[el].classList.remove('d-none');
+                    }
+            
+                    if (_input.value.toLowerCase() === obj.data.substr(0, _input.value.length) || _input.value.toLowerCase() === obj.data2.substr(0, _input.value.length)) {
+                        _datas[el].classList.remove('d-none');
+                    }
+                    
+                    if (_input.value.toLowerCase() === '') {
+                        _datas[el].classList.remove('d-none');
+                    }
+                }
+            },
             prodMenos() {
                 if (this.cantProd === 1) {
                     this.cantProd = 1;
@@ -248,37 +394,31 @@
                         }
                     });
 
-                    // console.log("Mis mesas -> ", this.getMesa);
+                    console.log("Mis mesas -> ", this.getMesa);
                 }).catch(err => {
                     console.log(err);
                 });
             },
             EatInRestaurant(comer, id_comercio) {
-                this.getMesas(id_comercio);
-
                 var _trolley = this.$store.getters.trolley;
                 if (comer === true) {
-                    if (_trolley.length) {
-                        if (_trolley.length <= 1) {
-                            for (var i = 0; i < _trolley.length; i++) {
-                                if (_trolley[i].id_comercio === id_comercio) {
-                                    if (this.getMesa.length) {
-                                        return true;
-                                    } else {
-                                        return false;
-                                    }
+                    if (_trolley.length <= 1) {
+                        for (var i = 0; i < _trolley.length; i++) {
+                            if (_trolley[i].id_comercio === id_comercio) {
+                                if (this.getMesa.length) {
+                                    this.eatinrest = true;
                                 } else {
-                                    return false;
+                                    this.eatinrest = false;
                                 }
+                            } else {
+                                this.eatinrest = false;
                             }
-                        } else {
-                            return false;
                         }
                     } else {
-                        return true;
+                        this.eatinrest = false;
                     }
                 } else {
-                    return false;
+                    this.eatinrest = false;
                 }
             },
             addCarrito(obj) {
@@ -286,6 +426,8 @@
                 var _shippingFormsLlevar = document.querySelector(`#llevar_${obj._id}`);
                 var _shippingFormsComer = document.querySelector(`#comer_${obj._id}`);
                 var _btnAlert = document.querySelector(`#alertdr__${obj._id}`);
+
+                console.log(obj, _shippingFormsComer);
 
                 if (_shippingFormsDelivery || _shippingFormsLlevar || _shippingFormsComer) {
                     if (_shippingFormsDelivery.checked != false || _shippingFormsLlevar.checked != false || _shippingFormsComer.checked != false) {
@@ -387,11 +529,43 @@
                             }
                 
                             console.log("Pedido -> ", this.$store.getters.trolley);
-                        } else {
-                            if (_shippingFormsComer.checked === true) {
-                                this.pedido.shippingForms = "eat_in_restaurant";
+                        } else if (_shippingFormsComer.checked === true) {
+                            var _select = document.querySelector(`#selectMesa_${obj._id}`);
+                            this.pedido.shippingForms = "eat_in_restaurant";
+                            this.pedido.is_type_mesa = true;
+                            this.pedido.type_mesa = this.type_mesa; // 1 = unico, 2 = separado
+
+                            console.log("Mesa -> ", _select.value);
+
+                            if (this.pedido.type_mesa === 1) {
+                                this.pedido.mesa = {
+                                    numero_mesa: _select.value,
+                                    list_invitados: [], // if es igual a pago unico
+                                }
+
+                                this.mysInvitados.forEach(inv => {
+                                    this.pedido.mesa.list_invitados.push({
+                                        id_invitante: this.$store.getters.uid,
+                                        id_invitado: inv.id,
+                                        name_invitado: inv.name,
+                                        phone_invitado: inv.phone,
+                                        email_invitado: inv.email,
+                                        photo_invitado: inv.photo ? inv.photo : "",
+                                    });
+                                });
                             }
 
+                            if (this.pedido.type_mesa === 2) {
+                                this.pedido.mesa = {
+                                    numero_mesa: 0,
+                                    list_invitados: [],
+                                }
+                            }
+
+                            this.pedido.mesa.hours_start = "";
+                            this.pedido.mesa.hours_end = "";
+
+                            console.log(this.invitado);
                             console.log("Comer en restaurante no esta habilitado aun.");
                         }
                         
@@ -753,6 +927,215 @@
             padding: 4px 22px;
             margin: 0 auto;
             border: none;
+        }
+    }
+
+    .boxListInvite {
+        width: 100%;
+        height: max-content;
+        margin: 0 0 1.25rem;
+        padding: 0 0 .5rem;
+
+        // border-bottom: 1px solid rgba(0,0,0,.25);
+
+        &__title {
+            width: 100%;
+            height: max-width;
+
+            p {
+                color: #777;
+                text-align: left;
+                font-size: 1.25rem; 
+                margin: 0 0 .5rem;
+                padding: 0 0 .5rem;
+
+                border-bottom: 1px solid rgba(0,0,0,.25);
+            }
+        }
+
+        &__searchinvitado {
+            position: relative;
+            display: block;
+            width: 100%;
+            height: 40px;
+            background: transparent;
+            
+            input {
+                width: 100%;
+                height: 40px;
+                line-height: 40px;
+                outline: none;
+                box-shadow: none;
+                margin: 0;
+                padding: 0;
+                border: none;
+                border-bottom: 1px solid var(--blue);
+                text-transform: uppercase;
+                color: var(--blue);
+            }
+
+            .searchinvitado__result {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                margin: 0;
+                padding: .5rem;
+                background: #fff;
+                overflow-y: auto;
+                overflow-x: hidden;
+                width: 100%;
+                max-height: 200px;
+                z-index: 10;
+                display: none;
+
+                p {
+                    display: flex;
+                    justify-content: flex-start;
+                    align-items: center;
+                    margin: 0 0 .5rem;
+                    // padding: 0 0 .5rem;
+                    // border-bottom: 1px solid rgba(0,0,0,.15);
+                    width: 100%;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                    text-transform: uppercase;
+                    cursor: pointer;
+
+                    &:last-child {
+                        margin: 0;
+                        padding: 0;
+                        border-bottom: none;
+                    }
+
+                    img {
+                        display: block;
+                        margin: 0;
+                        padding: 0;
+                        width: 30px;
+                        height: 30px;
+                        border-radius: 50%;
+                        margin-right: .5rem;
+                        object-fit: cover;
+                        object-position: center center;
+                    }
+                }
+            }
+
+            &.searching {
+                .searchinvitado__result {
+                    display: block;
+                }
+            }
+        }
+
+        &__nav {
+            display: block;
+            width: 100%;
+            height: max-content;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+
+            li {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                width: 100%;
+                height: max-content;
+                margin: .5rem 0;
+
+                p {
+                    display: flex;
+                    justify-content: flex-start;
+                    align-items: center;
+                    margin: 0;
+                    padding: 0;
+                    width: 100%;
+
+                    img {
+                        display: block;
+                        margin: 0;
+                        padding: 0;
+                        width: 30px;
+                        height: 30px;
+                        border-radius: 50%;
+                        margin-right: .5rem;
+                        object-fit: cover;
+                        object-position: center center;
+                    }
+                }
+
+                span {
+                    img {
+                        display: block;
+                        margin: 0;
+                        padding: 0;
+                        width: 15px;
+                        cursor: pointer;
+                    }
+                }
+
+                .my-checkbox {
+                    display: block;
+                    width: 100%;
+                    height: max-content;
+                    cursor: pointer;
+
+                    input[type="checkbox"] {
+                        display: none;
+                    }
+
+                    .check {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        width: 100%;
+                        height: max-content;
+                        padding: 0 0 0.25rem;
+                        margin: 0 0 0.25rem;
+                        border-bottom: 1px solid var(--bluePrimary);
+                        cursor: pointer;
+
+                        &:last-child {
+                            padding: 0;
+                            margin: 0;
+                            border-bottom: none;
+                        }
+
+                        p {
+                            color: var(--text-color);
+                            margin: 0;
+                        }
+
+                        .box {
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            width: 20px;
+                            height: 20px;
+                            border: 1px solid #d1d1d1;
+
+                            i {
+                                display: none;
+                                font-size: .85rem;
+                                color: var(--blue);
+                            }
+                        }
+                    }
+
+                    input[type="checkbox"]:checked + .check {
+                        .box {
+                            border: 1px solid var(--blue);
+
+                            i {
+                                display: block;
+                                opacity: 1;
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 </style>
