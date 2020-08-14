@@ -18,7 +18,7 @@
             <h5 style="padding-top: 1rem;" class="titleModal">Tu compra</h5>
             <div v-if="this.$store.getters.trolley.length" class="BoxPage">
                 <div v-for="(cart, i) in this.$store.getters.trolley" :key="i" class="comercios">
-                    <p class="comercios__title">{{ getComercio(cart.id_comercio) }} <i :id="'toggle_icon_' + cart.id_comercio" @click="showConfig(cart.id_comercio)" class="fas fa-caret-down"></i></p>
+                    <p class="comercios__title">{{ getComercio(cart.id_comercio) }} <i v-if="cart.type_cart.type_cart != 'Invitado'" :id="'toggle_icon_' + cart.id_comercio" @click="showConfig(cart.id_comercio)" class="fas fa-caret-down"></i></p>
                     <button @click="actualizarTrolley(i, cart._id);" style="display: none;" :id="'GuardarTrolleyCart_' + cart._id" type="button" class="btnSaveEdit">Guardar</button>
 
                     <div v-for="(prod, y) in cart.products" :key="y" class="comercios__prod">
@@ -33,12 +33,12 @@
                         </div>
                         <div class="prod--price">
                             <p class="price">{{ (prod.price_with_iva * prod.quantity) | money }}€</p>
-                            <span @click="deleteProd(i, y)" class="delete-product"><img :src="EliminarProducto"></span>
+                            <span v-if="cart.type_cart.type_cart != 'Invitado'" @click="deleteProd(i, y)" class="delete-product"><img :src="EliminarProducto"></span>
                         </div>
                     </div>
 
                     <div :id="'config_' + cart.id_comercio" class="comercios__config">
-                        <div class="config--item">
+                        <div v-if="cart.is_type_mesa === false" class="config--item">
                             <div class="item-left">
                                 <img src="../assets/moto.png" class="imgIconos">
                                 <p class="text">Delivery</p>
@@ -54,7 +54,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="config--item">
+                        <div v-if="cart.is_type_mesa === false" class="config--item">
                             <div class="item-left">
                                 <img src="../assets/recogertienda.svg" class="imgIconos __retienda">
                                 <p class="text">Para llevar</p>
@@ -70,7 +70,29 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="config--item">
+                        <div v-if="cart.is_type_mesa === true" class="config--item __mesas">
+                            <p>Numero de mesa: {{ cart.mesa.numero_mesa }}</p>
+                            <p>De {{ cart.mesa.hours_start }} hasta las {{ cart.mesa.hours_end }}</p>
+                            <div class="boxListInvite">
+                                <div class="boxListInvite__title">
+                                    <p>Lista de invitados</p>
+                                </div>
+                                <div class="boxListInvite__searchinvitado2">
+                                    <input id="searchinvitado2" type="text" v-on:keyup="searchinvitado2" v-on:focus="opensearchinvitado2" class="from-control" placeholder="Buscar invitado">
+                                    <div @click="selectUserComoInvitado2" :data-idpro="cart.id_comercio" :data-index="i" class="searchinvitado__result2">
+                                        <p v-for="res in listSearchUser" :key="'result_'+res.id" :id="'result_'+res.id" :data-obj="JSON.stringify(res)" class="result"><img :src="res.photo" :onerror="'this.src = ' + '\'' + imgDefaultUser + '\''"> {{ res.name }}</p>
+                                    </div>
+                                </div>
+                                <p :id="'sms_' + cart.id_comercio" class="sms">Lo sentimos pero el usuario que quiere invitar tiene carritos por pagar.</p>
+                                <ul class="boxListInvite__nav">
+                                    <li v-for="(inv, w) in cart.mesa.list_invitados" :key="w">
+                                        <p><img :src="inv.photo_invitado ? inv.photo_invitado : ''" :onerror="'this.src = ' + '\'' + imgDefaultUser + '\''"> {{ inv.name_invitado }}</p>
+                                        <span @click="eliminarInvitado(i, w)" class="delete-product"><img :src="EliminarProducto"></span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div v-if="cart.is_type_mesa === false" class="config--item">
                             <div class="item-left">
                                 <img src="../assets/regalo.svg" class="imgIconos">
                                 <p class="text">Para Regalo</p>
@@ -99,7 +121,7 @@
                         </div>
                     </div>
 
-                    <div class="comercios__address">
+                    <div v-if="cart.is_type_mesa === false" class="comercios__address">
                         <input type="text" :data-address="'input_address_' + cart.id_comercio" :value="cart.address" disabled class="form-control">
                         <button @click="editAddress(cart.id_comercio);" class="edit" type="button">
                             <img src="../assets/lapiz.svg">
@@ -135,6 +157,7 @@
     import config from "../config.js";
     import back from '../assets/img/icons/flechavolver.svg';
     import imgDefault from '../assets/img/noimage.jpeg';
+    import imgDefaultUser from "../assets/avatar.png";
     import EliminarProducto from "../assets/img/icons/close.svg";
 
     // -> components
@@ -142,7 +165,7 @@
 
     // -> API + EventBus
     import { EventBus } from '../main.js';
-    // import api from '../api.js';
+    import api from '../api.js';
     import funciones from "../funciones.js";
     import axios from "axios";
 
@@ -156,6 +179,7 @@
                 myclass: ['modal-trolley'],
                 back: config.rutaWeb(back),
                 imgDefault: imgDefault,
+                imgDefaultUser: imgDefaultUser,
                 myTrolley: [],
                 EliminarProducto: EliminarProducto,
                 is_disabled: false,
@@ -167,7 +191,8 @@
                     iva: [],
                     subTotal: 0.00,
                     total: 0.00
-                }
+                },
+                listSearchUser: []
             }
         },
         async created() {
@@ -193,11 +218,127 @@
                         }
                     });
 
+                    await api.get("cliente/list/").then(res => {
+                        var _values = Object.values(res);
+                        var _uid = this.$store.getters.uid;
+
+                        _values.forEach(item => {
+                            if (item.key != undefined) {
+                                if (item.key != _uid) {
+                                    this.listSearchUser.push({
+                                        id: item.key,
+                                        name: `${item.name} ${item.lastname}`,
+                                        phone: item.phone,
+                                        email: item.email,
+                                        photo: item.avatar ? item.avatar : ""
+                                    });
+                                }
+                            }
+                        });
+                    }).catch(err => {
+                        console.log(err);
+                    });
+
                     console.log(this.$store.getters.trolley);
                 }
             }
         },
         methods: {
+            selectUserComoInvitado2(e) {
+                var _el = e.target;
+                var index = _el.parentNode.getAttribute("data-index");
+                var _idProd = _el.parentNode.getAttribute("data-idpro");
+                var obj = JSON.parse(_el.getAttribute("data-obj"));
+                document.querySelector("#searchinvitado2").value = "";
+                var _ms = document.querySelector("#sms_" + _idProd);
+
+                axios.get(`https://myraus.com:8282/api/cart/get/invitado/${obj.id}`).then(res => {
+                    var _result = res.data.result;
+
+                    if (_result === true) {
+                        if (_ms) {
+                            if (!_ms.classList.contains("err")) {
+                                _ms.classList.add("err");
+                            }
+
+                            setTimeout(() => {
+                                _ms.classList.remove("err");
+                            }, 3500);
+
+                            return false;
+                        }
+                    } else {
+                        this.$store.state.trolley[index].mesa.list_invitados.push({
+                            id_invitante: this.$store.getters.uid,
+                            id_invitado: obj.id,
+                            name_invitado: obj.name,
+                            phone_invitado: obj.phone,
+                            email_invitado: obj.email,
+                            photo_invitado: obj.photo ? obj.photo : "",
+                        });
+
+                        axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(res => {
+                            console.log(res);
+                            EventBus.$emit("NewPushOfTrolleyChangeComer", {ok: "OK"});
+                        }).catch(err => {
+                            console.log(err);
+                        });
+                    }
+                }).catch(err => {
+                    console.log(err);
+                });
+                
+                if (document.querySelector("#searchinvitado2").parentNode.classList.contains("boxListInvite__searchinvitado2")) {
+                    document.querySelector("#searchinvitado2").parentNode.classList.remove("searching2");
+                }
+            },
+            opensearchinvitado2() {
+                if (document.querySelector("#searchinvitado2")) {
+                    if (document.querySelector("#searchinvitado2").parentNode.classList.contains("boxListInvite__searchinvitado2")) {
+                        document.querySelector("#searchinvitado2").parentNode.classList.add("searching2");
+                    }
+                }
+            },
+            searchinvitado2(e) {
+                var _parent = e.target.parentNode;
+                var _input = e.target;
+                var _boxResult = _parent.children[1];
+                var _datas = _boxResult.children;
+
+                if (_parent.classList.contains("boxListInvite__searchinvitado2")) {
+                    if (_input.value != "") {
+                        _parent.classList.add("searching2");
+                    }
+                }
+
+                for (var el = 0; el < _datas.length; el++) {
+                    var filterEmail = JSON.parse(_datas[el].getAttribute("data-obj")).name.toLowerCase();
+                    var filterName = JSON.parse(_datas[el].getAttribute("data-obj")).email.toLowerCase();
+                    var obj = {data: filterEmail, data2: filterName};
+
+                    _datas[el].classList.add("d-none");
+
+                    if (_input.value.toLowerCase() === obj.data || _input.value.toLowerCase() === obj.data2) {
+                        _datas[el].classList.remove('d-none');
+                    }
+
+                    if (_input.value.toLowerCase() === obj.data.substr(obj.data.indexOf(" ") + 1, _input.value.length) || _input.value.toLowerCase() === obj.data2.substr(obj.data2.indexOf(" ") + 1, _input.value.length)) {
+                        _datas[el].classList.remove('d-none');
+                    }
+                    
+                    if (_input.value.toLowerCase() === obj.data.substr(obj.data.lastIndexOf(" ") + 1, _input.value.length) || _input.value.toLowerCase() === obj.data2.substr(obj.data2.lastIndexOf(" ") + 1, _input.value.length)) {
+                        _datas[el].classList.remove('d-none');
+                    }
+            
+                    if (_input.value.toLowerCase() === obj.data.substr(0, _input.value.length) || _input.value.toLowerCase() === obj.data2.substr(0, _input.value.length)) {
+                        _datas[el].classList.remove('d-none');
+                    }
+                    
+                    if (_input.value.toLowerCase() === '') {
+                        _datas[el].classList.remove('d-none');
+                    }
+                }
+            },
             papelRegalo(id_c, index) {
                 var _checked = document.querySelector(`#regalo_${id_c}`);
                 var _trolley = this.$store.getters.trolley[index];
@@ -419,6 +560,19 @@
                 this.listPrice.total = _total;
                 this.listPrice.total = parseFloat(this.listPrice.total) + parseFloat(this.shippingPrince.delivery) + parseFloat(this.shippingPrince.wear);
                 console.log(this.listPrice);
+            },
+            eliminarInvitado(index_c, index_i) {
+                delete this.$store.getters.trolley[index_c].mesa.list_invitados[index_i];
+                this.$store.getters.trolley[index_c].mesa.list_invitados.splice(index_i, 1);
+                
+                axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index_c]).then(res => {
+                    console.log(res);
+                    EventBus.$emit("NewPushOfTrolleyChangeComer", {ok: "OK"});
+                }).catch(err => {
+                    console.log(err);
+                });
+
+                console.log("Delete -> ", this.$store.getters.trolley);
             },
             deleteProd(index_c, index_p) {
                 delete this.$store.getters.trolley[index_c].products[index_p];
@@ -787,6 +941,10 @@
                     padding-bottom: .5rem;
                     border-bottom: 1px solid rgba(0,0,0,.35);
 
+                    &.__mesas {
+                        display: block;
+                    }
+
                     .item-left {
                         display: flex;
                         justify-content: flex-start;
@@ -1091,6 +1249,228 @@
             margin: 0;
             padding: 1rem 0;
             text-align: center;
+        }
+    }
+
+    .boxListInvite {
+        width: 100%;
+        height: max-content;
+        margin: 0 0 1.25rem;
+        padding: 0 0 .5rem;
+
+        // border-bottom: 1px solid rgba(0,0,0,.25);
+
+        &__title {
+            width: 100%;
+            height: max-width;
+
+            p {
+                color: #777;
+                text-align: left;
+                font-size: 1.25rem; 
+                margin: 0 0 .5rem;
+                padding: 0 0 .5rem;
+
+                border-bottom: 1px solid rgba(0,0,0,.25);
+            }
+        }
+
+        &__searchinvitado2 {
+            position: relative;
+            display: block;
+            width: 100%;
+            height: 40px;
+            background: transparent;
+            
+            input {
+                width: 100%;
+                height: 40px;
+                line-height: 40px;
+                outline: none;
+                box-shadow: none;
+                margin: 0;
+                padding: 0;
+                border: none;
+                border-bottom: 1px solid var(--blue);
+                text-transform: uppercase;
+                color: var(--blue);
+            }
+
+            .searchinvitado__result2 {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                margin: 0;
+                padding: .5rem;
+                background: #fff;
+                overflow-y: auto;
+                overflow-x: hidden;
+                width: 100%;
+                max-height: 200px;
+                z-index: 10;
+                display: none;
+
+                p {
+                    display: flex;
+                    justify-content: flex-start;
+                    align-items: center;
+                    margin: 0 0 .5rem;
+                    // padding: 0 0 .5rem;
+                    // border-bottom: 1px solid rgba(0,0,0,.15);
+                    width: 100%;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                    text-transform: uppercase;
+                    cursor: pointer;
+
+                    &:last-child {
+                        margin: 0;
+                        padding: 0;
+                        border-bottom: none;
+                    }
+
+                    img {
+                        display: block;
+                        margin: 0;
+                        padding: 0;
+                        width: 30px;
+                        height: 30px;
+                        border-radius: 50%;
+                        margin-right: .5rem;
+                        object-fit: cover;
+                        object-position: center center;
+                    }
+                }
+            }
+
+            &.searching2 {
+                .searchinvitado__result2 {
+                    display: block;
+                }
+            }
+        }
+
+        &__nav {
+            display: block;
+            width: 100%;
+            height: max-content;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+
+            li {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                width: 100%;
+                height: max-content;
+                margin: .5rem 0;
+
+                p {
+                    display: flex;
+                    justify-content: flex-start;
+                    align-items: center;
+                    margin: 0;
+                    padding: 0;
+                    width: 100%;
+
+                    img {
+                        display: block;
+                        margin: 0;
+                        padding: 0;
+                        width: 30px;
+                        height: 30px;
+                        border-radius: 50%;
+                        margin-right: .5rem;
+                        object-fit: cover;
+                        object-position: center center;
+                    }
+                }
+
+                span {
+                    img {
+                        display: block;
+                        margin: 0;
+                        padding: 0;
+                        width: 15px;
+                        cursor: pointer;
+                    }
+                }
+
+                .my-checkbox {
+                    display: block;
+                    width: 100%;
+                    height: max-content;
+                    cursor: pointer;
+
+                    input[type="checkbox"] {
+                        display: none;
+                    }
+
+                    .check {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        width: 100%;
+                        height: max-content;
+                        padding: 0 0 0.25rem;
+                        margin: 0 0 0.25rem;
+                        border-bottom: 1px solid var(--bluePrimary);
+                        cursor: pointer;
+
+                        &:last-child {
+                            padding: 0;
+                            margin: 0;
+                            border-bottom: none;
+                        }
+
+                        p {
+                            color: var(--text-color);
+                            margin: 0;
+                        }
+
+                        .box {
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            width: 20px;
+                            height: 20px;
+                            border: 1px solid #d1d1d1;
+
+                            i {
+                                display: none;
+                                font-size: .85rem;
+                                color: var(--blue);
+                            }
+                        }
+                    }
+
+                    input[type="checkbox"]:checked + .check {
+                        .box {
+                            border: 1px solid var(--blue);
+
+                            i {
+                                display: block;
+                                opacity: 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .sms {
+        display: none;
+        color: #d33838;
+        font-size: 1rem;
+        margin: .5rem 0;
+        padding: 0;
+        text-align: center;
+
+        &.err {
+            display: block;
         }
     }
 </style>

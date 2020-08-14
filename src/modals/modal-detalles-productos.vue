@@ -47,7 +47,7 @@
                                 </b-list-group>
                             </div>
                         </div>
-                        <div class="groupSelect">
+                        <div v-if="!this.$store.getters.trolley.length" class="groupSelect">
                             <div class="quality">
                                 <h5>Cantidad</h5>
                                 <b-button v-on:click="prodMenos()">-</b-button>
@@ -96,81 +96,122 @@
                                 Comprar
                             </b-button>
                         </div>
+                        <div v-if="this.$store.getters.trolley.length" class="groupSelect">
+                            <div v-if="this.$store.getters.trolley[0].is_type_mesa === false">
+                                <div class="quality">
+                                    <h5>Cantidad</h5>
+                                    <b-button v-on:click="prodMenos()">-</b-button>
+                                    <input type="text" class="form-control" v-model="cantProd">
+                                    <b-button v-on:click="prodMas()">+</b-button>
+                                </div>
+                                <b-button type="button" @click="addProductoCarrito(prod.data), $bvModal.hide(prod.title + prod.id)" class="btnComprar">
+                                    Comprar
+                                </b-button>
+                            </div>
+                            <div v-if="this.$store.getters.trolley[0].is_type_mesa === true">
+                                <div class="quality">
+                                    <h5>Cantidad</h5>
+                                    <b-button v-on:click="prodMenos()">-</b-button>
+                                    <input type="text" class="form-control" v-model="cantProd">
+                                    <b-button v-on:click="prodMas()">+</b-button>
+                                </div>
+                                <div class="groupRadio">
+                                    <p v-if="this.$store.getters.trolley[0].type_cart.type_cart === 'Invitado'">Usted es invitado</p>
+                                    <div v-if="this.$store.getters.trolley[0].type_cart.type_cart === 'Invitado'" class="form-grou">
+                                        <label :for="'comer_' + prod.data._id">
+                                            <div class="a">
+                                                <img src="../assets/dinner.png" alt="">
+                                                <span>Mesa: {{ this.$store.getters.trolley[0].mesa.numero_mesa }}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                <b-button type="button" @click="addProductoCarrito(prod.data), $bvModal.hide(prod.title + prod.id)" class="btnComprar">
+                                    Comprar
+                                </b-button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </b-modal>
 
-        <button type="button" id="btn_comer" v-b-modal="'modal-comer_' + prod.data._id" style="display: none;"></button>
-        <b-modal modal-class="modal-comer" centered :id="'modal-comer_' + prod.data._id" :ref="'modal-comer_' + prod.data._id"  hide-footer hide-header>  
-            <div class="d-block text-center">
-                <div class="boxMesa">
-                    <h3>Unirse a mesa</h3>
+            <button type="button" id="btn_comer" v-b-modal="'modal-comer_' + prod.data._id" style="display: none;"></button>
+            <b-modal modal-class="modal-comer" centered :id="'modal-comer_' + prod.data._id" :ref="'modal-comer_' + prod.data._id"  hide-footer hide-header>  
+                <div class="d-block text-center">
+                    <div class="boxMesa">
+                        <h3>Unirse a mesa</h3>
 
-                    <div class="boxSelectMesa">
-                        <select :name="'selectMesa_' + prod.data._id" :id="'selectMesa_' + prod.data._id" class="form-control select-mesa">
-                            <option v-for="(m, i) in this.getMesa" :key="i" :value="m._id">{{ m.mesa }}</option>
-                        </select>
-                        <span class="cubo"></span>
-                    </div>
-                    
-                    <div class="checboxs">
-                        <div class="form-group">
-                            <input v-if="this.is_pago_unico === true" @change="SelectedMesa(prod.data._id)" type="radio" checked :name="'radiosSelectMesa_' + prod.data._id" data-name="pago-unico" :id="'pago-unico_' + prod.data._id">
-                            <input v-else @change="SelectedMesa(prod.data._id)" type="radio" :name="'radiosSelectMesa_' + prod.data._id" data-name="pago-unico" :id="'pago-unico_' + prod.data._id">
-                            <label :for="'pago-unico_' + prod.data._id">
-                                <div class="a">
-                                    <span>Pago único</span>
-                                </div>
-                                <div class="box">
-                                    <i class="fas fa-check"></i>
-                                </div>
-                            </label>
+                        <div class="boxSelectMesa">
+                            <select @change="horariosMesa" :name="'selectMesa_' + prod.data._id" :id="'selectMesa_' + prod.data._id" class="form-control select-mesa">
+                                <option value="" selected>Elige la mesa</option>
+                                <option v-for="(m, i) in this.getMesa" :key="i" :value="JSON.stringify(m)">{{ m.mesa }}</option>
+                            </select>
+                            <span class="cubo"></span>
                         </div>
-                        <div v-if="this.is_pago_unico === true" class="boxListInvite">
-                            <div class="boxListInvite__title">
-                                <p>Lista de invitados</p>
+                        
+                        <div v-if="this.time_limit != ''" class="boxHorarios">
+                            <p class="title">Cuando se active la mesa usted tendra un tiempo limite de <span>{{ this.time_limit }}</span>min.</p>
+                        </div>
+                        
+                        <div class="checboxs">
+                            <div class="form-group">
+                                <input v-if="this.is_pago_unico === true" @change="typeDePagoPorMesa(prod.data._id)" type="radio" checked :name="'radiosSelectMesa_' + prod.data._id" data-name="pago-unico" :id="'pago-unico_' + prod.data._id">
+                                <input v-else @change="typeDePagoPorMesa(prod.data._id)" type="radio" :name="'radiosSelectMesa_' + prod.data._id" data-name="pago-unico" :id="'pago-unico_' + prod.data._id">
+                                <label :for="'pago-unico_' + prod.data._id">
+                                    <div class="a">
+                                        <span>Pago único</span>
+                                    </div>
+                                    <div class="box">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                </label>
                             </div>
-                            <div class="boxListInvite__searchinvitado">
-                                <input id="searchinvitado" type="text" v-on:keyup="searchinvitado" v-on:focus="opensearchinvitado" class="from-control" placeholder="Buscar invitado">
-                                <div @click="selectUserComoInvitado" class="searchinvitado__result">
-                                    <p v-for="res in this.listSearchUser" :key="'result_'+res.id" :id="'result_'+res.id" :data-obj="JSON.stringify(res)" class="result"><img :src="res.photo" :onerror="'this.src = ' + '\'' + imgDefaultUser + '\''"> {{ res.name }}</p>
+                            <div v-if="this.is_pago_unico === true" class="boxListInvite">
+                                <div class="boxListInvite__title">
+                                    <p>Lista de invitados</p>
                                 </div>
+                                <div class="boxListInvite__searchinvitado">
+                                    <input id="searchinvitado" type="text" v-on:keyup="searchinvitado" v-on:focus="opensearchinvitado" class="from-control" placeholder="Buscar invitado">
+                                    <div @click="selectUserComoInvitado" :data-idpro="prod.data._id" class="searchinvitado__result">
+                                        <p v-for="res in this.listSearchUser" :key="'result_'+res.id" :id="'result_'+res.id" :data-obj="JSON.stringify(res)" class="result"><img :src="res.photo" :onerror="'this.src = ' + '\'' + imgDefaultUser + '\''"> {{ res.name }}</p>
+                                    </div>
+                                </div>
+                                <p :id="'sms_' + prod.data._id" class="sms">Lo sentimos pero el usuario que quiere invitar tiene carritos por pagar.</p>
+                                <ul class="boxListInvite__nav">
+                                    <li v-for="(inv, i) in this.mysInvitados" :key="i">
+                                        <p><img :src="inv.photo ? inv.photo : ''" :onerror="'this.src = ' + '\'' + imgDefaultUser + '\''"> {{ inv.name }}</p>
+                                        <span @click="deleteInvitado(i)" class="delete-product"><img :src="EliminarProducto"></span>
+                                    </li>
+                                </ul>
                             </div>
-                            <ul class="boxListInvite__nav">
-                                <li v-for="(inv, i) in this.mysInvitados" :key="i">
-                                    <p><img :src="inv.photo ? inv.photo : ''" :onerror="'this.src = ' + '\'' + imgDefaultUser + '\''"> {{ inv.name }}</p>
-                                    <span @click="deleteInvitado(i)" class="delete-product"><img :src="EliminarProducto"></span>
-                                </li>
-                            </ul>
+                            <div class="form-group">
+                                <input @change="typeDePagoPorMesa(prod.data._id)" type="radio" :name="'radiosSelectMesa_' + prod.data._id" data-name="pago-separado" :id="'pago-separado_' + prod.data._id">
+                                <label :for="'pago-separado_' + prod.data._id">
+                                    <div class="a">
+                                        <span>Pago por separado</span>
+                                    </div>
+                                    <div class="box">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <input @change="SelectedMesa(prod.data._id)" type="radio" :name="'radiosSelectMesa_' + prod.data._id" data-name="pago-separado" :id="'pago-separado_' + prod.data._id">
-                            <label :for="'pago-separado_' + prod.data._id">
-                                <div class="a">
-                                    <span>Pago por separado</span>
-                                </div>
-                                <div class="box">
-                                    <i class="fas fa-check"></i>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
 
-                    <button class="btn btnConfirmar" @click="addCarrito(prod.data), $bvModal.hide(`modal-comer_${prod.data._id}`)">
-                        Confirmar
-                    </button>
+                        <button class="btn btnConfirmar" @click="addCarrito(prod.data)">
+                            Confirmar
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </b-modal>
+            </b-modal>
 
-        <button type="button" :id="'alertdr_' + prod.data._id" v-b-modal="'modal-alertdr_' + prod.data._id" style="display: none;"></button>
-        <b-modal modal-class="modal-alertdr" centered :id="'modal-alertdr_' + prod.data._id" :ref="'modal-alertdr_' + prod.data._id"  hide-footer hide-header>  
-            <div class="d-block text-center">
-                <img style="width: 150px; margin-bottom: 1rem;" :src="checkimg" alt="">
-                <h3>¡Éxito!</h3>
-                <p>El producto fue agregado al carrito.</p>
-            </div>
+            <button type="button" :id="'alertdr_' + prod.data._id" v-b-modal="'modal-alertdr_' + prod.data._id" style="display: none;"></button>
+            <b-modal modal-class="modal-alertdr" centered :id="'modal-alertdr_' + prod.data._id" :ref="'modal-alertdr_' + prod.data._id"  hide-footer hide-header>  
+                <div class="d-block text-center">
+                    <img style="width: 150px; margin-bottom: 1rem;" :src="checkimg" alt="">
+                    <h3>¡Éxito!</h3>
+                    <p>El producto fue agregado al carrito.</p>
+                </div>
+            </b-modal>
         </b-modal>
     </div>
 </template>
@@ -213,6 +254,8 @@
                 getMesa: "",
                 eatinrest: false,
                 listSearchUser: [],
+                time_limit: "",
+                miMesa: {},
                 mysInvitados: [],
                 invitado: {
                     id_invitante: this.$store.getters.uid,
@@ -279,7 +322,20 @@
             });
         },
         methods: {
-            SelectedMesa(id_p) {
+            horariosMesa(e) {
+                if (e.target.value != "") {
+                    var _obj = JSON.parse(e.target.value);
+                    this.miMesa = _obj;
+                    this.time_limit = _obj.time_limit;
+                    console.log("Mesa -> ", _obj);
+                }
+
+                if (e.target.value === "") {
+                    this.miMesa = {};
+                    this.time_limit = "";
+                }
+            },
+            typeDePagoPorMesa(id_p) {
                 var _check = document.querySelectorAll(`[name="radiosSelectMesa_${id_p}"]`);
                 var _checked = "";
 
@@ -307,9 +363,31 @@
             },
             selectUserComoInvitado(e) {
                 var _el = e.target;
+                var _idProd = _el.parentNode.getAttribute("data-idpro");
                 var obj = JSON.parse(_el.getAttribute("data-obj"));
                 document.querySelector("#searchinvitado").value = "";
-                this.mysInvitados.push(obj);
+                var _ms = document.querySelector("#sms_" + _idProd);
+
+                axios.get(`https://myraus.com:8282/api/cart/get/invitado/${obj.id}`).then(res => {
+                    var _result = res.data.result;
+
+                    if (_result === true) {
+                        if (_ms) {
+                            if (!_ms.classList.contains("err")) {
+                                _ms.classList.add("err");
+                            }
+
+                            setTimeout(() => {
+                                _ms.classList.remove("err");
+                            }, 3500);
+                            return false;
+                        }
+                    } else {
+                        this.mysInvitados.push(obj);
+                    }
+                }).catch(err => {
+                    console.log(err);
+                });
                 
                 if (document.querySelector("#searchinvitado").parentNode.classList.contains("boxListInvite__searchinvitado")) {
                     document.querySelector("#searchinvitado").parentNode.classList.remove("searching");
@@ -421,11 +499,72 @@
                     this.eatinrest = false;
                 }
             },
+            addProductoCarrito(obj) {
+                var _btnAlert = document.querySelector(`#alertdr_${obj._id}`);
+
+                var _prod = {
+                    id_producto: obj._id,
+                    name: obj.name,
+                    description: obj.description,
+                    category: obj.category_text,
+                    sub_category: obj.sub_category_text,
+                    quantity: this.cantProd,
+                    images: obj.images,
+                    detalles: obj.detalles,
+                    iva: obj.iva,
+                    price_with_iva: obj.price_with_iva
+                }
+                
+                var _trolley = this.$store.getters.trolley;
+
+                for (var i = 0; i < _trolley.length; i++) {
+                    if (_trolley[i].id_comercio === obj.id_restaurant) {
+                        var _idDifrente = true;
+                        var _quantityIgual = 0;
+
+                        for (var z = 0; z < _trolley[i].products.length; z++) {
+                            if (_trolley[i].products[z].id_producto === _prod.id_producto) {
+                                _quantityIgual = _trolley[i].products[z].quantity + this.cantProd;
+                                _prod.quantity = _quantityIgual;
+
+                                this.$store.state.trolley[i].products[z] = _prod;
+                                _idDifrente = false;
+                            }
+                        }
+
+                        if (_idDifrente === true) {
+                            this.$store.state.trolley[i].products.push(_prod);
+                        }
+
+                        var _trolley2 = this.$store.getters.trolley;
+                        var _total = 0;
+
+                        for (var y = 0; y < _trolley2[i].products.length; y++) {
+                            _total = _total = (parseFloat((_trolley2[i].products[y].price_with_iva).toFixed(2)) * parseInt((_trolley2[i].products[y].quantity))) + _total;
+                        }
+
+                        this.$store.state.trolley[i].total = parseFloat(_total.toFixed(2));
+
+                        console.log("ANTES DE ACTUALIZAR -> ", this.$store.getters.trolley[i]);
+                        axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[i]).then(res => {
+                            console.log(res);
+                            EventBus.$emit("NewPushOfTrolley", {ok: "OK"});
+                            EventBus.$emit("NewPushOfTrolleyChangeComer", {ok: "OK"});
+                            if (_btnAlert) {
+                                _btnAlert.click();
+                            }
+                        }).catch(err => {
+                            console.log(err);
+                        });
+                        this.cantProd = 1;
+                    }
+                }
+            },
             addCarrito(obj) {
                 var _shippingFormsDelivery = document.querySelector(`#delivery_${obj._id}`);
                 var _shippingFormsLlevar = document.querySelector(`#llevar_${obj._id}`);
                 var _shippingFormsComer = document.querySelector(`#comer_${obj._id}`);
-                var _btnAlert = document.querySelector(`#alertdr__${obj._id}`);
+                var _btnAlert = document.querySelector(`#alertdr_${obj._id}`);
 
                 console.log(obj, _shippingFormsComer);
 
@@ -439,84 +578,108 @@
                             if (_shippingFormsLlevar.checked === true) {
                                 this.pedido.shippingForms = "wear";
                             }
-
-                            this.pedido.id_comercio = obj.id_restaurant;
-                            this.pedido.lat = obj.lat;
-                            this.pedido.lng = obj.lng;
-                            this.pedido.id_cliente = this.$store.getters.uid;
-                            this.pedido.address = this.$store.getters.user.address;
-                            this.pedido.created_at = moment(new Date()).format("YYYY-MM-DD HH:mm");
-
-                            this.pedido.costos_extras = obj.costos;
-
-                            var _prod = {
-                                id_producto: obj._id,
-                                name: obj.name,
-                                description: obj.description,
-                                category: obj.category_text,
-                                sub_category: obj.sub_category_text,
-                                quantity: this.cantProd,
-                                images: obj.images,
-                                detalles: obj.detalles,
-                                iva: obj.iva,
-                                price_with_iva: obj.price_with_iva
-                            }
-                            
-                            var _trolley = this.$store.getters.trolley;
-                            var _set = true;
-
-                            for (var i = 0; i < _trolley.length; i++) {
-                                if (_trolley[i].id_comercio === obj.id_restaurant) {
-                                    _set = false;
-                                    var _idDifrente = true;
-                                    var _quantityIgual = 0;
-
-                                    for (var z = 0; z < _trolley[i].products.length; z++) {
-                                        if (_trolley[i].products[z].id_producto === _prod.id_producto) {
-                                            _quantityIgual = _trolley[i].products[z].quantity + this.cantProd;
-                                            _prod.quantity = _quantityIgual;
-
-                                            this.$store.state.trolley[i].products[z] = _prod;
-                                            _idDifrente = false;
-                                        }
+                        } else if (_shippingFormsComer.checked === true) {
+                            if (this.time_limit != "") {
+                                // MESA ------------------------------------------------------------
+                                this.pedido.shippingForms = "eat_in_restaurant";
+                                this.pedido.is_type_mesa = true;
+                                this.pedido.type_mesa = this.type_mesa; // 1 = unico, 2 = separado
+    
+                                if (this.pedido.type_mesa === 1) {
+                                    this.pedido.mesa = {
+                                        numero_mesa: this.miMesa.mesa,
+                                        list_invitados: [], // if es igual a pago unico
                                     }
-
-                                    if (_idDifrente === true) {
-                                        this.$store.state.trolley[i].products.push(_prod);
-                                    }
-
-                                    var _trolley2 = this.$store.getters.trolley;
-                                    var _total = 0;
-
-                                    for (var y = 0; y < _trolley2[i].products.length; y++) {
-                                        _total = _total = (parseFloat((_trolley2[i].products[y].price_with_iva).toFixed(2)) * parseInt((_trolley2[i].products[y].quantity))) + _total;
-                                    }
-
-                                    this.$store.state.trolley[i].total = parseFloat(_total.toFixed(2));
-
-                                    console.log("ANTES DE ACTUALIZAR -> ", this.$store.state.trolley[i]);
-                                    axios.put("https://myraus.com:8282/api/cart/update", this.$store.state.trolley[i]).then(res => {
-                                        console.log(res);
-                                        EventBus.$emit("NewPushOfTrolley", {ok: "OK"});
-                                        EventBus.$emit("NewPushOfTrolleyChangeComer", {ok: "OK"});
-                                        if (_btnAlert) {
-                                            _btnAlert.click();
-                                        }
-                                    }).catch(err => {
-                                        console.log(err);
+    
+                                    this.mysInvitados.forEach(inv => {
+                                        this.pedido.mesa.list_invitados.push({
+                                            id_invitante: this.$store.getters.uid,
+                                            id_invitado: inv.id,
+                                            name_invitado: inv.name,
+                                            phone_invitado: inv.phone,
+                                            email_invitado: inv.email,
+                                            photo_invitado: inv.photo ? inv.photo : "",
+                                        });
                                     });
-                                    this.cantProd = 1;
                                 }
+    
+                                if (this.pedido.type_mesa === 2) {
+                                    this.pedido.mesa = {
+                                        numero_mesa: 0,
+                                        list_invitados: [],
+                                    }
+                                }
+    
+                                this.pedido.mesa.hours_start = moment(new Date()).format("HH:mm:ss a");
+                                var _f = new Date();
+                                var _fl = this.time_limit;
+                                var _m = _f.getMinutes();
+                                _f.setMinutes(_m + _fl);
+                                this.pedido.mesa.hours_end = moment(_f).format("HH:mm:ss a");
+                                // END MESA ----------------------------------------------------------
+                            } else {
+                                console.log("Por favor selecciona una mesa.");
+                                return false;
                             }
+                        }
+                        
+                        this.pedido.id_comercio = obj.id_restaurant;
+                        this.pedido.lat = obj.lat;
+                        this.pedido.lng = obj.lng;
+                        this.pedido.id_cliente = this.$store.getters.uid;
+                        this.pedido.address = this.$store.getters.user.address;
+                        this.pedido.created_at = moment(new Date()).format("YYYY-MM-DD HH:mm");
 
-                            if (_set === true) {
-                                this.pedido.total = parseFloat((obj.price_with_iva * this.cantProd).toFixed(2));
-                                this.pedido.products.push(_prod);
+                        this.pedido.costos_extras = obj.costos;
 
-                                console.log("POST DEL PRIMER CARRITO -> ", this.pedido);
-                                axios.post("https://myraus.com:8282/api/cart/add", this.pedido).then(res => {
-                                    this.pedido._id = res.data.cart._id;
-                                    this.$store.state.trolley.push(this.pedido);
+                        var _prod = {
+                            id_producto: obj._id,
+                            name: obj.name,
+                            description: obj.description,
+                            category: obj.category_text,
+                            sub_category: obj.sub_category_text,
+                            quantity: this.cantProd,
+                            images: obj.images,
+                            detalles: obj.detalles,
+                            iva: obj.iva,
+                            price_with_iva: obj.price_with_iva
+                        }
+                        
+                        var _trolley = this.$store.getters.trolley;
+                        var _set = true;
+
+                        for (var i = 0; i < _trolley.length; i++) {
+                            if (_trolley[i].id_comercio === obj.id_restaurant) {
+                                _set = false;
+                                var _idDifrente = true;
+                                var _quantityIgual = 0;
+
+                                for (var z = 0; z < _trolley[i].products.length; z++) {
+                                    if (_trolley[i].products[z].id_producto === _prod.id_producto) {
+                                        _quantityIgual = _trolley[i].products[z].quantity + this.cantProd;
+                                        _prod.quantity = _quantityIgual;
+
+                                        this.$store.state.trolley[i].products[z] = _prod;
+                                        _idDifrente = false;
+                                    }
+                                }
+
+                                if (_idDifrente === true) {
+                                    this.$store.state.trolley[i].products.push(_prod);
+                                }
+
+                                var _trolley2 = this.$store.getters.trolley;
+                                var _total = 0;
+
+                                for (var y = 0; y < _trolley2[i].products.length; y++) {
+                                    _total = _total = (parseFloat((_trolley2[i].products[y].price_with_iva).toFixed(2)) * parseInt((_trolley2[i].products[y].quantity))) + _total;
+                                }
+
+                                this.$store.state.trolley[i].total = parseFloat(_total.toFixed(2));
+
+                                console.log("ANTES DE ACTUALIZAR -> ", this.$store.state.trolley[i]);
+                                axios.put("https://myraus.com:8282/api/cart/update", this.$store.state.trolley[i]).then(res => {
+                                    console.log(res);
                                     EventBus.$emit("NewPushOfTrolley", {ok: "OK"});
                                     EventBus.$emit("NewPushOfTrolleyChangeComer", {ok: "OK"});
                                     if (_btnAlert) {
@@ -527,48 +690,28 @@
                                 });
                                 this.cantProd = 1;
                             }
-                
-                            console.log("Pedido -> ", this.$store.getters.trolley);
-                        } else if (_shippingFormsComer.checked === true) {
-                            var _select = document.querySelector(`#selectMesa_${obj._id}`);
-                            this.pedido.shippingForms = "eat_in_restaurant";
-                            this.pedido.is_type_mesa = true;
-                            this.pedido.type_mesa = this.type_mesa; // 1 = unico, 2 = separado
-
-                            console.log("Mesa -> ", _select.value);
-
-                            if (this.pedido.type_mesa === 1) {
-                                this.pedido.mesa = {
-                                    numero_mesa: _select.value,
-                                    list_invitados: [], // if es igual a pago unico
-                                }
-
-                                this.mysInvitados.forEach(inv => {
-                                    this.pedido.mesa.list_invitados.push({
-                                        id_invitante: this.$store.getters.uid,
-                                        id_invitado: inv.id,
-                                        name_invitado: inv.name,
-                                        phone_invitado: inv.phone,
-                                        email_invitado: inv.email,
-                                        photo_invitado: inv.photo ? inv.photo : "",
-                                    });
-                                });
-                            }
-
-                            if (this.pedido.type_mesa === 2) {
-                                this.pedido.mesa = {
-                                    numero_mesa: 0,
-                                    list_invitados: [],
-                                }
-                            }
-
-                            this.pedido.mesa.hours_start = "";
-                            this.pedido.mesa.hours_end = "";
-
-                            console.log(this.invitado);
-                            console.log("Comer en restaurante no esta habilitado aun.");
                         }
-                        
+
+                        if (_set === true) {
+                            this.pedido.total = parseFloat((obj.price_with_iva * this.cantProd).toFixed(2));
+                            this.pedido.products.push(_prod);
+
+                            console.log("POST DEL PRIMER CARRITO -> ", this.pedido);
+                            axios.post("https://myraus.com:8282/api/cart/add", this.pedido).then(res => {
+                                this.pedido._id = res.data.cart._id;
+                                this.$store.state.trolley.push(this.pedido);
+                                EventBus.$emit("NewPushOfTrolley", {ok: "OK"});
+                                EventBus.$emit("NewPushOfTrolleyChangeComer", {ok: "OK"});
+                                if (_btnAlert) {
+                                    _btnAlert.click();
+                                }
+                            }).catch(err => {
+                                console.log(err);
+                            });
+                            this.cantProd = 1;
+                        }
+
+                        console.log("Pedido -> ", this.$store.getters.trolley);
                     } else {
                         console.log("Disculpe debes seleccionar un {{ shippingForms }}");
                     }
@@ -811,7 +954,7 @@
         .boxSelectMesa {
             position: relative;
             display: block;
-            width: 70%;
+            width: 85%;
             margin: 0 auto;
             
             .select-mesa {
@@ -927,6 +1070,27 @@
             padding: 4px 22px;
             margin: 0 auto;
             border: none;
+        }
+    }
+
+    .boxHorarios {
+        position: relative;
+        width: 100%;
+        height: max-content;
+
+        p.title {
+            margin: 0;
+            width: 100%;
+            text-align: center;
+            padding: .5rem;
+            font-size: 1rem;
+            font-weight: bold;
+            font-style: italic;
+            color: var(--text-color);
+            
+            span {
+                color: #9d8755;
+            }
         }
     }
 
@@ -1136,6 +1300,19 @@
                     }
                 }
             }
+        }
+    }
+
+    .sms {
+        display: none;
+        color: #d33838;
+        font-size: 1rem;
+        margin: .5rem 0;
+        padding: 0;
+        text-align: center;
+
+        &.err {
+            display: block;
         }
     }
 </style>

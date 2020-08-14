@@ -723,7 +723,7 @@
         mounted() {
             if (this.$store.getters.isLoggedIn === true) {
                 this.$store.commit("loading");
-                // console.log("Store -> ", this.$store.getters);
+                console.log("Store -> ", this.$store.getters);
             }
         }
     }
