@@ -247,7 +247,7 @@
                 listBeneficio: [],
                 listIncentivo: [],
                 googleMapApi: "",
-                distancia: "20.000",
+                distancia: "20000.000",
                 rts: {
                     page: 0
                 },

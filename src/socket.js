@@ -1,4 +1,3 @@
-import config from "./config.js";
 import store from "./store/store.js";
 import IO from 'socket.io-client';
 import { EventBus } from './main.js';
@@ -6,11 +5,11 @@ import { EventBus } from './main.js';
 export default {
 	Iniciar: function() {
         if (store()) {
-            let socket = IO(config.ModeRUN === config.ModeRUNIQ ? config.dominioApi_prod : config.dominioApi_dev);
+            let socket = IO("https://myraus.com:6866");
     
             let user = {};
             if (store().getters.uid) {
-                user = {id: store().getters.uid};
+                user = {id: store().getters.uid, name: "", photo: ""};
 
                 if (store().getters.user.is_loggin === true) {
                     socket.on('connect', function() { 
@@ -25,6 +24,11 @@ export default {
     
                         socket.on('EgresoReady', obj => {
                             EventBus.$emit('EgresoReady', obj);
+                        });
+
+                        socket.on('CarritoUpdate', obj => {
+                            console.log("SOCKET TROLLEY ->>>>>>>>>>>>>>>>>>>>>>>>>>", obj);
+                            EventBus.$emit('EmitTrolleyUpdate', obj);
                         });
                     });
                 }

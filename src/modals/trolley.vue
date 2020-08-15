@@ -132,9 +132,12 @@
                     </div>
                 </div>
 
-                <div class="boxTotal">
+                <div v-if="isInvitado === false" class="boxTotal">
                     <p class="title">Total: <span class="mount">{{ this.listPrice.total | money }}€</span></p>
-                    <button :disabled="this.is_disabled" type="button" class="btnPago" v-b-modal.modal-send-2>Enviar pago</button>
+                    <button :disabled="this.is_disabled" type="button" class="btnPago" v-b-modal.modal-payment-2>Enviar pago</button>
+                </div>
+                <div v-if="isInvitado === true" class="boxTotal">
+                    <p class="title">Total: <span class="mount">{{ this.listPrice.total | money }}€</span></p>
                 </div>
             </div>
             <div v-if="!this.$store.getters.trolley.length" class="align-center">
@@ -183,6 +186,7 @@
                 myTrolley: [],
                 EliminarProducto: EliminarProducto,
                 is_disabled: false,
+                emit: "",
                 shippingPrince: {
                     delivery: 0,
                     wear: 0,
@@ -192,7 +196,8 @@
                     subTotal: 0.00,
                     total: 0.00
                 },
-                listSearchUser: []
+                listSearchUser: [],
+                isInvitado: false,
             }
         },
         async created() {
@@ -218,6 +223,11 @@
                         }
                     });
 
+                    EventBus.$on("EmitTrolleyUpdate", obj => {
+                        this.emit = obj;
+                        this.getTrolley();
+                    });
+
                     await api.get("cliente/list/").then(res => {
                         var _values = Object.values(res);
                         var _uid = this.$store.getters.uid;
@@ -238,12 +248,25 @@
                     }).catch(err => {
                         console.log(err);
                     });
-
-                    console.log(this.$store.getters.trolley);
                 }
             }
         },
         methods: {
+            is_invitado(obj) {
+                if (obj.length) {
+                    for (var i = 0; i < obj.length; i++) {
+                        if (obj[i].is_type_mesa === true) {
+                            if (obj[i].type_cart.type_cart === "Invitado") {
+                                this.isInvitado = true;
+                            } else {
+                                this.isInvitado = false;
+                            }
+                        } else {
+                            this.isInvitado = false;
+                        }
+                    }
+                }
+            },
             selectUserComoInvitado2(e) {
                 var _el = e.target;
                 var index = _el.parentNode.getAttribute("data-index");
@@ -277,8 +300,7 @@
                             photo_invitado: obj.photo ? obj.photo : "",
                         });
 
-                        axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(res => {
-                            console.log(res);
+                        axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(() => {
                             EventBus.$emit("NewPushOfTrolleyChangeComer", {ok: "OK"});
                         }).catch(err => {
                             console.log(err);
@@ -348,8 +370,7 @@
                         _trolley.total = parseFloat(_trolley.total) + parseFloat(_trolley.costos_extras.papel_regalo);
                         _trolley.papel_of_regalo = true;
 
-                        axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(res => {
-                            console.log(res);
+                        axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(() => {
                             this.price(this.$store.getters.trolley);
                         }).catch(err => {
                             console.log(err);
@@ -358,8 +379,7 @@
                         _trolley.total = parseFloat(_trolley.total) - parseFloat(_trolley.costos_extras.papel_regalo);
                         _trolley.papel_of_regalo = false;
 
-                        axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(res => {
-                            console.log(res);
+                        axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(() => {
                             this.price(this.$store.getters.trolley);
                         }).catch(err => {
                             console.log(err);
@@ -387,8 +407,7 @@
                         _nAddress = _input.value;
                         _trolley.address = _nAddress;
 
-                        axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(res => {
-                            console.log(res);
+                        axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(() => {
                             _input.disabled = true;
                         }).catch(err => {
                             console.log(err);
@@ -405,8 +424,7 @@
                     if (_shippingFormsDelivery.checked === true) {
                         _trolley.shippingForms = "delivery";
 
-                        axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(res => {
-                            console.log(res);
+                        axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(() => {
                             this.price(this.$store.getters.trolley);
                             this.getPriceDelivery(this.$store.getters.trolley[index]);
                         }).catch(err => {
@@ -417,8 +435,7 @@
                     if (_shippingFormsLlevar.checked === true) {
                         _trolley.shippingForms = "wear";
 
-                        axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(res => {
-                            console.log(res);
+                        axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(() => {
                             this.price(this.$store.getters.trolley);
                             this.getPriceWear(this.$store.getters.trolley[index]);
                         }).catch(err => {
@@ -504,7 +521,8 @@
                     }
 
                     this.price(this.$store.getters.trolley);
-                    console.log("Response of Trolley -> ", this.$store.getters.trolley);
+                    this.is_invitado(this.$store.getters.trolley);
+                    console.log("Data trolley -> ", res.data.data);
                 }).catch(err => {
                     console.log(err);
                 });
@@ -559,14 +577,12 @@
 
                 this.listPrice.total = _total;
                 this.listPrice.total = parseFloat(this.listPrice.total) + parseFloat(this.shippingPrince.delivery) + parseFloat(this.shippingPrince.wear);
-                console.log(this.listPrice);
             },
             eliminarInvitado(index_c, index_i) {
                 delete this.$store.getters.trolley[index_c].mesa.list_invitados[index_i];
                 this.$store.getters.trolley[index_c].mesa.list_invitados.splice(index_i, 1);
                 
-                axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index_c]).then(res => {
-                    console.log(res);
+                axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index_c]).then(() => {
                     EventBus.$emit("NewPushOfTrolleyChangeComer", {ok: "OK"});
                 }).catch(err => {
                     console.log(err);
@@ -583,8 +599,7 @@
                     delete this.$store.getters.trolley[index_c];
                     this.$store.getters.trolley.splice(index_c, 1);
 
-                    axios.post("https://myraus.com:8282/api/cart/delete", {_id: id_comercio}).then(res => {
-                        console.log(res);
+                    axios.post("https://myraus.com:8282/api/cart/delete", {_id: id_comercio}).then(() => {
                         EventBus.$emit("NewPushOfTrolleyChangeComer", {ok: "OK"});
                     }).catch(err => {
                         console.log(err);
@@ -600,8 +615,7 @@
                     this.$store.state.trolley[index_c].total = 0;
                     this.$store.state.trolley[index_c].total = parseFloat(_total.toFixed(2));
 
-                    axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index_c]).then(res => {
-                        console.log(res);
+                    axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index_c]).then(() => {
                         this.price(this.$store.getters.trolley);
                         EventBus.$emit("NewPushOfTrolleyChangeComer", {ok: "OK"});
                     }).catch(err => {
@@ -624,8 +638,7 @@
                 this.$store.state.trolley[index].total = 0;
                 this.$store.state.trolley[index].total = parseFloat(_total.toFixed(2));
 
-                axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(res => {
-                    console.log(res);
+                axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(() => {
                     this.price(this.$store.getters.trolley);
                     this.getPriceDelivery(this.$store.getters.trolley[index]);
                     _btn.setAttribute("style", "display: none;");
@@ -653,7 +666,6 @@
 
                 var _coords_u = this.$store.getters.coords;
                 var _km = funciones.getKilometros(_coords_u.lat, _coords_u.lng, _coords_c.lat, _coords_c.lng);
-                console.log(_km);
                 var _costos = obj.costos_extras;
 
                 if (_costos.standard.km != 0 && _costos.standard.price != 0 && _costos.km_exta.km != 0 && _costos.km_exta.price != 0 && _costos.minima.price_a != 0 && _costos.minima.price_b != 0) {

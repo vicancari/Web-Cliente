@@ -190,19 +190,17 @@
                     await this.mesesAntesActual();
 
                     var Uid = this.$store.getters.uid;
-                    await api.get('transactions/list/all').then(res => {
+                    await api.get('transactions/list/all/' + Uid).then(res => {
                         res.forEach(item => {
                             if (item.usuario != undefined) {
-                                if (Uid === item.usuario.uid) {
-                                    if (item.mode.toLowerCase() === "ingreso") {
-                                        this.listTransacciones.i.all.push(item);
-                                        this.listTransacciones.i.filter.push(item);
-                                    }
-                
-                                    if (item.mode.toLowerCase() === "egreso") {
-                                        this.listTransacciones.e.all.push(item);
-                                        this.listTransacciones.e.filter.push(item);
-                                    }
+                                if (item.mode.toLowerCase() === "ingreso") {
+                                    this.listTransacciones.i.all.push(item);
+                                    this.listTransacciones.i.filter.push(item);
+                                }
+            
+                                if (item.mode.toLowerCase() === "egreso") {
+                                    this.listTransacciones.e.all.push(item);
+                                    this.listTransacciones.e.filter.push(item);
                                 }
                             }
                         });

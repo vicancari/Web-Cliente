@@ -47,7 +47,7 @@
                                 </b-list-group>
                             </div>
                         </div>
-                        <div v-if="!this.$store.getters.trolley.length" class="groupSelect">
+                        <div v-if="!is_trolley.length" class="groupSelect">
                             <div class="quality">
                                 <h5>Cantidad</h5>
                                 <b-button v-on:click="prodMenos()">-</b-button>
@@ -96,19 +96,8 @@
                                 Comprar
                             </b-button>
                         </div>
-                        <div v-if="this.$store.getters.trolley.length" class="groupSelect">
-                            <div v-if="this.$store.getters.trolley[0].is_type_mesa === false">
-                                <div class="quality">
-                                    <h5>Cantidad</h5>
-                                    <b-button v-on:click="prodMenos()">-</b-button>
-                                    <input type="text" class="form-control" v-model="cantProd">
-                                    <b-button v-on:click="prodMas()">+</b-button>
-                                </div>
-                                <b-button type="button" @click="addProductoCarrito(prod.data), $bvModal.hide(prod.title + prod.id)" class="btnComprar">
-                                    Comprar
-                                </b-button>
-                            </div>
-                            <div v-if="this.$store.getters.trolley[0].is_type_mesa === true">
+                        <div v-if="is_trolley.length" class="groupSelect">
+                            <div v-if="isTypeMesa === false">
                                 <div class="quality">
                                     <h5>Cantidad</h5>
                                     <b-button v-on:click="prodMenos()">-</b-button>
@@ -116,19 +105,66 @@
                                     <b-button v-on:click="prodMas()">+</b-button>
                                 </div>
                                 <div class="groupRadio">
-                                    <p v-if="this.$store.getters.trolley[0].type_cart.type_cart === 'Invitado'">Usted es invitado</p>
-                                    <div v-if="this.$store.getters.trolley[0].type_cart.type_cart === 'Invitado'" class="form-grou">
-                                        <label :for="'comer_' + prod.data._id">
+                                    <div v-if="prod.data.delivery === true" class="form-grou">
+                                        <input type="radio" :name="'radiosSelect_' + prod.data._id" :id="'delivery_' + prod.data._id">
+                                        <label :for="'delivery_' + prod.data._id">
                                             <div class="a">
-                                                <img src="../assets/dinner.png" alt="">
-                                                <span>Mesa: {{ this.$store.getters.trolley[0].mesa.numero_mesa }}</span>
+                                                <img src="../assets/moto.png" alt="">
+                                                <span>Delivery</span>
+                                            </div>
+                                            <div class="box">
+                                                <i class="fas fa-check"></i>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div v-if="prod.data.wear === true" class="form-grou">
+                                        <input type="radio" :name="'radiosSelect_' + prod.data._id" :id="'llevar_' + prod.data._id">
+                                        <label :for="'llevar_' + prod.data._id">
+                                            <div class="a">
+                                                <img src="../assets/take.png" alt="">
+                                                <span>Para llevar</span>
+                                            </div>
+                                            <div class="box">
+                                                <i class="fas fa-check"></i>
                                             </div>
                                         </label>
                                     </div>
                                 </div>
-                                <b-button type="button" @click="addProductoCarrito(prod.data), $bvModal.hide(prod.title + prod.id)" class="btnComprar">
+                                <b-button type="button" @click="addCarrito(prod.data), $bvModal.hide(prod.title + prod.id)" class="btnComprar">
                                     Comprar
                                 </b-button>
+                            </div>
+                            <div v-if="isTypeMesa === true">
+                                <div v-for="(t, i) in is_trolley" :key="i">
+                                    <div v-if="t.id_comercio != prod.data.id_restaurant">
+                                        <p class="sms err">Disculpe pero usted posee un carrito con una mesa activa.</p>
+                                        <b-button disabled type="button" class="btnComprar">
+                                            Comprar
+                                        </b-button>
+                                    </div>
+                                    <div v-if="t.id_comercio === prod.data.id_restaurant">
+                                        <div class="quality">
+                                            <h5>Cantidad</h5>
+                                            <b-button v-on:click="prodMenos()">-</b-button>
+                                            <input type="text" class="form-control" v-model="cantProd">
+                                            <b-button v-on:click="prodMas()">+</b-button>
+                                        </div>
+                                        <div class="groupRadio">
+                                            <p v-if="is_trolley[0].type_cart.type_cart === 'Invitado'">Usted es invitado</p>
+                                            <div v-if="is_trolley[0].type_cart.type_cart === 'Invitado'" class="form-grou">
+                                                <label :for="'comer_' + prod.data._id">
+                                                    <div class="a">
+                                                        <img src="../assets/dinner.png" alt="">
+                                                        <span>Mesa: {{ is_trolley[0].mesa.numero_mesa }}</span>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <b-button type="button" @click="addProductoCarrito(prod.data), $bvModal.hide(prod.title + prod.id)" class="btnComprar">
+                                            Comprar
+                                        </b-button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -197,7 +233,7 @@
                             </div>
                         </div>
 
-                        <button class="btn btnConfirmar" @click="addCarrito(prod.data)">
+                        <button class="btn btnConfirmar" @click="addCarrito(prod.data), $bvModal.hide('modal-comer_' + prod.data._id), $bvModal.hide(prod.title + prod.id)">
                             Confirmar
                         </button>
                     </div>
@@ -209,7 +245,7 @@
                 <div class="d-block text-center">
                     <img style="width: 150px; margin-bottom: 1rem;" :src="checkimg" alt="">
                     <h3>¡Éxito!</h3>
-                    <p>El producto fue agregado al carrito.</p>
+                    <p>Se guardo el carrito con éxito.</p>
                 </div>
             </b-modal>
         </b-modal>
@@ -257,6 +293,7 @@
                 time_limit: "",
                 miMesa: {},
                 mysInvitados: [],
+                is_trolley: [],
                 invitado: {
                     id_invitante: this.$store.getters.uid,
                     id_invitado: "",
@@ -271,7 +308,13 @@
                 },
                 is_pago_unico: false,
                 type_mesa: "",
+                emit: "",
+                isTypeMesa: false,
                 pedido: {
+                    type_cart: {
+                        type_cart: "Propio",
+                        value: 1,
+                    },
                     status: 0,
                     id_comercio: "",
                     lat: "",
@@ -309,10 +352,42 @@
                         }
                     }
                 });
-
-                console.log("Lista de usuarios -> ", this.listSearchUser);
             }).catch(err => {
                 console.log(err);
+            });
+
+            this.is_trolley = this.$store.getters.trolley;
+            this.fIsTypeMesa(this.is_trolley);
+
+            EventBus.$on("NewPushOfTrolley", obj => {
+                if (obj.ok === "OK") {
+                    this.is_trolley = [];
+                    this.is_trolley = this.$store.getters.trolley;
+                    this.fIsTypeMesa(this.is_trolley);
+                }
+            });
+
+            EventBus.$on("TrolleyPagado", obj => {
+                if (obj.ok === "OK") {
+                    this.is_trolley = [];
+                    this.is_trolley = this.$store.getters.trolley;
+                    this.fIsTypeMesa(this.is_trolley);
+                }
+            });
+
+            EventBus.$on("NewPushOfTrolleyChangeComer", obj => {
+                if (obj.ok === "OK") {
+                    this.is_trolley = [];
+                    this.is_trolley = this.$store.getters.trolley;
+                    this.fIsTypeMesa(this.is_trolley);
+                }
+            });
+
+            EventBus.$on("EmitTrolleyUpdate", obj => {
+                this.emit = obj;
+                this.is_trolley = [];
+                this.is_trolley = this.$store.getters.trolley;
+                this.fIsTypeMesa(this.is_trolley);
             });
 
             EventBus.$on("NewPushOfTrolleyChangeComer", obj => {
@@ -322,6 +397,19 @@
             });
         },
         methods: {
+            fIsTypeMesa(obj) {
+                if (obj.length) {
+                    for (var i = 0; i < obj.length; i++) {
+                        if (obj[i].is_type_mesa === true) {
+                            this.isTypeMesa = true;
+                        } else {
+                            this.isTypeMesa = false;
+                        }
+                    }
+                } else {
+                    this.isTypeMesa = false;
+                }
+            },
             horariosMesa(e) {
                 if (e.target.value != "") {
                     var _obj = JSON.parse(e.target.value);
@@ -472,7 +560,7 @@
                         }
                     });
 
-                    console.log("Mis mesas -> ", this.getMesa);
+                    // console.log("Mis mesas -> ", this.getMesa);
                 }).catch(err => {
                     console.log(err);
                 });
@@ -550,6 +638,27 @@
                             console.log(res);
                             EventBus.$emit("NewPushOfTrolley", {ok: "OK"});
                             EventBus.$emit("NewPushOfTrolleyChangeComer", {ok: "OK"});
+
+                            this.pedido = {
+                                type_cart: {
+                                    type_cart: "Propio",
+                                    value: 1,
+                                },
+                                status: 0,
+                                id_comercio: "",
+                                lat: "",
+                                lng: "",
+                                id_cliente: "",
+                                shippingForms: "",
+                                created_at: "",
+                                total: "",
+                                papel_of_regalo: false,
+                                is_type_mesa: false,
+                                address: "",
+                                costos_extras: {},
+                                products: []
+                            }
+
                             if (_btnAlert) {
                                 _btnAlert.click();
                             }
@@ -682,6 +791,27 @@
                                     console.log(res);
                                     EventBus.$emit("NewPushOfTrolley", {ok: "OK"});
                                     EventBus.$emit("NewPushOfTrolleyChangeComer", {ok: "OK"});
+
+                                    this.pedido = {
+                                        type_cart: {
+                                            type_cart: "Propio",
+                                            value: 1,
+                                        },
+                                        status: 0,
+                                        id_comercio: "",
+                                        lat: "",
+                                        lng: "",
+                                        id_cliente: "",
+                                        shippingForms: "",
+                                        created_at: "",
+                                        total: "",
+                                        papel_of_regalo: false,
+                                        is_type_mesa: false,
+                                        address: "",
+                                        costos_extras: {},
+                                        products: []
+                                    }
+
                                     if (_btnAlert) {
                                         _btnAlert.click();
                                     }
@@ -702,6 +832,27 @@
                                 this.$store.state.trolley.push(this.pedido);
                                 EventBus.$emit("NewPushOfTrolley", {ok: "OK"});
                                 EventBus.$emit("NewPushOfTrolleyChangeComer", {ok: "OK"});
+
+                                this.pedido = {
+                                    type_cart: {
+                                        type_cart: "Propio",
+                                        value: 1,
+                                    },
+                                    status: 0,
+                                    id_comercio: "",
+                                    lat: "",
+                                    lng: "",
+                                    id_cliente: "",
+                                    shippingForms: "",
+                                    created_at: "",
+                                    total: "",
+                                    papel_of_regalo: false,
+                                    is_type_mesa: false,
+                                    address: "",
+                                    costos_extras: {},
+                                    products: []
+                                }
+
                                 if (_btnAlert) {
                                     _btnAlert.click();
                                 }
@@ -711,7 +862,8 @@
                             this.cantProd = 1;
                         }
 
-                        console.log("Pedido -> ", this.$store.getters.trolley);
+                        console.log("trolley enviado ->", this.pedido);
+                        console.log("trolley del get -> ", this.$store.getters.trolley);
                     } else {
                         console.log("Disculpe debes seleccionar un {{ shippingForms }}");
                     }

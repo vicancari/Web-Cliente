@@ -61,6 +61,7 @@
     import api from "../api.js";
     // import funciones from "../funciones.js";
     import { EventBus } from "../main.js";
+    import moment from "moment";
 
     export default {
         name: 'send',
@@ -102,6 +103,8 @@
                     phone: "",
                     id_comercio: "",
                     id_empresa: "",
+                    date: "",
+                    time: "",
                 }
             }
         },
@@ -451,6 +454,8 @@
                     this.transaction.uid = this.$store.getters.user.key;
                     this.transaction.phone = this.$store.getters.user.phone;
                     this.transaction.id_comercio = _idRes;
+                    this.transaction.date = moment(new Date()).format("YYYY-MM-DD");
+                    this.transaction.time = moment(new Date()).format("HH:mm");
 
                     api.get(`restaurante/${_idRes}`).then(res => {
                         var _balanceResActual = 0;

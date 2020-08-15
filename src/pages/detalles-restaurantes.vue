@@ -173,7 +173,7 @@ import { Carousel, Slide } from 'vue-carousel';
 // API + Firebase + funciones
 import api from '../api.js';
 import axios from "axios";
-// import moment from "moment";
+import moment from "moment";
 import { EventBus } from "../main.js";
 
 import ModalDetallesProductos from "../modals/modal-detalles-productos.vue";
@@ -361,7 +361,7 @@ export default {
             }
         },
         addMyFavory() {
-            api.post("favory/", {id_user: this.$store.getters.uid, id_comercio: this.id_restaurante}).then(res => {
+            api.post("favory/", {id_user: this.$store.getters.uid, id_comercio: this.id_restaurante, date: moment(new Date()).format("YYYY-MM-DD"), time: moment(new Date()).format("HH:mm")}).then(res => {
                 console.log("Is favory ", res);
                 EventBus.$emit("addFavory", {ok: 'OK'});
                 this.id_favory = res.data._id;

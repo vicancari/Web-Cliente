@@ -110,6 +110,8 @@
     import api from "../api.js";
     import * as firebase from "firebase";
 
+    import moment from "moment";
+
     export default {
         name: 'recargar',
         components: {},
@@ -151,6 +153,8 @@
                     name: "",
                     uid: "",
                     phone: "",
+                    date: "",
+                    time: "",
                 }
             }
         },
@@ -198,6 +202,9 @@
                         this.tranRecarga.name = this.$store.getters.user.name + " " + this.$store.getters.user.lastname;
                         this.tranRecarga.uid = this.$store.getters.user.key;
                         this.tranRecarga.phone = this.$store.getters.user.phone;
+                        this.tranRecarga.date = moment(new Date()).format("YYYY-MM-DD");
+                        this.tranRecarga.time = moment(new Date()).format("HH:mm");
+
                         console.log("Update saldo -> ", res);
                         console.log("trans -> ", this.tranRecarga);
 

@@ -1,21 +1,21 @@
 <template>
     <div>
-        <b-modal v-bind="GetTrolley" centered :modal-class="myclass" id="modal-send-2" ref="modal-send-2"  hide-footer hide-header>  
-            <div class="boxCalculate2">
-                <p class="title-pago-trolley">Monto a pagar</p>
-                <div class="priceText2">
-                    <span>€</span>
-                    <p id="saldoSend" class="form-control">{{ price.total | money }}</p>
-                    <button class="btn-next" type="button"><img class="img-fluid" :src="check" alt="" @click="Pay"></button>
-                </div>
-            </div>
-        </b-modal>
-        
-        <b-modal centered :modal-class="payment" id="modal-payment-2" ref="modal-payment-2"  hide-footer hide-header>  
+        <b-modal v-bind="GetTrolley" centered :modal-class="payment" id="modal-payment-2" ref="modal-payment-2"  hide-footer hide-header>  
             <div class="boxPago2">
                 <div class="x" v-for="(t, i) in this.GetTrolley.data" :key="i">
                     <h5 class="title">Selecciona un tipo de pago</h5>
-                    <div class="box checkedRadio" :id="'selectCuenta_' + t.id_comercio"></div>
+                    <div class="box checkedRadio" :id="'selectCuenta_' + t.id_comercio">
+                        <div v-for="(c, y) in t.cuentas" :key="y" class="checkedRadio__group">
+                            <input v-if="c.name === 'propio'" type="radio" :data-idcomercio="`${t.id_comercio}`" :data-radio="`${c.name}_${t.id_comercio}`" :id="`radio_${c.name}_${t.id_comercio}`" :name="`tipoPago_${t.id_comercio}`" checked>
+                            <label v-if="c.name === 'propio'" :for="`radio_${c.name}_${t.id_comercio}`">{{ c.name }}</label>
+
+                            <input v-if="c.name != 'propio' && c.name != 'mix'" type="radio" :data-idcomercio="`${t.id_comercio}`" :data-radio="`${c.id_plan}_${t.id_comercio}`" :id="`radio_${c.id_plan}_${t.id_comercio}`" :name="`tipoPago_${t.id_comercio}`">
+                            <label v-if="c.name != 'propio' && c.name != 'mix'" :for="`radio_${c.id_plan}_${t.id_comercio}`">{{ c.name }}</label>
+
+                            <input v-if="c.name === 'mix'" type="radio" :data-idcomercio="`${t.id_comercio}`" :data-radio="`${c.name}_${t.id_comercio}`" :id="`radio_${c.name}_${t.id_comercio}`" :name="`tipoPago_${t.id_comercio}`">
+                            <label v-if="c.name === 'mix'" :for="`radio_${c.name}_${t.id_comercio}`">{{ c.name }}</label>
+                        </div>
+                    </div>
                     <div class="boxPrice">
                         <p>Sub Total: {{ t.total | money }}€</p>
                         <p v-for="pr in price.iva" :key="pr.id_c"><span v-if="pr.id_c === t.id_comercio">IVA: {{ pr.porcentaje }}%: <span>{{ pr.monto | money }}€</span></span></p>
@@ -80,7 +80,6 @@
         },
         async created() {
             this.price = await this.GetTrolley.price;
-            console.log("PAGO TROLLEY", this.price);
         },
         methods: {
             getComercio(id_comercio) {
@@ -110,166 +109,6 @@
                 }
 
                 return _name;
-            },
-            setAccounts() {
-                this.GetTrolley.data.forEach(item => {
-                    var _box = document.querySelector("#selectCuenta_" + item.id_comercio);
-                    var _myAccounts = this.$store.getters.user.accounts;
-                    var categories = Object.values(this.getCategoria(item.id_comercio));
-                    var _cate = categories.length ? categories[0].name.replace("#", "") : "";
-                    var _businessname = this.getComercio(item.id_comercio);
-                    var _miSaldoSend = "";
-                    
-                    this.price.iva.forEach(p => {
-                        _miSaldoSend = parseFloat(item.total) + parseFloat(p.monto);
-                    });
-
-                    console.log(_miSaldoSend);
-                    this.miSaldoTotal = parseFloat(_miSaldoSend) + parseFloat(this.miSaldoTotal);
-
-                    this.pagoMix = [];
-    
-                    var _myAccountsKeys = Object.keys(_myAccounts);
-                    _myAccounts = Object.values(_myAccounts);
-    
-                    var otroHTML = {
-                        propia: `
-                            <div class="checkedRadio__group">
-                                <input type="radio" data-idcomercio="${item.id_comercio}" data-radio="propio_${item.id_comercio}" id="radio_propio_${item.id_comercio}" name="tipoPago_${item.id_comercio}" checked>
-                                <label for="radio_propio_${item.id_comercio}">Propio</label>
-                            </div>
-                        `,
-                        mix: `
-                            <div class="checkedRadio__group">
-                                <input type="radio" data-idcomercio="${item.id_comercio}" data-radio="mix_${item.id_comercio}" id="radio_mix_${item.id_comercio}" name="tipoPago_${item.id_comercio}">
-                                <label for="radio_mix_${item.id_comercio}">Mix</label>
-                            </div>
-                        `
-                    }
-    
-                    var _mix = false;
-                    var _mixChecked = false;
-    
-                    if (parseFloat(_miSaldoSend) <= parseFloat(_myAccounts[_myAccounts.length - 1].value)) {
-                        _box.innerHTML += otroHTML.propia;
-                    }
-                    
-                    for (var i = 0; i < _myAccounts.length; i++) {
-                        if (_myAccountsKeys[i].toLowerCase() != "propio") {
-                            if ((_myAccounts[i].categorias || _myAccounts[i].establecimientos) &&  _myAccounts[i].value > 0) {
-                                if (parseFloat(_miSaldoSend) <= parseFloat(_myAccounts[i].value)) {
-                                    if (parseFloat(_miSaldoSend) <= parseFloat(_myAccounts[i].value)) {
-                                        if (_myAccounts[i].categorias) {
-                                            for (var y = 0; y < _myAccounts[i].categorias.length; y++) {
-                                                if (_myAccounts[i].categorias[y].nombre.toLowerCase() === _cate.toLowerCase()) {
-                                                    var html3 = `
-                                                        <div class="checkedRadio__group">
-                                                            <input type="radio" data-idcomercio="${item.id_comercio}" data-radio="${_myAccounts[i].id_plan}_${item.id_comercio}" id="radio_${_myAccounts[i].id_plan}_${item.id_comercio}" name="tipoPago_${item.id_comercio}">
-                                                            <label for="radio_${_myAccounts[i].id_plan}_${item.id_comercio}">${_myAccountsKeys[i]}</label>
-                                                        </div>
-                                                    `;
-                        
-                                                    _box.innerHTML += html3;
-                                                }
-                                            }
-                                        }
-    
-                                        if (_myAccounts[i].establecimientos) {
-                                            for (var b = 0; b < _myAccounts[i].establecimientos.length; b++) {
-                                                if (_myAccounts[i].establecimientos[b].business_name.toLowerCase() === _businessname.toLowerCase()) {
-                                                    var html2 = `
-                                                        <div class="checkedRadio__group">
-                                                            <input type="radio" data-idcomercio="${item.id_comercio}" data-radio="${_myAccounts[i].id_plan}_${item.id_comercio}" id="radio_${_myAccounts[i].id_plan}_${item.id_comercio}" name="tipoPago_${item.id_comercio}">
-                                                            <label for="radio_${_myAccounts[i].id_plan}_${item.id_comercio}">${_myAccountsKeys[i]}</label>
-                                                        </div>
-                                                    `;
-                        
-                                                    _box.innerHTML += html2;
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        if (parseFloat(_myAccounts[i].value) > parseFloat(_miSaldoSend)) {
-                                            if (_myAccounts[i].categorias) {
-                                                for (var z = 0; z < _myAccounts[i].categorias.length; z++) {
-                                                    if (_myAccounts[i].categorias[z].nombre.toLowerCase() === _cate.toLowerCase()) {
-                                                        this.pagoMix.push({
-                                                            name: _myAccountsKeys[i]
-                                                        });
-                                                    }
-                                                }
-                                            }
-    
-                                            if (_myAccounts[i].establecimientos) {
-                                                for (var z23 = 0; z23 < _myAccounts[i].establecimientos.length; z23++) {
-                                                    if (_myAccounts[i].establecimientos[z23].business_name.toLowerCase() === _businessname.toLowerCase()) {
-                                                        this.pagoMix.push({
-                                                            name: _myAccountsKeys[i]
-                                                        });
-                                                    }
-                                                }
-                                            }
-    
-                                            console.log(this.pagoMix);
-                                            _mix = true;
-                                        }
-                                    }
-                                } else {
-                                    if (parseFloat(_myAccounts[i].value) < parseFloat(_miSaldoSend)) {
-                                        if (_myAccounts[i].categorias) {
-                                            for (var x = 0; x < _myAccounts[i].categorias.length; x++) {
-                                                if (_myAccounts[i].categorias[x].nombre.toLowerCase() === _cate.toLowerCase()) {
-                                                    this.pagoMix.push({
-                                                        name: _myAccountsKeys[i]
-                                                    });
-                                                }
-                                            }
-                                        }
-    
-                                        if (_myAccounts[i].establecimientos) {
-                                            for (var z2 = 0; z2 < _myAccounts[i].establecimientos.length; z2++) {
-                                                if (_myAccounts[i].establecimientos[z2].business_name.toLowerCase() === _businessname.toLowerCase()) {
-                                                    this.pagoMix.push({
-                                                        name: _myAccountsKeys[i]
-                                                    });
-                                                }
-                                            }
-                                        }
-    
-                                        _mix = true;
-                                        _mixChecked = true;
-                                    }
-                                }
-                            }
-                            
-                            if (!_myAccounts[i].establecimientos) {
-                                for (var y9 = 0; y9 < _myAccounts[i].categorias.length; y9++) {
-                                    if (_myAccounts[i].categorias[y9].nombre.toLowerCase() === _cate.toLowerCase()) {
-                                        if (_myAccounts[i].value === 0) {
-                                            _mix = false;
-                                        }
-                                    }
-                                }
-                            } else {
-                                for (var i9 = 0; i9 < _myAccounts[i].establecimientos.length; i9++) {
-                                    if (_myAccounts[i].establecimientos[i9].business_name.toLowerCase() === _businessname.toLowerCase()) {
-                                        if (_myAccounts[i].value === 0) {
-                                            _mix = false;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-    
-                    if (_mix === true) {
-                        _box.innerHTML += otroHTML.mix;
-    
-                        if (_mixChecked === true) {
-                            document.querySelector("#radio_mix_" + item.id_comercio).checked = true;
-                        }
-                    }
-                });
             },
             enviarSaldo() {
                 this.$store.commit("loading");
@@ -336,14 +175,6 @@
                     console.log(err);
                     this.stopLoader();
                 });
-            },
-            Pay() {
-                this.$refs['modal-send-2'].hide();
-                this.$refs['modal-payment-2'].show();
-
-                setTimeout(() => {
-                    this.setAccounts();
-                }, 950);
             },
             stopLoader() { this.$store.commit("notLoading"); },
         }
