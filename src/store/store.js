@@ -22,6 +22,7 @@ export default function(/* { ssrContext } */) {
             listCategorias: [],
             filterCategory: {},
             trolley: [],
+            listSearchUser: [],
             coords: {
                 lat: "",
                 lng: "",
@@ -48,6 +49,7 @@ export default function(/* { ssrContext } */) {
             listIncentivo: state => state.listIncentivo,
             balancePropio: state => state.balancePropio,
             listPropio: state => state.listPropio,
+            listSearchUser: state => state.listSearchUser,
             trolley: state => state.trolley,
             listRestaurantes: state => state.listRestaurantes,
             listCategorias: state => state.listCategorias,
@@ -85,6 +87,7 @@ export default function(/* { ssrContext } */) {
                 state.listIncentivo = [];
                 state.balancePropio = 0;
                 state.listPropio = [];
+                state.listSearchUser = [];
                 state.listCategorias = [];
                 state.coords = {lat: "", lng: ""};
                 state.listRestaurantes = {

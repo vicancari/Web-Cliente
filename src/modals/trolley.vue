@@ -80,7 +80,7 @@
                                 <div class="boxListInvite__searchinvitado2">
                                     <input id="searchinvitado2" type="text" v-on:keyup="searchinvitado2" v-on:focus="opensearchinvitado2" class="from-control" placeholder="Buscar invitado">
                                     <div @click="selectUserComoInvitado2" :data-idpro="cart.id_comercio" :data-index="i" class="searchinvitado__result2">
-                                        <p v-for="res in listSearchUser" :key="'result_'+res.id" :id="'result_'+res.id" :data-obj="JSON.stringify(res)" class="result"><img :src="res.photo" :onerror="'this.src = ' + '\'' + imgDefaultUser + '\''"> {{ res.name }}</p>
+                                        <p v-for="res in this.$store.getters.listSearchUser" :key="'result_'+res.id" :id="'result_'+res.id" :data-obj="JSON.stringify(res)" class="result"><img :src="res.photo" :onerror="'this.src = ' + '\'' + imgDefaultUser + '\''"> {{ res.name }}</p>
                                     </div>
                                 </div>
                                 <p :id="'sms_' + cart.id_comercio" class="sms">Lo sentimos pero el usuario que quiere invitar tiene carritos por pagar.</p>
@@ -168,7 +168,6 @@
 
     // -> API + EventBus
     import { EventBus } from '../main.js';
-    import api from '../api.js';
     import funciones from "../funciones.js";
     import axios from "axios";
 
@@ -196,7 +195,6 @@
                     subTotal: 0.00,
                     total: 0.00
                 },
-                listSearchUser: [],
                 isInvitado: false,
             }
         },
@@ -226,27 +224,6 @@
                     EventBus.$on("EmitTrolleyUpdate", obj => {
                         this.emit = obj;
                         this.getTrolley();
-                    });
-
-                    await api.get("cliente/list/").then(res => {
-                        var _values = Object.values(res);
-                        var _uid = this.$store.getters.uid;
-
-                        _values.forEach(item => {
-                            if (item.key != undefined) {
-                                if (item.key != _uid) {
-                                    this.listSearchUser.push({
-                                        id: item.key,
-                                        name: `${item.name} ${item.lastname}`,
-                                        phone: item.phone,
-                                        email: item.email,
-                                        photo: item.avatar ? item.avatar : ""
-                                    });
-                                }
-                            }
-                        });
-                    }).catch(err => {
-                        console.log(err);
                     });
                 }
             }

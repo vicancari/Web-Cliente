@@ -206,8 +206,8 @@
     import axios from "axios";
     import * as firebase from "firebase";
     import funciones from "../funciones.js";
-    import socket from "../socket.js";
     import { EventBus } from "../main.js";
+    import socket from "../socket.js";
 
     import ModalDetallesProductos from "../modals/modal-detalles-productos.vue";
 
@@ -247,7 +247,7 @@
                 listBeneficio: [],
                 listIncentivo: [],
                 googleMapApi: "",
-                distancia: "20000.000",
+                distancia: "20.000",
                 rts: {
                     page: 0
                 },
@@ -275,9 +275,10 @@
 
             if (this.$store.getters.isLoggedIn === true) {
                 await this.getUser();
-                await socket.Iniciar();
                 await this.getStreetAddressFrom();
                 await this.getRestaurantes(this.ubiLat, this.ubiLng, this.distancia, this.rts.page);
+                await this.getUserList();
+                await socket.Iniciar(this.$store.getters.user);
             }
         },
         methods: {
@@ -286,6 +287,37 @@
                 this.searching = _input;
                 var _conv = _input.split(" ").join("-");
                 this.$router.push(`/home/searching=${_conv}`);
+            },
+            getUserList() {
+                axios.get("https://myraus.com:9999/api/cliente/list/").then(res => {
+                    var _values = Object.values(res.data);
+                    var _uid = this.$store.getters.uid;
+
+                    this.$store.state.listSearchUser = [];
+                    _values.forEach(item => {
+                        if (item.key != undefined) {
+                            if (item.key != _uid) {
+                                this.$store.state.listSearchUser.push({
+                                    id: item.key,
+                                    name: `${item.name} ${item.lastname}`,
+                                    phone: item.phone,
+                                    email: item.email,
+                                    photo: item.avatar ? item.avatar : ""
+                                });
+                            }
+                        }
+                    });
+
+                    this.$store.getters.listSearchUser.sort(function(a, b) {
+                        if (a.name < b.name) {
+                            return -1;
+                        }
+                    });
+
+                    console.log("LISTA DE USUARIOS -> ", this.$store.getters.listSearchUser);
+                }).catch(err => {
+                    console.log(err);
+                });
             },
             selectRestaurante3(e) {
                 var _el = e.target;

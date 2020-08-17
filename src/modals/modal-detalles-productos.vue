@@ -209,7 +209,7 @@
                                 <div class="boxListInvite__searchinvitado">
                                     <input id="searchinvitado" type="text" v-on:keyup="searchinvitado" v-on:focus="opensearchinvitado" class="from-control" placeholder="Buscar invitado">
                                     <div @click="selectUserComoInvitado" :data-idpro="prod.data._id" class="searchinvitado__result">
-                                        <p v-for="res in this.listSearchUser" :key="'result_'+res.id" :id="'result_'+res.id" :data-obj="JSON.stringify(res)" class="result"><img :src="res.photo" :onerror="'this.src = ' + '\'' + imgDefaultUser + '\''"> {{ res.name }}</p>
+                                        <p v-for="res in this.$store.getters.listSearchUser" :key="'result_'+res.id" :id="'result_'+res.id" :data-obj="JSON.stringify(res)" class="result"><img :src="res.photo" :onerror="'this.src = ' + '\'' + imgDefaultUser + '\''"> {{ res.name }}</p>
                                     </div>
                                 </div>
                                 <p :id="'sms_' + prod.data._id" class="sms">Lo sentimos pero el usuario que quiere invitar tiene carritos por pagar.</p>
@@ -265,7 +265,7 @@
 
     // -> API + Firebase + funciones
     import axios from "axios";
-    import api from "../api.js";
+    // import api from "../api.js";
     import { EventBus } from "../main.js";
     import moment from "moment";
 
@@ -334,27 +334,6 @@
         async created() {
             this.prod = this.GetProd;
             await this.getMesas(this.prod.data.id_restaurant);
-
-            await api.get("cliente/list/").then(res => {
-                var _values = Object.values(res);
-                var _uid = this.$store.getters.uid;
-
-                _values.forEach(item => {
-                    if (item.key != undefined) {
-                        if (item.key != _uid) {
-                            this.listSearchUser.push({
-                                id: item.key,
-                                name: `${item.name} ${item.lastname}`,
-                                phone: item.phone,
-                                email: item.email,
-                                photo: item.avatar ? item.avatar : ""
-                            });
-                        }
-                    }
-                });
-            }).catch(err => {
-                console.log(err);
-            });
 
             this.is_trolley = this.$store.getters.trolley;
             this.fIsTypeMesa(this.is_trolley);

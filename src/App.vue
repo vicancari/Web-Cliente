@@ -8,6 +8,7 @@
 <script>
   import axios from "axios";
   import preloader from "./components/preloader.vue";
+
   export default {
     name: 'App',
     data() {
@@ -17,7 +18,7 @@
       }
     },
     components: { preloader },
-    created() {
+    async created() {
       axios.interceptors.response.use(undefined, function(err) {
         return new Promise(function(resolve, reject) {
           if (err.status === 401 && err.config && !err.config.__isRetryRequest) {
