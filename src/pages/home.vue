@@ -207,7 +207,6 @@
     import * as firebase from "firebase";
     import funciones from "../funciones.js";
     import { EventBus } from "../main.js";
-    import socket from "../socket.js";
 
     import ModalDetallesProductos from "../modals/modal-detalles-productos.vue";
 
@@ -247,7 +246,7 @@
                 listBeneficio: [],
                 listIncentivo: [],
                 googleMapApi: "",
-                distancia: "20.000",
+                distancia: "20000.000",
                 rts: {
                     page: 0
                 },
@@ -274,11 +273,10 @@
             this.$store.state.coords.lng = this.ubiLng;
 
             if (this.$store.getters.isLoggedIn === true) {
-                await this.getUser();
+                this.getUser();
                 await this.getStreetAddressFrom();
                 await this.getRestaurantes(this.ubiLat, this.ubiLng, this.distancia, this.rts.page);
                 await this.getUserList();
-                await socket.Iniciar(this.$store.getters.user);
             }
         },
         methods: {
@@ -313,8 +311,6 @@
                             return -1;
                         }
                     });
-
-                    console.log("LISTA DE USUARIOS -> ", this.$store.getters.listSearchUser);
                 }).catch(err => {
                     console.log(err);
                 });
@@ -755,7 +751,7 @@
         mounted() {
             if (this.$store.getters.isLoggedIn === true) {
                 this.$store.commit("loading");
-                console.log("Store -> ", this.$store.getters);
+                // console.log("Store -> ", this.$store.getters);
             }
         }
     }

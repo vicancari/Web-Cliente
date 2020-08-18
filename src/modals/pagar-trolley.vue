@@ -17,8 +17,7 @@
                         </div>
                     </div>
                     <div class="boxPrice">
-                        <p>Sub Total: {{ t.total | money }}€</p>
-                        <p v-for="pr in price.iva" :key="pr.id_c"><span v-if="pr.id_c === t.id_comercio">IVA: {{ pr.porcentaje }}%: <span>{{ pr.monto | money }}€</span></span></p>
+                        <p>Total: {{ t.total_a_pagar | money }}€</p>
                         <h5 class="name">{{ getComercio(t.id_comercio) }}</h5>
                     </div>
                 </div>
@@ -67,19 +66,10 @@
                 saldoSend: 0,
                 miSaldoTotal: [],
                 pxT: 52,
-                price: {
-                    iva: [],
-                    subTotal: 0.00,
-                    total: 0.00
-                },
                 listRestSearch: {
                     filters: []
                 },
-                listSubTotal: [],
             }
-        },
-        async created() {
-            this.price = await this.GetTrolley.price;
         },
         methods: {
             getComercio(id_comercio) {

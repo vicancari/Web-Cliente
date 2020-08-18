@@ -7,9 +7,10 @@
             <form id="form-register">
                 <div class="form1" v-if="section == 1">
                     <div class="form-group">
-                        <input type="text" id="email" autocomplete="off" class="form-control" v-model="dataForm.email" required>
+                        <input type="text" id="email" v-on:keyup="validaEmail" autocomplete="off" class="form-control" v-model="dataForm.email" required>
                         <label class="form-control-placeholder" for="email">Email</label>
                         <p data-error="email" class="msgError d-none">*msgError</p>
+                        <p data-error="emailExiste" class="msgError d-none">El correo que ingreso ya esta registrado.</p>
                     </div>
                     <div class="form-group">
                         <input type="text" id="name" autocomplete="off" class="form-control" v-model="dataForm.name" required>
@@ -29,7 +30,7 @@
                     <div class="form-group">
                         <div class="boxBtnFooter">
                             <button type="button" class="btn _back" @click="irAllogin">Cancelar</button>
-                            <button type="button" class="btn _next" @click="nextForm">Siguiente</button>
+                            <button type="button" id="nextForm1" class="btn _next" @click="nextForm">Siguiente</button>
                         </div>
                     </div>
                 </div>
@@ -77,11 +78,12 @@
                                 </div>
                             </div>
                             <div class="boxTelephone__right">
-                                <input type="number" id="telephone" autocomplete="off" onkeypress="return funciones.campoNumber(event);" class="form-control" v-model="dataForm.phone" required>
+                                <input type="number" id="telephone" autocomplete="off" onkeypress="return funciones.campoNumber(event);" v-on:keyup="validaPhoneNumber" class="form-control" v-model="dataForm.phone" required>
                                 <label class="form-control-placeholder" for="telephone">Teléfono</label>
                             </div>
                         </div>
                         <p data-error="telephone" class="msgError d-none">*msgError</p>
+                        <p data-error="phoneExiste" class="msgError d-none">El numero de teléfono que ingreso ya existe.</p>
                     </div>
                     <div class="form-group">
                         <input type="password" id="password" maxlength="15" onkeypress="if(this.value.length==this.getAttribute('maxlength')) return false;" autocomplete="off" onkeyup="return funciones.validar_clave(this);" v-on:keyup="valiPass" class="form-control" v-model="dataForm.password" required >
@@ -241,6 +243,47 @@
             }
         },
         methods: {
+            validaEmail(e) {
+                var btn = document.querySelector("#nextForm1");
+                if (funciones.validarEmail(e.target.value.toLowerCase()) === true) {
+                    api.get(`auth/emailExist/${e.target.value}`).then(res => {
+                        if (res.existe === true) {
+                            btn.disabled = true;
+                            document.querySelector("[data-error='emailExiste']").classList.remove("d-none");
+                            setTimeout(() => {
+                                document.querySelector("[data-error='emailExiste']").classList.add("d-none");
+                            }, 5000);
+
+                            return false;
+                        }
+                    }).catch(err => {
+                        if (err.existe === false) {
+                            btn.disabled = false;
+                        }
+                    });
+                } else {
+                    btn.disabled = false;
+                }
+            },
+            validaPhoneNumber(e) {
+                var btn = document.querySelector("#btnRegistar");
+                var cA = document.querySelector("#cArea");
+                api.get(`auth/phoneExist/${cA.innerText + e.target.value}`).then(res => {
+                    if (res.existe === true) {
+                        btn.disabled = true;
+                        document.querySelector("[data-error='phoneExiste']").classList.remove("d-none");
+                        setTimeout(() => {
+                            document.querySelector("[data-error='phoneExiste']").classList.add("d-none");
+                        }, 5000);
+
+                        return false;
+                    } 
+                }).catch(err => {
+                    if (err.existe === false) {
+                        btn.disabled = false;
+                    }
+                });
+            },
             valiPass(e) {
                 if (e.target.getAttribute("id") === "confPassword") {
                     if (e.target.value.length >= 8) {

@@ -27,7 +27,7 @@
                 firebase.auth().signOut().then(() => {
                     api.post('auth/isloggin/', {id: this.$store.getters.uid, is_loggin: false}).then(res => {
                         if (res.success === true) {
-                            console.log("logout -> Ok...");
+                            // console.log("logout -> Ok...");
                         }
                     }).catch(err => {
                         console.log("error: ", err);

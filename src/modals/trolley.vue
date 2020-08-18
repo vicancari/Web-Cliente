@@ -44,7 +44,7 @@
                                 <p class="text">Delivery</p>
                             </div>
                             <div class="item-right">
-                                <p v-if="cart.shippingForms === 'delivery'" class="price">{{ getPriceDelivery(cart) | money }}€</p>
+                                <p v-if="cart.shippingForms === 'delivery'" class="price">{{ cart.total_delivery | money }}€</p>
                                 <div class="boxCheckbox">
                                     <input @change="changeShipping(cart.id_comercio, cart, i)" v-if="cart.shippingForms === 'delivery'" type="radio" :name="'radiosSelect_' + cart.id_comercio" :id="'delivery_' + cart.id_comercio" checked>
                                     <input @change="changeShipping(cart.id_comercio, cart, i)" v-else type="radio" :name="'radiosSelect_' + cart.id_comercio" :id="'delivery_' + cart.id_comercio">
@@ -60,7 +60,7 @@
                                 <p class="text">Para llevar</p>
                             </div>
                             <div class="item-right">
-                                <p v-if="cart.shippingForms === 'wear'" class="price">{{ getPriceWear(cart) }}€</p>
+                                <p v-if="cart.shippingForms === 'wear'" class="price">{{ cart.total_wear }}€</p>
                                 <div class="boxCheckbox">
                                     <input @change="changeShipping(cart.id_comercio, cart, i)" v-if="cart.shippingForms === 'wear'" type="radio" :name="'radiosSelect_' + cart.id_comercio" :id="'wear_' + cart.id_comercio" checked>
                                     <input @change="changeShipping(cart.id_comercio, cart, i)" v-else type="radio" :name="'radiosSelect_' + cart.id_comercio" :id="'wear_' + cart.id_comercio">
@@ -72,17 +72,19 @@
                         </div>
                         <div v-if="cart.is_type_mesa === true" class="config--item __mesas">
                             <p>Numero de mesa: {{ cart.mesa.numero_mesa }}</p>
-                            <p>De {{ cart.mesa.hours_start }} hasta las {{ cart.mesa.hours_end }}</p>
+                            <p>Tiempo restante: {{ cuentaAtras }}</p>
                             <div class="boxListInvite">
                                 <div class="boxListInvite__title">
                                     <p>Lista de invitados</p>
                                 </div>
-                                <div class="boxListInvite__searchinvitado2">
+                                <p v-if="parseInt(cart.mesa.list_invitados.length) + 1 < parseInt(capacidadMesa[i])">Capacidad: {{ cart.mesa.list_invitados.length + 1 }} de {{ capacidadMesa[i] }} </p>
+                                <div v-if="parseInt(cart.mesa.list_invitados.length) + 1 < parseInt(capacidadMesa[i])" class="boxListInvite__searchinvitado2">
                                     <input id="searchinvitado2" type="text" v-on:keyup="searchinvitado2" v-on:focus="opensearchinvitado2" class="from-control" placeholder="Buscar invitado">
                                     <div @click="selectUserComoInvitado2" :data-idpro="cart.id_comercio" :data-index="i" class="searchinvitado__result2">
-                                        <p v-for="res in this.$store.getters.listSearchUser" :key="'result_'+res.id" :id="'result_'+res.id" :data-obj="JSON.stringify(res)" class="result"><img :src="res.photo" :onerror="'this.src = ' + '\'' + imgDefaultUser + '\''"> {{ res.name }}</p>
+                                        <p v-for="res in listSearchUser" :key="'result_'+res.id" :id="'result_'+res.id" :data-obj="JSON.stringify(res)" class="result"><img :src="res.photo" :onerror="'this.src = ' + '\'' + imgDefaultUser + '\''"> {{ res.name }}</p>
                                     </div>
                                 </div>
+                                <p v-else class="sms err" style="text-align: left !important;">Mesa llena, capacidad máxima es de: {{ capacidadMesa[i] }}</p>
                                 <p :id="'sms_' + cart.id_comercio" class="sms">Lo sentimos pero el usuario que quiere invitar tiene carritos por pagar.</p>
                                 <ul class="boxListInvite__nav">
                                     <li v-for="(inv, w) in cart.mesa.list_invitados" :key="w">
@@ -115,9 +117,9 @@
                             <p class="title">Sub total</p>
                             <span class="mount">{{ cart.total | money }}€</span>
                         </div>
-                        <div v-for="(iva, i) in listPrice.iva" :key="i" class="total--item">
-                            <p v-if="iva.id_c === cart.id_comercio" class="title">IVA {{ iva.porcentaje }}%</p>
-                            <span v-if="iva.id_c === cart.id_comercio" class="mount">{{ iva.monto | money }}€</span>
+                        <div v-for="(iva, i) in cart.iva_agrupado" :key="i" class="total--item">
+                            <p class="title">IVA {{ iva.porcentaje }}%</p>
+                            <span class="mount">{{ iva.monto | money }}€</span>
                         </div>
                     </div>
 
@@ -130,14 +132,23 @@
                             Guardar
                         </button>
                     </div>
+                    <div v-if="cart.is_type_mesa === false" class="comercios__phone">
+                        <input type="text" :data-phone="'input_phone_' + cart.id_comercio" :value="cart.phone" disabled class="form-control" onkeypress="return funciones.campoNumber(event);">
+                        <button @click="editPhone(cart.id_comercio);" class="edit" type="button">
+                            <img src="../assets/lapiz.svg">
+                        </button>
+                        <button @click="saveNewPhone(cart.id_comercio, i);" class="save" type="button">
+                            Guardar
+                        </button>
+                    </div>
                 </div>
 
                 <div v-if="isInvitado === false" class="boxTotal">
-                    <p class="title">Total: <span class="mount">{{ this.listPrice.total | money }}€</span></p>
+                    <p class="title">Total: <span class="mount">{{ price(this.$store.getters.trolley) | money }}€</span></p>
                     <button :disabled="this.is_disabled" type="button" class="btnPago" v-b-modal.modal-payment-2>Enviar pago</button>
                 </div>
                 <div v-if="isInvitado === true" class="boxTotal">
-                    <p class="title">Total: <span class="mount">{{ this.listPrice.total | money }}€</span></p>
+                    <p class="title">Total: <span class="mount">{{ price(this.$store.getters.trolley) | money }}€</span></p>
                 </div>
             </div>
             <div v-if="!this.$store.getters.trolley.length" class="align-center">
@@ -151,7 +162,7 @@
         </b-modal>
 
         <pagar-trolley
-            :GetTrolley="{data: this.$store.getters.trolley, price: listPrice}"
+            :GetTrolley="{data: this.$store.getters.trolley}"
         ></pagar-trolley>
     </div>
 </template>
@@ -168,8 +179,8 @@
 
     // -> API + EventBus
     import { EventBus } from '../main.js';
-    import funciones from "../funciones.js";
     import axios from "axios";
+    // import moment from "moment";
 
     export default {
         name: 'historial',
@@ -186,16 +197,10 @@
                 EliminarProducto: EliminarProducto,
                 is_disabled: false,
                 emit: "",
-                shippingPrince: {
-                    delivery: 0,
-                    wear: 0,
-                },
-                listPrice: {
-                    iva: [],
-                    subTotal: 0.00,
-                    total: 0.00
-                },
                 isInvitado: false,
+                capacidadMesa: [],
+                listSearchUser: [],
+                cuentaAtras: "",
             }
         },
         async created() {
@@ -225,10 +230,68 @@
                         this.emit = obj;
                         this.getTrolley();
                     });
+
+                    axios.get("https://myraus.com:9999/api/cliente/list/").then(res => {
+                        var _values = Object.values(res.data);
+                        var _uid = this.$store.getters.uid;
+
+                        this.listSearchUser = [];
+                        _values.forEach(item => {
+                            if (item.key != undefined) {
+                                if (item.key != _uid) {
+                                    this.listSearchUser.push({
+                                        id: item.key,
+                                        name: `${item.name} ${item.lastname}`,
+                                        phone: item.phone,
+                                        email: item.email,
+                                        photo: item.avatar ? item.avatar : ""
+                                    });
+                                }
+                            }
+                        });
+
+                        this.listSearchUser.sort(function(a, b) {
+                            if (a.name < b.name) {
+                                return -1;
+                            }
+                        });
+                    }).catch(err => {
+                        console.log(err);
+                    });
                 }
             }
         },
         methods: {
+            cuentaRegresiva(limite) {
+                var _l = limite;
+                var x = setInterval(function() {
+                    _l = parseInt(limite) - 1;
+                    this.cuentaAtras = `${_l}min`;
+
+                    if (_l === 0) {
+                        this.cuentaAtras = "Mesa finalizada...";
+                        clearInterval(x);
+                    }
+                }, 60000);
+            },
+            getCapacidadMesa(id_comercio, n_mesa) {
+                axios.get(`https://myraus.com:8282/api/mesas/get/${id_comercio}`).then(res => {
+                    if (res.data.data.length) {
+                        for (var i = 0; i < res.data.data.length; i++) {
+                            var _n_mesa = res.data.data[i].mesa;
+                            this.cuentaRegresiva(res.data.data[i].time_limit);
+                            if (parseInt(n_mesa) === parseInt(_n_mesa)) {
+                                this.capacidadMesa.push(res.data.data[i].capacidad);
+                                return false;
+                            }
+                        }
+                    } else {
+                        return false;
+                    }
+                }).catch(err => {
+                    console.log(err);
+                });
+            },
             is_invitado(obj) {
                 if (obj.length) {
                     for (var i = 0; i < obj.length; i++) {
@@ -344,18 +407,14 @@
 
                 if (_checked) {
                     if (_checked.checked === true) {
-                        _trolley.total = parseFloat(_trolley.total) + parseFloat(_trolley.costos_extras.papel_regalo);
                         _trolley.papel_of_regalo = true;
-
                         axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(() => {
                             this.price(this.$store.getters.trolley);
                         }).catch(err => {
                             console.log(err);
                         });
                     } else {
-                        _trolley.total = parseFloat(_trolley.total) - parseFloat(_trolley.costos_extras.papel_regalo);
                         _trolley.papel_of_regalo = false;
-
                         axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(() => {
                             this.price(this.$store.getters.trolley);
                         }).catch(err => {
@@ -392,6 +451,34 @@
                     }
                 }
             },
+            editPhone(id_c) {
+                var _input = document.querySelector(`[data-Phone="input_phone_${id_c}"]`);
+
+                if (_input) {
+                    if (_input.disabled === true) {
+                        _input.disabled = false;
+                        _input.focus();
+                    }
+                }
+            },
+            saveNewPhone(id_c, index) {
+                var _input = document.querySelector(`[data-Phone="input_phone_${id_c}"]`);
+                var _trolley = this.$store.getters.trolley[index];
+                var _nPhone = "";
+
+                if (_input) {
+                    if (_input.disabled === false) {
+                        _nPhone = _input.value;
+                        _trolley.phone = _nPhone;
+
+                        axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(() => {
+                            _input.disabled = true;
+                        }).catch(err => {
+                            console.log(err);
+                        });
+                    }
+                }
+            },
             changeShipping(id_comercio, trolley, index) {
                 var _trolley = this.$store.getters.trolley[index];
                 var _shippingFormsDelivery = document.querySelector(`#delivery_${id_comercio}`);
@@ -403,7 +490,6 @@
 
                         axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(() => {
                             this.price(this.$store.getters.trolley);
-                            this.getPriceDelivery(this.$store.getters.trolley[index]);
                         }).catch(err => {
                             console.log(err);
                         });
@@ -414,7 +500,6 @@
 
                         axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(() => {
                             this.price(this.$store.getters.trolley);
-                            this.getPriceWear(this.$store.getters.trolley[index]);
                         }).catch(err => {
                             console.log(err);
                         });
@@ -505,55 +590,17 @@
                 });
             },
             price(arr) {
-                this.listPrice.iva = [];
-                var _agruparIVA = [];
-                var _subTotalBase = 0;
                 var _total = 0;
 
-                var arrayTemporal = [];
-                arr.forEach(item => {
-                    for (var i = 0; i < item.products.length; i++) {
-                        arrayTemporal = _agruparIVA.filter(resp => resp["iva"] == item.products[i]["iva"] && resp["id_c"] == item.id_comercio);
-                        if (arrayTemporal.length > 0) {
-                            _agruparIVA[_agruparIVA.indexOf(arrayTemporal[0])];
-                        } else {
-                            _agruparIVA.push({
-                                "id_c": item.id_comercio,
-                                "iva" : item.products[i]["iva"]
-                            });
-                        }
+                for (var i = 0; i < arr.length; i++) {
+                    if (arr[i].is_type_mesa === true) {
+                        this.getCapacidadMesa(arr[i].id_comercio, arr[i].mesa.numero_mesa);
                     }
 
-                    _subTotalBase = parseFloat((item.total + _subTotalBase).toFixed(2));
-                });
+                    _total = parseFloat(arr[i].total_a_pagar) + parseFloat(_total)
+                }
 
-                this.listPrice.subTotal = _subTotalBase;
-                _agruparIVA.forEach(item => {
-                    arr.forEach(item2 => {
-                        if (item.id_c === item2.id_comercio) {
-                            this.listPrice.iva.push({
-                                id_c: item.id_c,
-                                porcentaje: item.iva,
-                                monto: parseFloat((item2.total * parseFloat(`0.${item.iva}`)).toFixed(2))
-                            });
-                        }
-                    });
-                });
-
-                this.listPrice.iva.forEach(item => {
-                    _total = parseFloat((_total + item.monto).toFixed(2));
-                });
-
-                _total = parseFloat((_subTotalBase + _total).toFixed(2))
-
-                this.listPrice.iva.sort(function(a, b) {
-                    if (a.porcentaje < b.porcentaje) {
-                        return -1;
-                    }
-                });
-
-                this.listPrice.total = _total;
-                this.listPrice.total = parseFloat(this.listPrice.total) + parseFloat(this.shippingPrince.delivery) + parseFloat(this.shippingPrince.wear);
+                return _total;
             },
             eliminarInvitado(index_c, index_i) {
                 delete this.$store.getters.trolley[index_c].mesa.list_invitados[index_i];
@@ -582,16 +629,6 @@
                         console.log(err);
                     });
                 } else {
-                    var _trolley = this.$store.getters.trolley[index_c];
-                    var _total = 0;
-
-                    for (var i = 0; i < _trolley.products.length; i++) {
-                        _total = (parseFloat((_trolley.products[i].price_with_iva).toFixed(2)) * parseInt((_trolley.products[i].quantity))) + _total;
-                    }
-
-                    this.$store.state.trolley[index_c].total = 0;
-                    this.$store.state.trolley[index_c].total = parseFloat(_total.toFixed(2));
-
                     axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index_c]).then(() => {
                         this.price(this.$store.getters.trolley);
                         EventBus.$emit("NewPushOfTrolleyChangeComer", {ok: "OK"});
@@ -603,80 +640,14 @@
                 console.log("Delete -> ", this.$store.getters.trolley);
             },
             actualizarTrolley(index, id_comercio) {
-                var _trolley = this.$store.getters.trolley[index];
                 var _btn = document.querySelector(`#GuardarTrolleyCart_${id_comercio}`);
-
-                var _total = 0;
-
-                for (var i = 0; i < _trolley.products.length; i++) {
-                    _total = (parseFloat((_trolley.products[i].price_with_iva).toFixed(2)) * parseInt((_trolley.products[i].quantity))) + _total;
-                }
-
-                this.$store.state.trolley[index].total = 0;
-                this.$store.state.trolley[index].total = parseFloat(_total.toFixed(2));
-
                 axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[index]).then(() => {
                     this.price(this.$store.getters.trolley);
-                    this.getPriceDelivery(this.$store.getters.trolley[index]);
                     _btn.setAttribute("style", "display: none;");
                     this.is_disabled = false;
                 }).catch(err => {
                     console.log(err);
                 });
-            },
-            getPriceWear(obj) {
-                var _cant = 0;
-                obj.products.forEach(item => {
-                    _cant = parseInt(item.quantity) + parseInt(_cant);
-                });
-
-                this.shippingPrince.delivery = 0; 
-                this.shippingPrince.wear = parseFloat(obj.costos_extras.envases) * parseInt(_cant)
-                return parseFloat(obj.costos_extras.envases) * parseInt(_cant);
-            },
-            getPriceDelivery(obj) {
-                var _total = obj.total;
-                var _coords_c = {
-                    lat: obj.lat,
-                    lng: obj.lng
-                }
-
-                var _coords_u = this.$store.getters.coords;
-                var _km = funciones.getKilometros(_coords_u.lat, _coords_u.lng, _coords_c.lat, _coords_c.lng);
-                var _costos = obj.costos_extras;
-
-                if (_costos.standard.km != 0 && _costos.standard.price != 0 && _costos.km_exta.km != 0 && _costos.km_exta.price != 0 && _costos.minima.price_a != 0 && _costos.minima.price_b != 0) {
-                    var _kmStand = _costos.standard.km;
-                    var _priceExtra = _costos.km_exta.price;
-
-                    if (parseFloat(_total) > parseFloat(_costos.minima.price_a)) {
-                        this.shippingPrince.wear = 0;
-                        this.shippingPrince.delivery = _costos.minima.price_b;
-                        return _costos.minima.price_b;
-                    }
-                    
-                    if (parseFloat(_total) <= parseFloat(_costos.minima.price_a)) {
-                        if (parseInt(_km.split(".")[0]) > parseInt(_kmStand)) {
-                            var _restKM = _km - _kmStand; // Valor para km extra
-                            
-                            var _montoExtra = parseInt(String(_restKM).split(".")[0]) * _priceExtra;
-
-                            this.shippingPrince.wear = 0;
-                            this.shippingPrince.delivery = _costos.standard.price + _montoExtra;
-                            return _costos.standard.price + _montoExtra;
-                        }
-
-                        if (parseInt(_km.split(".")[0]) <= parseInt(_kmStand)) {
-                            this.shippingPrince.wear = 0;
-                            this.shippingPrince.delivery = _costos.standard.price;
-                            return _costos.standard.price;
-                        }
-                    }
-
-                    this.listPrice.total = parseFloat(this.listPrice.total) + parseFloat(this.shippingPrince.delivery) + parseFloat(this.shippingPrince.wear);
-                } else {
-                    return "0.00";
-                }
             },
         }
     }
@@ -1023,6 +994,63 @@
             }
 
             &__address {
+                position: relative;
+                width: 100%;
+                padding: 0 1rem;
+                margin: .5rem 0;
+
+                button {
+                    display: none;
+                    position: absolute;
+                    top: 0;
+                    right: 10px;
+                    border: none;
+                    background: transparent;
+                    outline: none;
+                    box-shadow: none;
+                    width: 50px;
+
+                    img {
+                        display: block;
+                        width: 100%;
+                        margin: 0;
+                        padding: 0;
+                    }
+
+                    &.save {
+                        display: block;
+                        width: max-content;
+                        background: var(--bluePrimary);
+                        color: #fff;
+                        padding: .25rem .5rem;
+                    }
+                }
+
+                input {
+                    background: transparent;
+                    border: none;
+                    border-bottom: 1px solid rgba(0,0,0,.25);
+                    border-radius: 0;
+                    outline: none;
+                    box-shadow: none;
+                    padding: .5rem 2.5rem .5rem 0;
+                    color: var(--blue);
+
+                    &:disabled {
+                        color: #777;
+                    }
+
+                    &:disabled ~ .edit {
+                        display: block;
+                    }
+
+                    &:disabled ~ .save {
+                        display: none;
+                    }
+                }
+            }
+
+            &__phone {
                 position: relative;
                 width: 100%;
                 padding: 0 1rem;

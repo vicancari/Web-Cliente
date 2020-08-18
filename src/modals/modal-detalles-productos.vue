@@ -191,7 +191,7 @@
                         
                         <div class="checboxs">
                             <div class="form-group">
-                                <input v-if="this.is_pago_unico === true" @change="typeDePagoPorMesa(prod.data._id)" type="radio" checked :name="'radiosSelectMesa_' + prod.data._id" data-name="pago-unico" :id="'pago-unico_' + prod.data._id">
+                                <input v-if="this.is_pago === true" @change="typeDePagoPorMesa(prod.data._id)" type="radio" checked :name="'radiosSelectMesa_' + prod.data._id" data-name="pago-unico" :id="'pago-unico_' + prod.data._id">
                                 <input v-else @change="typeDePagoPorMesa(prod.data._id)" type="radio" :name="'radiosSelectMesa_' + prod.data._id" data-name="pago-unico" :id="'pago-unico_' + prod.data._id">
                                 <label :for="'pago-unico_' + prod.data._id">
                                     <div class="a">
@@ -202,7 +202,20 @@
                                     </div>
                                 </label>
                             </div>
-                            <div v-if="this.is_pago_unico === true" class="boxListInvite">
+                            
+                            <div class="form-group">
+                                <input @change="typeDePagoPorMesa(prod.data._id)" type="radio" :name="'radiosSelectMesa_' + prod.data._id" data-name="pago-separado" :id="'pago-separado_' + prod.data._id">
+                                <label :for="'pago-separado_' + prod.data._id">
+                                    <div class="a">
+                                        <span>Pago por separado</span>
+                                    </div>
+                                    <div class="box">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div v-if="this.is_pago === true" class="boxListInvite">
                                 <div class="boxListInvite__title">
                                     <p>Lista de invitados</p>
                                 </div>
@@ -220,22 +233,14 @@
                                     </li>
                                 </ul>
                             </div>
-                            <div class="form-group">
-                                <input @change="typeDePagoPorMesa(prod.data._id)" type="radio" :name="'radiosSelectMesa_' + prod.data._id" data-name="pago-separado" :id="'pago-separado_' + prod.data._id">
-                                <label :for="'pago-separado_' + prod.data._id">
-                                    <div class="a">
-                                        <span>Pago por separado</span>
-                                    </div>
-                                    <div class="box">
-                                        <i class="fas fa-check"></i>
-                                    </div>
-                                </label>
-                            </div>
+
+                            <p :class="this.err != '' ? 'err' : ''" class="sms">{{ this.err }}</p>
                         </div>
 
-                        <button class="btn btnConfirmar" @click="addCarrito(prod.data), $bvModal.hide('modal-comer_' + prod.data._id), $bvModal.hide(prod.title + prod.id)">
+                        <button class="btn btnConfirmar" @click="addCarrito(prod.data)">
                             Confirmar
                         </button>
+                        <button :id="'closeModal_' + prod.data._id" @click="$bvModal.hide('modal-comer_' + prod.data._id), $bvModal.hide(prod.title + prod.id)" style="display: none;">---</button>
                     </div>
                 </div>
             </b-modal>
@@ -293,6 +298,7 @@
                 time_limit: "",
                 miMesa: {},
                 mysInvitados: [],
+                err: "",
                 is_trolley: [],
                 invitado: {
                     id_invitante: this.$store.getters.uid,
@@ -301,12 +307,13 @@
                     phone_invitado: "",
                     email_invitado: "",
                     photo_invitado: "",
+                    status_invitado: "",
                 },
                 horus: {
                     start: "",
                     end: "",
                 },
-                is_pago_unico: false,
+                is_pago: false,
                 type_mesa: "",
                 emit: "",
                 isTypeMesa: false,
@@ -322,10 +329,17 @@
                     id_cliente: "",
                     shippingForms: "",
                     created_at: "",
-                    total: "",
+                    total: 0,
+                    total_with_iva: 0,
+                    total_delivery: 0,
+                    total_wear: 0,
+                    total_a_pagar: 0,
+                    total_papel_of_regalo: 0,
+                    iva_agrupado: [],
                     papel_of_regalo: false,
                     is_type_mesa: false,
                     address: "",
+                    phone: "",
                     costos_extras: {},
                     products: []
                 },
@@ -337,30 +351,6 @@
 
             this.is_trolley = this.$store.getters.trolley;
             this.fIsTypeMesa(this.is_trolley);
-
-            EventBus.$on("NewPushOfTrolley", obj => {
-                if (obj.ok === "OK") {
-                    this.is_trolley = [];
-                    this.is_trolley = this.$store.getters.trolley;
-                    this.fIsTypeMesa(this.is_trolley);
-                }
-            });
-
-            EventBus.$on("TrolleyPagado", obj => {
-                if (obj.ok === "OK") {
-                    this.is_trolley = [];
-                    this.is_trolley = this.$store.getters.trolley;
-                    this.fIsTypeMesa(this.is_trolley);
-                }
-            });
-
-            EventBus.$on("NewPushOfTrolleyChangeComer", obj => {
-                if (obj.ok === "OK") {
-                    this.is_trolley = [];
-                    this.is_trolley = this.$store.getters.trolley;
-                    this.fIsTypeMesa(this.is_trolley);
-                }
-            });
 
             EventBus.$on("EmitTrolleyUpdate", obj => {
                 this.emit = obj;
@@ -414,12 +404,12 @@
 
                 if (_checked) {
                     if (_checked.getAttribute("data-name").toLowerCase() === "pago-unico") {
-                        this.is_pago_unico = true;
+                        this.is_pago = true;
                         this.type_mesa = 1;
                     }
     
                     if (_checked.getAttribute("data-name").toLowerCase() === "pago-separado") {
-                        this.is_pago_unico = false;
+                        this.is_pago = true;
                         this.type_mesa = 2;
                     }
                 }
@@ -566,8 +556,37 @@
                     this.eatinrest = false;
                 }
             },
+            resetPedido() {
+                this.pedido = {
+                    type_cart: {
+                        type_cart: "Propio",
+                        value: 1,
+                    },
+                    status: 0,
+                    id_comercio: "",
+                    lat: "",
+                    lng: "",
+                    id_cliente: "",
+                    shippingForms: "",
+                    created_at: "",
+                    total: 0,
+                    total_with_iva: 0,
+                    total_delivery: 0,
+                    total_wear: 0,
+                    total_a_pagar: 0,
+                    total_papel_of_regalo: 0,
+                    iva_agrupado: [],
+                    papel_of_regalo: false,
+                    is_type_mesa: false,
+                    address: "",
+                    phone: "",
+                    costos_extras: {},
+                    products: []
+                }
+            },
             addProductoCarrito(obj) {
                 var _btnAlert = document.querySelector(`#alertdr_${obj._id}`);
+                var _btnCM = document.querySelector('#closeModal_' + obj._id);
 
                 var _prod = {
                     id_producto: obj._id,
@@ -603,48 +622,31 @@
                             this.$store.state.trolley[i].products.push(_prod);
                         }
 
-                        var _trolley2 = this.$store.getters.trolley;
-                        var _total = 0;
-
-                        for (var y = 0; y < _trolley2[i].products.length; y++) {
-                            _total = _total = (parseFloat((_trolley2[i].products[y].price_with_iva).toFixed(2)) * parseInt((_trolley2[i].products[y].quantity))) + _total;
-                        }
-
-                        this.$store.state.trolley[i].total = parseFloat(_total.toFixed(2));
-
                         console.log("ANTES DE ACTUALIZAR -> ", this.$store.getters.trolley[i]);
                         axios.put("https://myraus.com:8282/api/cart/update", this.$store.getters.trolley[i]).then(res => {
                             console.log(res);
                             EventBus.$emit("NewPushOfTrolley", {ok: "OK"});
                             EventBus.$emit("NewPushOfTrolleyChangeComer", {ok: "OK"});
 
-                            this.pedido = {
-                                type_cart: {
-                                    type_cart: "Propio",
-                                    value: 1,
-                                },
-                                status: 0,
-                                id_comercio: "",
-                                lat: "",
-                                lng: "",
-                                id_cliente: "",
-                                shippingForms: "",
-                                created_at: "",
-                                total: "",
-                                papel_of_regalo: false,
-                                is_type_mesa: false,
-                                address: "",
-                                costos_extras: {},
-                                products: []
-                            }
+                            this.cantProd = 1;
+                            this.resetPedido();
 
-                            if (_btnAlert) {
+                            if (_btnAlert, _btnCM) {
+                                _btnCM.click();
                                 _btnAlert.click();
                             }
                         }).catch(err => {
-                            console.log(err);
+                            console.log(err.response.data);
+                            if (err.response.data.code === 2) {
+                                this.err = err.response.data.error;
+
+                                setTimeout(() => {
+                                    this.err = "";
+                                }, 4500);
+                            }
+
+                            this.resetPedido();
                         });
-                        this.cantProd = 1;
                     }
                 }
             },
@@ -653,8 +655,7 @@
                 var _shippingFormsLlevar = document.querySelector(`#llevar_${obj._id}`);
                 var _shippingFormsComer = document.querySelector(`#comer_${obj._id}`);
                 var _btnAlert = document.querySelector(`#alertdr_${obj._id}`);
-
-                console.log(obj, _shippingFormsComer);
+                var _btnCM = document.querySelector('#closeModal_' + obj._id);
 
                 if (_shippingFormsDelivery || _shippingFormsLlevar || _shippingFormsComer) {
                     if (_shippingFormsDelivery.checked != false || _shippingFormsLlevar.checked != false || _shippingFormsComer.checked != false) {
@@ -672,31 +673,23 @@
                                 this.pedido.shippingForms = "eat_in_restaurant";
                                 this.pedido.is_type_mesa = true;
                                 this.pedido.type_mesa = this.type_mesa; // 1 = unico, 2 = separado
-    
-                                if (this.pedido.type_mesa === 1) {
-                                    this.pedido.mesa = {
-                                        numero_mesa: this.miMesa.mesa,
-                                        list_invitados: [], // if es igual a pago unico
-                                    }
-    
-                                    this.mysInvitados.forEach(inv => {
-                                        this.pedido.mesa.list_invitados.push({
-                                            id_invitante: this.$store.getters.uid,
-                                            id_invitado: inv.id,
-                                            name_invitado: inv.name,
-                                            phone_invitado: inv.phone,
-                                            email_invitado: inv.email,
-                                            photo_invitado: inv.photo ? inv.photo : "",
-                                        });
+                                    
+                                this.pedido.mesa = {
+                                    numero_mesa: this.miMesa.mesa,
+                                    list_invitados: [], // if es igual a pago unico
+                                }
+
+                                this.mysInvitados.forEach(inv => {
+                                    this.pedido.mesa.list_invitados.push({
+                                        id_invitante: this.$store.getters.uid,
+                                        id_invitado: inv.id,
+                                        name_invitado: inv.name,
+                                        phone_invitado: inv.phone,
+                                        email_invitado: inv.email,
+                                        photo_invitado: inv.photo ? inv.photo : "",
+                                        status_invitado: "espera", // espera, aceptado, cancelado
                                     });
-                                }
-    
-                                if (this.pedido.type_mesa === 2) {
-                                    this.pedido.mesa = {
-                                        numero_mesa: 0,
-                                        list_invitados: [],
-                                    }
-                                }
+                                });
     
                                 this.pedido.mesa.hours_start = moment(new Date()).format("HH:mm:ss a");
                                 var _f = new Date();
@@ -715,6 +708,7 @@
                         this.pedido.lat = obj.lat;
                         this.pedido.lng = obj.lng;
                         this.pedido.id_cliente = this.$store.getters.uid;
+                        this.pedido.phone = this.$store.getters.user.phone;
                         this.pedido.address = this.$store.getters.user.address;
                         this.pedido.created_at = moment(new Date()).format("YYYY-MM-DD HH:mm");
 
@@ -756,53 +750,35 @@
                                     this.$store.state.trolley[i].products.push(_prod);
                                 }
 
-                                var _trolley2 = this.$store.getters.trolley;
-                                var _total = 0;
-
-                                for (var y = 0; y < _trolley2[i].products.length; y++) {
-                                    _total = _total = (parseFloat((_trolley2[i].products[y].price_with_iva).toFixed(2)) * parseInt((_trolley2[i].products[y].quantity))) + _total;
-                                }
-
-                                this.$store.state.trolley[i].total = parseFloat(_total.toFixed(2));
-
                                 console.log("ANTES DE ACTUALIZAR -> ", this.$store.state.trolley[i]);
                                 axios.put("https://myraus.com:8282/api/cart/update", this.$store.state.trolley[i]).then(res => {
                                     console.log(res);
                                     EventBus.$emit("NewPushOfTrolley", {ok: "OK"});
                                     EventBus.$emit("NewPushOfTrolleyChangeComer", {ok: "OK"});
 
-                                    this.pedido = {
-                                        type_cart: {
-                                            type_cart: "Propio",
-                                            value: 1,
-                                        },
-                                        status: 0,
-                                        id_comercio: "",
-                                        lat: "",
-                                        lng: "",
-                                        id_cliente: "",
-                                        shippingForms: "",
-                                        created_at: "",
-                                        total: "",
-                                        papel_of_regalo: false,
-                                        is_type_mesa: false,
-                                        address: "",
-                                        costos_extras: {},
-                                        products: []
-                                    }
+                                    this.cantProd = 1;
+                                    this.resetPedido();
 
-                                    if (_btnAlert) {
+                                    if (_btnAlert, _btnCM) {
+                                        _btnCM.click();
                                         _btnAlert.click();
                                     }
                                 }).catch(err => {
-                                    console.log(err);
+                                    console.log(err.response.data);
+                                    if (err.response.data.code === 2) {
+                                        this.err = err.response.data.error;
+
+                                        setTimeout(() => {
+                                            this.err = "";
+                                        }, 4500);
+                                    }
+
+                                    this.resetPedido();
                                 });
-                                this.cantProd = 1;
                             }
                         }
 
                         if (_set === true) {
-                            this.pedido.total = parseFloat((obj.price_with_iva * this.cantProd).toFixed(2));
                             this.pedido.products.push(_prod);
 
                             console.log("POST DEL PRIMER CARRITO -> ", this.pedido);
@@ -812,33 +788,24 @@
                                 EventBus.$emit("NewPushOfTrolley", {ok: "OK"});
                                 EventBus.$emit("NewPushOfTrolleyChangeComer", {ok: "OK"});
 
-                                this.pedido = {
-                                    type_cart: {
-                                        type_cart: "Propio",
-                                        value: 1,
-                                    },
-                                    status: 0,
-                                    id_comercio: "",
-                                    lat: "",
-                                    lng: "",
-                                    id_cliente: "",
-                                    shippingForms: "",
-                                    created_at: "",
-                                    total: "",
-                                    papel_of_regalo: false,
-                                    is_type_mesa: false,
-                                    address: "",
-                                    costos_extras: {},
-                                    products: []
-                                }
+                                this.cantProd = 1;
+                                this.resetPedido();
 
-                                if (_btnAlert) {
+                                if (_btnAlert, _btnCM) {
+                                    _btnCM.click();
                                     _btnAlert.click();
                                 }
                             }).catch(err => {
-                                console.log(err);
+                                console.log(err.response.data);
+                                if (err.response.data.code === 2) {
+                                    this.err = err.response.data.error;
+
+                                    setTimeout(() => {
+                                        this.err = "";
+                                    }, 4500);
+                                }
+                                this.resetPedido();
                             });
-                            this.cantProd = 1;
                         }
 
                         console.log("trolley enviado ->", this.pedido);

@@ -31,6 +31,7 @@ Vue.use(VueToast, {
 });
 
 // Globales
+global.SESIONACTUAL = "";
 window.axios = axios;
 window.funciones = funciones;
 window.config = config;
@@ -57,6 +58,7 @@ firebase.auth().onAuthStateChanged(user => {
     _uid = user.uid;
     
     store().state.isLoggedIn = true;
+    socket.Iniciar({uid: user.uid, name: user.displayName, photo: user.photoURL ? user.photoURL : "https://myraus.com/personas/img/avatar.735a1d2d.png"});
     api.post('auth/isloggin/', {id: _uid, is_loggin: true}).then(res => {
       if (res.success === true) {
         console.log("isloggin -> Ok...");
@@ -67,6 +69,7 @@ firebase.auth().onAuthStateChanged(user => {
   } else {
     console.log("user is not loggin");
     store().state.isLoggedIn = false;
+    socket.Desconectar();
     
     if (router.currentRoute.name != "login") {
       if (router.currentRoute.name === "register" || router.currentRoute.name === "validarNumero") {
@@ -80,7 +83,7 @@ firebase.auth().onAuthStateChanged(user => {
 
 Vue.use(BootstrapVue);
 
-Vue.config.productionTip = true;
+Vue.config.productionTip = config.ModeRUN === 1 ? true : false;
 Vue.use(Vuex);
 
 export const EventBus = new Vue();

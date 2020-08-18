@@ -38,7 +38,7 @@
                                     <img class="img-fluid" :src="arrow">
                                 </button>
                                 <button type="button" v-if="egre.typeTransaccion === 'trolley'" block class="btn title" v-b-toggle="egre._id" :name="egre._id">
-                                    <p class="text">{{ getComercio(egre.comercio != undefined ? egre.comercio.id : egre.id_comercio != undefined ? egre.id_comercio : 'Carrito') }} <span class="time">{{ dateNow(egre.date + " " + egre.time) }}</span></p>
+                                    <p class="text">{{ egre.comercio.name }} <span class="time">{{ dateNow(egre.date + " " + egre.time) }}</span></p>
                                     <img class="img-fluid" :src="arrow">
                                 </button>
                                 <b-collapse :id="egre._id" :accordion="egre._id">
@@ -212,21 +212,29 @@
                     });
         
                     EventBus.$on('IngresoReady', (data) => {
-                        this.listTransacciones.i.all.push(data);
-                        this.listTransacciones.i.filter.push(data);
-                        this.listTransacciones.i.filter.sort(function(a, b) {
-                            if (a.date && a.time < b.date && b.time) {
-                                return -1;
+                        this.listTransacciones.i.all.forEach(item => {
+                            if (item.key != data.key) {
+                                this.listTransacciones.i.all.push(data);
+                                this.listTransacciones.i.filter.push(data);
+                                this.listTransacciones.i.filter.sort(function(a, b) {
+                                    if (a.date && a.time < b.date && b.time) {
+                                        return -1;
+                                    }
+                                });
                             }
                         });
                     });
         
                     EventBus.$on('EgresoReady', (data) => {
-                        this.listTransacciones.e.all.push(data);
-                        this.listTransacciones.e.filter.push(data);
-                        this.listTransacciones.e.filter.sort(function(a, b) {
-                            if (a.date && a.time < b.date && b.time) {
-                                return -1;
+                        this.listTransacciones.e.all.forEach(item => {
+                            if (item.key != data.key) {
+                                this.listTransacciones.e.all.push(data);
+                                this.listTransacciones.e.filter.push(data);
+                                this.listTransacciones.e.filter.sort(function(a, b) {
+                                    if (a.date && a.time < b.date && b.time) {
+                                        return -1;
+                                    }
+                                });
                             }
                         });
                     });

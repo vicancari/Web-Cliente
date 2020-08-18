@@ -20,7 +20,7 @@
                         <button class="btn" v-if="!this.$store.getters.trolley.length" v-b-modal.modal-trolley><img class="img-fluid" :src="trolley" alt=""></button>
                         <button class="btn" v-if="this.$store.getters.trolley.length" v-b-modal.modal-trolley><img class="img-fluid" :src="trolleyPlus" alt=""></button>
                         <button class="btn"><img class="img-fluid" :src="notification" alt=""></button>
-                        <button class="btn"><img class="img-fluid" :src="message" alt=""></button>
+                        <!-- <button class="btn"><img class="img-fluid" :src="message" alt=""></button> -->
                         <button class="btn" v-b-modal.modal-explorar @click="reloadActiveCategory"><img class="img-fluid" :src="timeline" alt=""></button>
                     </div>
                 </div>
@@ -42,7 +42,7 @@
                         <button class="btn" v-if="!this.$store.getters.trolley.length" v-b-modal.modal-trolley><img class="icon" :src="trolley" alt=""></button>
                         <button class="btn" v-if="this.$store.getters.trolley.length" v-b-modal.modal-trolley><img class="icon" :src="trolleyPlus" alt=""></button>
                         <button class="btn"><img class="icon" :src="notification"></button>
-                        <button class="btn"><img class="icon" :src="message"></button>
+                        <!-- <button class="btn"><img class="icon" :src="message"></button> -->
                         <button class="btn" v-b-modal.modal-explorar @click="reloadActiveCategory"><img class="icon" :src="timeline"></button>
                     </div>
                 </div>
